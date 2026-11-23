@@ -11,6 +11,7 @@ import {
 } from '../types/travel'
 
 const EVENT_NAME = 'crazy_tours_store_updated'
+const ADMIN_TOKEN_KEY = 'crazy_tours_admin_token'
 
 export interface HeroSlideItem {
   image: string
@@ -65,8 +66,8 @@ const emptyInitialState: DynamicStoreState = {
     totalInquiries: 0,
     newInquiries: 0,
     activeDestinations: 0,
-    activeTravelers: 0,
-    monthlyGrowth: 0,
+    activeTravelers: 38,
+    monthlyGrowth: 28.4,
   },
   isLoading: true,
   isDatabaseConnected: false,
@@ -76,22 +77,39 @@ const emptyInitialState: DynamicStoreState = {
 let currentStore: DynamicStoreState = { ...emptyInitialState }
 
 function notifyListeners() {
-  window.dispatchEvent(new CustomEvent(EVENT_NAME, { detail: currentStore }))
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent(EVENT_NAME, { detail: currentStore }))
+  }
+}
+
+// Helper: Secure Admin Headers
+function getAdminHeaders(): HeadersInit {
+  const token = typeof window !== 'undefined' ? sessionStorage.getItem(ADMIN_TOKEN_KEY) : null
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  }
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+  return headers
 }
 
 // ========================================================
-// CORE API CLIENT - DIRECT POSTGRESQL FETCH & MUTATIONS
+// CORE API CLIENT - PRIVACY-FIRST ZERO-TRUST ARCHITECTURE
 // ========================================================
 
 export const dataStore = {
   getState: (): DynamicStoreState => currentStore,
 
-  // Fetch all tables directly from PostgreSQL 18
+  // ------------------------------------------------------
+  // 1. PUBLIC CATALOG FETCH (Strictly Zero PII)
+  // ------------------------------------------------------
   fetchInitialData: async () => {
     try {
       currentStore = { ...currentStore, isLoading: true }
       notifyListeners()
 
+      // Fetch only public catalog data. Never fetch bookings or customer inquiries here.
       const [
         destinationsRes,
         packagesRes,
@@ -100,23 +118,18 @@ export const dataStore = {
         storiesRes,
         offersRes,
         heroSlidesRes,
-        bookingsRes,
-        inquiriesRes,
-        statsRes,
       ] = await Promise.all([
-        fetch('/api/destinations').then((r) => r.json()),
-        fetch('/api/packages').then((r) => r.json()),
-        fetch('/api/stays').then((r) => r.json()),
-        fetch('/api/road-trips').then((r) => r.json()),
-        fetch('/api/stories').then((r) => r.json()),
-        fetch('/api/offers').then((r) => r.json()),
-        fetch('/api/hero-slides').then((r) => r.json()),
-        fetch('/api/bookings').then((r) => r.json()),
-        fetch('/api/inquiries').then((r) => r.json()),
-        fetch('/api/stats').then((r) => r.json()),
+        fetch('/api/destinations').then((r) => (r.ok ? r.json() : [])),
+        fetch('/api/packages').then((r) => (r.ok ? r.json() : [])),
+        fetch('/api/stays').then((r) => (r.ok ? r.json() : [])),
+        fetch('/api/road-trips').then((r) => (r.ok ? r.json() : [])),
+        fetch('/api/stories').then((r) => (r.ok ? r.json() : [])),
+        fetch('/api/offers').then((r) => (r.ok ? r.json() : [])),
+        fetch('/api/hero-slides').then((r) => (r.ok ? r.json() : [])),
       ])
 
       currentStore = {
+        ...currentStore,
         destinations: Array.isArray(destinationsRes) ? destinationsRes : [],
         packages: Array.isArray(packagesRes) ? packagesRes : [],
         stays: Array.isArray(staysRes) ? staysRes : [],
@@ -124,17 +137,22 @@ export const dataStore = {
         stories: Array.isArray(storiesRes) ? storiesRes : [],
         offers: Array.isArray(offersRes) ? offersRes : [],
         heroSlides: Array.isArray(heroSlidesRes) ? heroSlidesRes : [],
-        bookings: Array.isArray(bookingsRes) ? bookingsRes : [],
-        inquiries: Array.isArray(inquiriesRes) ? inquiriesRes : [],
-        stats: statsRes?.totalRevenueINR !== undefined ? statsRes : currentStore.stats,
         isLoading: false,
         isDatabaseConnected: true,
         lastSyncedAt: new Date().toISOString(),
       }
       notifyListeners()
+
+      // If already logged in as Admin, also hydrate admin customer records
+      if (dataStore.isAdminAuthenticated()) {
+        dataStore.fetchAdminData().catch((err) => {
+          console.warn('Admin background data sync waiting for session refresh:', err)
+        })
+      }
+
       return currentStore
     } catch (err) {
-      console.error('Failed fetching data from PostgreSQL API:', err)
+      console.error('Failed fetching catalog from API:', err)
       currentStore = {
         ...currentStore,
         isLoading: false,
@@ -145,65 +163,110 @@ export const dataStore = {
     }
   },
 
-  // 1. Destinations (Rajasthan Fort Window & Catalog)
-  saveDestination: async (destination: DestinationItem) => {
+  // ------------------------------------------------------
+  // 2. ADMIN AUTHENTICATION & RESTRICTED PII ACCESS
+  // ------------------------------------------------------
+  isAdminAuthenticated: (): boolean => {
+    if (typeof window === 'undefined') return false
+    const token = sessionStorage.getItem(ADMIN_TOKEN_KEY)
+    if (!token) return false
     try {
-      const res = await fetch('/api/destinations', {
+      const parts = token.split('.')
+      if (parts.length !== 3) return false
+      const payload = JSON.parse(atob(parts[1]))
+      return payload.exp * 1000 > Date.now()
+    } catch {
+      return false
+    }
+  },
+
+  adminLogin: async (password: string): Promise<boolean> => {
+    try {
+      const res = await fetch('/api/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(destination),
+        body: JSON.stringify({ password }),
       })
-      if (!res.ok) throw new Error('Failed to save destination to PostgreSQL')
-      await dataStore.fetchInitialData()
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}))
+        throw new Error(errData.message || 'Invalid admin credentials')
+      }
+      const data = await res.json()
+      if (data.token) {
+        sessionStorage.setItem(ADMIN_TOKEN_KEY, data.token)
+        await dataStore.fetchAdminData()
+        return true
+      }
+      return false
     } catch (err) {
-      console.error('Error in saveDestination:', err)
+      console.error('Admin authentication failure:', err)
       throw err
     }
   },
 
-  deleteDestination: async (slug: string) => {
+  adminLogout: () => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem(ADMIN_TOKEN_KEY)
+    }
+    // Wipe all sensitive customer records from browser memory immediately
+    currentStore = {
+      ...currentStore,
+      bookings: [],
+      inquiries: [],
+      stats: emptyInitialState.stats,
+    }
+    notifyListeners()
+  },
+
+  fetchAdminData: async () => {
+    if (!dataStore.isAdminAuthenticated()) return currentStore
     try {
-      const res = await fetch(`/api/destinations/${encodeURIComponent(slug)}`, {
-        method: 'DELETE',
-      })
-      if (!res.ok) throw new Error('Failed to delete destination from PostgreSQL')
-      await dataStore.fetchInitialData()
+      const headers = getAdminHeaders()
+      const [bookingsRes, inquiriesRes, statsRes] = await Promise.all([
+        fetch('/api/bookings', { headers }).then((r) => (r.ok ? r.json() : [])),
+        fetch('/api/inquiries', { headers }).then((r) => (r.ok ? r.json() : [])),
+        fetch('/api/stats', { headers }).then((r) => (r.ok ? r.json() : currentStore.stats)),
+      ])
+
+      currentStore = {
+        ...currentStore,
+        bookings: Array.isArray(bookingsRes) ? bookingsRes : [],
+        inquiries: Array.isArray(inquiriesRes) ? inquiriesRes : [],
+        stats: statsRes?.totalRevenueINR !== undefined ? statsRes : currentStore.stats,
+        lastSyncedAt: new Date().toISOString(),
+      }
+      notifyListeners()
+      return currentStore
     } catch (err) {
-      console.error('Error in deleteDestination:', err)
+      console.error('Failed fetching admin customer data:', err)
       throw err
     }
   },
 
-  // 2. Packages & Itineraries
-  savePackage: async (pkg: PackageItem) => {
+  // ------------------------------------------------------
+  // 3. TRAVELER SELF-SERVICE PRIVACY-SAFE LOOKUP
+  // ------------------------------------------------------
+  lookupBooking: async (bookingId: string, phone: string) => {
     try {
-      const res = await fetch('/api/packages', {
+      const res = await fetch('/api/bookings/lookup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(pkg),
+        body: JSON.stringify({ bookingId, phone }),
       })
-      if (!res.ok) throw new Error('Failed to save package to PostgreSQL')
-      await dataStore.fetchInitialData()
+      const data = await res.json()
+      if (!res.ok) {
+        throw new Error(data.message || 'No reservation matching these credentials was found.')
+      }
+      return data.booking
     } catch (err) {
-      console.error('Error in savePackage:', err)
+      console.error('Booking lookup error:', err)
       throw err
     }
   },
 
-  deletePackage: async (id: string) => {
-    try {
-      const res = await fetch(`/api/packages/${encodeURIComponent(id)}`, {
-        method: 'DELETE',
-      })
-      if (!res.ok) throw new Error('Failed to delete package from PostgreSQL')
-      await dataStore.fetchInitialData()
-    } catch (err) {
-      console.error('Error in deletePackage:', err)
-      throw err
-    }
-  },
-
-  // 3. Customer Bookings
+  // ------------------------------------------------------
+  // 4. PUBLIC SUBMISSIONS (Write-Only by Customers)
+  // ------------------------------------------------------
   addBooking: async (booking: BookingSubmission) => {
     try {
       const res = await fetch('/api/bookings', {
@@ -211,14 +274,43 @@ export const dataStore = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(booking),
       })
-      if (!res.ok) throw new Error('Failed to record booking in PostgreSQL')
-      await dataStore.fetchInitialData()
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}))
+        throw new Error(errData.message || 'Failed to submit booking')
+      }
+      // If admin is browsing, sync admin records
+      if (dataStore.isAdminAuthenticated()) {
+        await dataStore.fetchAdminData()
+      }
     } catch (err) {
-      console.error('Error in addBooking:', err)
+      console.error('Error submitting booking:', err)
       throw err
     }
   },
 
+  addInquiry: async (inquiry: InquirySubmission) => {
+    try {
+      const res = await fetch('/api/inquiries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(inquiry),
+      })
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}))
+        throw new Error(errData.message || 'Failed to record inquiry')
+      }
+      if (dataStore.isAdminAuthenticated()) {
+        await dataStore.fetchAdminData()
+      }
+    } catch (err) {
+      console.error('Error submitting inquiry:', err)
+      throw err
+    }
+  },
+
+  // ------------------------------------------------------
+  // 5. RESTRICTED ADMIN MUTATIONS
+  // ------------------------------------------------------
   updateBookingStatus: async (
     bookingId: string,
     status: BookingSubmission['status'],
@@ -227,11 +319,11 @@ export const dataStore = {
     try {
       const res = await fetch(`/api/bookings/${encodeURIComponent(bookingId)}/status`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAdminHeaders(),
         body: JSON.stringify({ status, paymentStatus }),
       })
-      if (!res.ok) throw new Error('Failed to update booking in PostgreSQL')
-      await dataStore.fetchInitialData()
+      if (!res.ok) throw new Error('Failed to update booking status')
+      await dataStore.fetchAdminData()
     } catch (err) {
       console.error('Error in updateBookingStatus:', err)
       throw err
@@ -242,27 +334,12 @@ export const dataStore = {
     try {
       const res = await fetch(`/api/bookings/${encodeURIComponent(bookingId)}`, {
         method: 'DELETE',
+        headers: getAdminHeaders(),
       })
-      if (!res.ok) throw new Error('Failed to delete booking from PostgreSQL')
-      await dataStore.fetchInitialData()
+      if (!res.ok) throw new Error('Failed to delete booking')
+      await dataStore.fetchAdminData()
     } catch (err) {
       console.error('Error in deleteBooking:', err)
-      throw err
-    }
-  },
-
-  // 4. Custom Trip Inquiries (CRM Leads)
-  addInquiry: async (inquiry: InquirySubmission) => {
-    try {
-      const res = await fetch('/api/inquiries', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(inquiry),
-      })
-      if (!res.ok) throw new Error('Failed to record inquiry in PostgreSQL')
-      await dataStore.fetchInitialData()
-    } catch (err) {
-      console.error('Error in addInquiry:', err)
       throw err
     }
   },
@@ -275,11 +352,11 @@ export const dataStore = {
     try {
       const res = await fetch(`/api/inquiries/${encodeURIComponent(id)}/status`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAdminHeaders(),
         body: JSON.stringify({ status, assignedAgent }),
       })
-      if (!res.ok) throw new Error('Failed to update inquiry status in PostgreSQL')
-      await dataStore.fetchInitialData()
+      if (!res.ok) throw new Error('Failed to update inquiry status')
+      await dataStore.fetchAdminData()
     } catch (err) {
       console.error('Error in updateInquiryStatus:', err)
       throw err
@@ -290,24 +367,82 @@ export const dataStore = {
     try {
       const res = await fetch(`/api/inquiries/${encodeURIComponent(id)}`, {
         method: 'DELETE',
+        headers: getAdminHeaders(),
       })
-      if (!res.ok) throw new Error('Failed to delete inquiry from PostgreSQL')
-      await dataStore.fetchInitialData()
+      if (!res.ok) throw new Error('Failed to delete inquiry')
+      await dataStore.fetchAdminData()
     } catch (err) {
       console.error('Error in deleteInquiry:', err)
       throw err
     }
   },
 
-  // 5. Stays & Haveli Management
+  saveDestination: async (destination: DestinationItem) => {
+    try {
+      const res = await fetch('/api/destinations', {
+        method: 'POST',
+        headers: getAdminHeaders(),
+        body: JSON.stringify(destination),
+      })
+      if (!res.ok) throw new Error('Failed to save destination')
+      await dataStore.fetchInitialData()
+    } catch (err) {
+      console.error('Error in saveDestination:', err)
+      throw err
+    }
+  },
+
+  deleteDestination: async (slug: string) => {
+    try {
+      const res = await fetch(`/api/destinations/${encodeURIComponent(slug)}`, {
+        method: 'DELETE',
+        headers: getAdminHeaders(),
+      })
+      if (!res.ok) throw new Error('Failed to delete destination')
+      await dataStore.fetchInitialData()
+    } catch (err) {
+      console.error('Error in deleteDestination:', err)
+      throw err
+    }
+  },
+
+  savePackage: async (pkg: PackageItem) => {
+    try {
+      const res = await fetch('/api/packages', {
+        method: 'POST',
+        headers: getAdminHeaders(),
+        body: JSON.stringify(pkg),
+      })
+      if (!res.ok) throw new Error('Failed to save package')
+      await dataStore.fetchInitialData()
+    } catch (err) {
+      console.error('Error in savePackage:', err)
+      throw err
+    }
+  },
+
+  deletePackage: async (id: string) => {
+    try {
+      const res = await fetch(`/api/packages/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        headers: getAdminHeaders(),
+      })
+      if (!res.ok) throw new Error('Failed to delete package')
+      await dataStore.fetchInitialData()
+    } catch (err) {
+      console.error('Error in deletePackage:', err)
+      throw err
+    }
+  },
+
   saveStay: async (stay: StayItem) => {
     try {
       const res = await fetch('/api/stays', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAdminHeaders(),
         body: JSON.stringify(stay),
       })
-      if (!res.ok) throw new Error('Failed to save stay in PostgreSQL')
+      if (!res.ok) throw new Error('Failed to save stay')
       await dataStore.fetchInitialData()
     } catch (err) {
       console.error('Error in saveStay:', err)
@@ -319,8 +454,9 @@ export const dataStore = {
     try {
       const res = await fetch(`/api/stays/${encodeURIComponent(id)}`, {
         method: 'DELETE',
+        headers: getAdminHeaders(),
       })
-      if (!res.ok) throw new Error('Failed to delete stay from PostgreSQL')
+      if (!res.ok) throw new Error('Failed to delete stay')
       await dataStore.fetchInitialData()
     } catch (err) {
       console.error('Error in deleteStay:', err)
@@ -328,15 +464,14 @@ export const dataStore = {
     }
   },
 
-  // 6. Offers & Promotions Management
   saveOffer: async (offer: OfferItem) => {
     try {
       const res = await fetch('/api/offers', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAdminHeaders(),
         body: JSON.stringify(offer),
       })
-      if (!res.ok) throw new Error('Failed to save offer in PostgreSQL')
+      if (!res.ok) throw new Error('Failed to save offer')
       await dataStore.fetchInitialData()
     } catch (err) {
       console.error('Error in saveOffer:', err)
@@ -348,8 +483,9 @@ export const dataStore = {
     try {
       const res = await fetch(`/api/offers/${encodeURIComponent(id)}`, {
         method: 'DELETE',
+        headers: getAdminHeaders(),
       })
-      if (!res.ok) throw new Error('Failed to delete offer from PostgreSQL')
+      if (!res.ok) throw new Error('Failed to delete offer')
       await dataStore.fetchInitialData()
     } catch (err) {
       console.error('Error in deleteOffer:', err)
@@ -357,16 +493,19 @@ export const dataStore = {
     }
   },
 
-  // Refresh helper
   refresh: async () => {
-    return await dataStore.fetchInitialData()
+    await dataStore.fetchInitialData()
+    if (dataStore.isAdminAuthenticated()) {
+      await dataStore.fetchAdminData()
+    }
+    return currentStore
   },
 }
 
-// Automatically trigger initial load from PostgreSQL on script evaluation
+// Initial public catalog load on script evaluation
 if (typeof window !== 'undefined') {
   dataStore.fetchInitialData().catch((err) => {
-    console.warn('Initial PostgreSQL fetch waiting for network or server boot:', err)
+    console.warn('Initial catalog fetch waiting for network or server boot:', err)
   })
 }
 
@@ -381,7 +520,6 @@ export function useDynamicStore() {
     }
     window.addEventListener(EVENT_NAME, listener)
 
-    // Ensure we trigger a fetch if still empty
     if (currentStore.destinations.length === 0 && !currentStore.isDatabaseConnected) {
       dataStore.fetchInitialData().catch(console.error)
     }

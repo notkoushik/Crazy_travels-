@@ -1,26 +1,30 @@
 import React, { useState } from 'react'
+import { Icon } from './Icon'
+
+const destinations = ['Kashmir', 'Kerala', 'Rajasthan', 'Andaman', 'Sikkim', 'Hampi']
 
 interface HeroInquiryCardProps {
   className?: string
   onClose?: () => void
+  closeLabel?: string
   initialDestination?: string
 }
 
 export function HeroInquiryCard({
   className = '',
   onClose,
+  closeLabel = 'Close trip details and inquiry',
   initialDestination = 'Kashmir',
 }: HeroInquiryCardProps) {
-  const [destination, setDestination] = useState(initialDestination)
+  const [destination, setDestination] = useState(
+    () => destinations.find((item) => initialDestination.includes(item)) ?? 'Kashmir',
+  )
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [month, setMonth] = useState('Next 30 Days')
   const [travelers, setTravelers] = useState('Couple (2 Adults)')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
-  const [isCollapsed, setIsCollapsed] = useState(false)
-
-  const destinations = ['Kashmir', 'Kerala', 'Rajasthan', 'Andaman', 'Sikkim', 'Hampi']
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -86,11 +90,11 @@ export function HeroInquiryCard({
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/35 text-white flex items-center justify-center text-sm font-bold transition-all hover:scale-110 active:scale-95 cursor-pointer shadow-xs"
-            aria-label="Close trip details popup"
-            title="Close / minimize to flight icon"
+            className="size-8 shrink-0 rounded-full bg-white/20 hover:bg-white/35 text-white grid place-items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+            aria-label={closeLabel}
+            title={closeLabel}
           >
-            ✕
+            <Icon name="x" size={18} />
           </button>
         )}
       </div>

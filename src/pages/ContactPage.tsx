@@ -102,7 +102,7 @@ export function ContactPage({ navigate, onToast }: ContactPageProps) {
 
           {/* Right Form: Inquire / Send Message */}
           <div>
-            <div className="bg-white p-6 sm:p-8 rounded-3xl border border-gray-100 shadow-xl space-y-5 sticky top-6">
+            <div className="bg-white p-6 sm:p-8 rounded-3xl border border-gray-100 shadow-xl space-y-5 sticky top-[calc(var(--site-nav-height)+1.5rem)]">
               {submitted ? (
                 <div className="text-center py-8 space-y-3">
                   <div className="w-12 h-12 rounded-full bg-green-100 text-green-700 flex items-center justify-center mx-auto">

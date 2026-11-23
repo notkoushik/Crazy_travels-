@@ -301,7 +301,7 @@ export function PackageDetailPage({
 
         {/* Right Sticky Booking Box */}
         <div className="space-y-6">
-          <div className="sticky top-6 bg-white p-6 rounded-3xl border border-gray-100 shadow-xl space-y-5">
+          <div className="sticky top-[calc(var(--site-nav-height)+1.5rem)] bg-white p-6 rounded-3xl border border-gray-100 shadow-xl space-y-5">
             <div className="pb-4 border-b border-gray-100">
               <span className="text-xs text-gray-400 uppercase font-bold block">Starting From</span>
               <div className="flex items-baseline gap-2">

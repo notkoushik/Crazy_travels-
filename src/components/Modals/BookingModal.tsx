@@ -80,10 +80,9 @@ export function BookingModal({
       })
       setConfirmedBookingId(refId)
       onToast(`Booking inquiry confirmed & saved to database! Reference #${refId}`)
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to submit booking:', err)
-      setConfirmedBookingId(refId)
-      onToast(`Booking confirmed! Reference #${refId}`)
+      onToast(`Unable to process booking: ${err.message || 'Network error. Please try again or contact support.'}`)
     }
   }
 

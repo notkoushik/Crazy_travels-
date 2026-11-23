@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   BookingSubmission,
   DestinationItem,
@@ -13,6 +13,7 @@ import { AdminPageProps, AdminTab } from './types'
 // Components
 import { AdminHeader } from './components/AdminHeader'
 import { AdminSidebar } from './components/AdminSidebar'
+import { AdminLoginScreen } from './components/AdminLoginScreen'
 
 // Tabs
 import { DashboardTab } from './tabs/DashboardTab'
@@ -36,7 +37,31 @@ import { InquiryDrawer } from './drawers/InquiryDrawer'
 
 export function AdminPage({ navigate, onToast }: AdminPageProps) {
   const store = useDynamicStore()
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => store.isAdminAuthenticated())
   const [activeTab, setActiveTab] = useState<AdminTab>('dashboard')
+
+  // Synchronize admin customer data on authentication
+  useEffect(() => {
+    if (isAuthenticated) {
+      store.fetchAdminData().catch((err) => {
+        console.warn('Initial admin data hydration:', err)
+      })
+    }
+  }, [isAuthenticated])
+
+  // If not authenticated, render secure Authorization Gate
+  if (!isAuthenticated) {
+    return (
+      <AdminLoginScreen
+        onLoginSuccess={() => {
+          setIsAuthenticated(true)
+          store.fetchAdminData().catch(console.error)
+        }}
+        navigate={navigate}
+        onToast={onToast}
+      />
+    )
+  }
 
   // Modals state for editing
   const [editingDestination, setEditingDestination] = useState<DestinationItem | null>(null)
@@ -290,7 +315,15 @@ export function AdminPage({ navigate, onToast }: AdminPageProps) {
   return (
     <div className="admin-panel-root min-h-screen bg-slate-50 text-slate-900 flex flex-col font-inter antialiased selection:bg-slate-900 selection:text-white">
       {/* Top Admin Header */}
-      <AdminHeader navigate={navigate} isDatabaseConnected={store.isDatabaseConnected} />
+      <AdminHeader
+        navigate={navigate}
+        isDatabaseConnected={store.isDatabaseConnected}
+        onLogout={() => {
+          store.adminLogout()
+          setIsAuthenticated(false)
+          onToast('Operations Console locked. Customer records cleared from memory.')
+        }}
+      />
 
       {/* Main Admin Workspace */}
       <div className="flex-1 flex overflow-hidden">

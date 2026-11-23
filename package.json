@@ -8,7 +8,8 @@
     "build": "node ./node_modules/vite/bin/vite.js build",
     "preview": "node ./node_modules/vite/bin/vite.js preview",
     "server": "node server/index.js",
-    "format": "oxfmt"
+    "test:privacy": "node server/test_privacy_controls.js",
+    "format": "node ./node_modules/oxfmt/dist/cli.js"
   },
   "dependencies": {
     "cors": "^2.8.6",

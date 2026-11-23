@@ -34,18 +34,18 @@ export function Footer({ navigate, onToast }: FooterProps) {
               Unpublished itineraries, seasonal departure discounts, and slow travel notes. Never spam.
             </p>
           </div>
-          <form onSubmit={handleSubscribe} className="flex w-full lg:w-auto max-w-md gap-2">
+          <form onSubmit={handleSubscribe} className="flex w-full flex-col min-[480px]:flex-row lg:w-auto max-w-md gap-2">
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email address"
               required
-              className="flex-1 px-4 py-3 rounded-xl bg-white/10 text-white placeholder-white/50 border border-white/20 text-sm focus:outline-none focus:border-[#ef4934]"
+              className="min-w-0 flex-1 px-4 py-3 rounded-xl bg-white/10 text-white placeholder-white/50 border border-white/20 text-sm focus:outline-none focus:border-[#ef4934]"
             />
             <button
               type="submit"
-              className="px-6 py-3 rounded-xl bg-[#ef4934] hover:bg-[#df3a25] text-white font-bold text-sm flex items-center gap-2 transition-all shadow-lg shadow-[#ef4934]/30 flex-none"
+              className="px-6 py-3 rounded-xl bg-[#ef4934] hover:bg-[#df3a25] text-white font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-[#ef4934]/30 flex-none"
             >
               <span>Join Club</span>
               <Icon name="arrow" size={16} />

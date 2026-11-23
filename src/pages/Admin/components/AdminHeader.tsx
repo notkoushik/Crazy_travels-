@@ -5,9 +5,10 @@ import { Icon } from '../../../components/Icon'
 interface AdminHeaderProps {
   navigate: (route: RouteName) => void
   isDatabaseConnected: boolean
+  onLogout?: () => void
 }
 
-export function AdminHeader({ navigate, isDatabaseConnected }: AdminHeaderProps) {
+export function AdminHeader({ navigate, isDatabaseConnected, onLogout }: AdminHeaderProps) {
   return (
     <header className="h-16 border-b border-slate-200/80 bg-white/95 backdrop-blur-md px-6 flex items-center justify-between sticky top-0 z-40">
       <div className="flex items-center gap-4">
@@ -63,6 +64,16 @@ export function AdminHeader({ navigate, isDatabaseConnected }: AdminHeaderProps)
           </div>
           <span className="hidden sm:inline font-inter">Super Admin</span>
         </div>
+        {onLogout && (
+          <button
+            onClick={onLogout}
+            className="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 text-xs font-semibold transition-colors flex items-center gap-1.5"
+            title="Lock Operations Console and wipe customer records from memory"
+          >
+            <Icon name="shield" size={13} className="text-rose-600" />
+            <span className="hidden sm:inline">Lock / Sign Out</span>
+          </button>
+        )}
       </div>
     </header>
   )

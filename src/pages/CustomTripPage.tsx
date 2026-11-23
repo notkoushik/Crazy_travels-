@@ -471,7 +471,7 @@ export function CustomTripPage({ navigate, onToast }: CustomTripPageProps) {
 
           {/* Right Live Itinerary Summary Panel */}
           <div>
-            <div className="sticky top-6 bg-white p-6 rounded-3xl border border-gray-100 shadow-lg space-y-4">
+            <div className="sticky top-[calc(var(--site-nav-height)+1.5rem)] bg-white p-6 rounded-3xl border border-gray-100 shadow-lg space-y-4">
               <span className="text-[10px] uppercase font-bold text-[#ef4934] tracking-widest block">
                 Live Itinerary Blueprint
               </span>

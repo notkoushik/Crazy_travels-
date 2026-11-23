@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Currency, RouteName } from './types/travel'
 import { allPackages, nationalDestinations } from './data/travelData'
 import { Header } from './components/Header'
@@ -13,7 +13,7 @@ import { CurrencyModal } from './components/Modals/CurrencyModal'
 import { LiveChatDrawer } from './components/Modals/LiveChatDrawer'
 import { StoryViewerModal } from './components/Modals/StoryViewerModal'
 import { WhatsAppFloat } from './components/WhatsAppFloat'
-import { HeroInquiryCard } from './components/HeroInquiryCard'
+import { TripInquiry } from './components/TripInquiry'
 
 // Pages
 import { HomePage } from './pages/HomePage'
@@ -50,7 +50,9 @@ export default function App() {
 
   // Express Interest / Hero Inquiry State
   const [isHeroInquiryOpen, setIsHeroInquiryOpen] = useState(true)
+  const [reopenHeroInquiry, setReopenHeroInquiry] = useState(false)
   const [inquiryModalOpen, setInquiryModalOpen] = useState(false)
+  const inquiryLauncherRef = useRef<HTMLButtonElement>(null)
 
   // Modals state
   const [authModalOpen, setAuthModalOpen] = useState(false)
@@ -66,13 +68,47 @@ export default function App() {
   })
 
   const handleOpenExpressInterest = () => {
-    if (route === 'home') {
-      setIsHeroInquiryOpen(true)
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-    } else {
+    if (route !== 'home' || !window.matchMedia('(min-width: 64rem)').matches) {
       setInquiryModalOpen(true)
+      return
     }
+
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (reduceMotion || window.scrollY <= 4) {
+      window.scrollTo({ top: 0, behavior: 'auto' })
+      setIsHeroInquiryOpen(true)
+      return
+    }
+
+    setReopenHeroInquiry(true)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
+
+  useEffect(() => {
+    if (!reopenHeroInquiry) return
+    if (route !== 'home') {
+      setReopenHeroInquiry(false)
+      return
+    }
+
+    const revealAtTop = () => {
+      if (window.scrollY > 4) return
+      setIsHeroInquiryOpen(true)
+      setReopenHeroInquiry(false)
+    }
+    const finishScroll = () => {
+      revealAtTop()
+      setReopenHeroInquiry(false)
+    }
+
+    revealAtTop()
+    window.addEventListener('scroll', revealAtTop, { passive: true })
+    document.addEventListener('scrollend', finishScroll)
+    return () => {
+      window.removeEventListener('scroll', revealAtTop)
+      document.removeEventListener('scrollend', finishScroll)
+    }
+  }, [reopenHeroInquiry, route])
 
   // Sync hash changes
   useEffect(() => {
@@ -112,22 +148,6 @@ export default function App() {
 
   // Render current page based on route
   const renderCurrentPage = () => {
-    if (route === 'home') {
-      return (
-        <HomePage
-          navigate={navigate}
-          saved={saved}
-          onToggleSave={toggleSaved}
-          onBook={handleOpenBooking}
-          currency={currency}
-          onToast={showToast}
-          onOpenStory={handleOpenStory}
-          isHeroInquiryOpen={isHeroInquiryOpen}
-          onCloseHeroInquiry={() => setIsHeroInquiryOpen(false)}
-        />
-      )
-    }
-
     if (route === 'admin') {
       return <AdminPage navigate={navigate} onToast={showToast} />
     }
@@ -162,7 +182,10 @@ export default function App() {
     if (route.startsWith('destination/')) {
       const slug = route.replace('destination/', '')
       const dest =
-        store.destinations.find((d) => d.slug === slug) || store.destinations[0]
+        store.destinations.find((d) => d.slug === slug) ??
+        nationalDestinations.find((d) => d.slug === slug) ??
+        store.destinations[0] ??
+        nationalDestinations[0]
       return (
         <DestinationPage
           destination={dest}
@@ -237,6 +260,7 @@ export default function App() {
         onOpenStory={handleOpenStory}
         isHeroInquiryOpen={isHeroInquiryOpen}
         onCloseHeroInquiry={() => setIsHeroInquiryOpen(false)}
+        inquiryLauncherRef={inquiryLauncherRef}
       />
     )
   }
@@ -274,7 +298,8 @@ export default function App() {
         onOpenCurrency={() => setCurrencyModalOpen(true)}
         currentCurrency={currency}
         user={user}
-        showFlightCircle={!isHeroInquiryOpen || route !== 'home'}
+        inlineInquiryOpen={isHeroInquiryOpen && route === 'home'}
+        inquiryLauncherRef={inquiryLauncherRef}
         onOpenExpressInterest={handleOpenExpressInterest}
       />
 
@@ -285,7 +310,7 @@ export default function App() {
       <Footer navigate={navigate} onToast={showToast} />
 
       {/* High-Quality WhatsApp Live Concierge Button */}
-      <WhatsAppFloat phoneNumber="918894998808" />
+      <WhatsAppFloat placement={route === 'home' ? 'desktop-floating' : 'floating'} />
 
       {/* Global Toast Alert */}
       {toastMessage && (
@@ -361,17 +386,12 @@ export default function App() {
         story={activeStory}
       />
 
-      {/* Global Express Interest Inquiry Modal (when triggered via flight icon from any page/scroll) */}
-      {inquiryModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="relative max-w-sm w-full flex justify-center">
-            <HeroInquiryCard
-              onClose={() => setInquiryModalOpen(false)}
-              initialDestination="Kashmir"
-            />
-          </div>
-        </div>
-      )}
+      <TripInquiry
+        modal
+        isOpen={inquiryModalOpen}
+        onClose={() => setInquiryModalOpen(false)}
+        launcherRef={inquiryLauncherRef}
+      />
     </div>
   )
 }

@@ -1,5 +1,3 @@
-import React, { useState } from 'react'
-
 interface CrazyToursLogoProps {
   className?: string
   size?: number
@@ -48,70 +46,27 @@ export function CrazyToursLogo({
   showWordmark = true,
   light = false,
 }: CrazyToursLogoProps) {
-  const [imageFailed, setImageFailed] = useState(false)
-
   return (
-    <div className={`flex items-center gap-3 ${className}`}>
-      {/* Icon Mark Box */}
-      <div
-        className="relative rounded-xl overflow-hidden shadow-sm flex-none flex items-center justify-center p-1 border border-emerald-950/15"
-        style={{
-          width: size,
-          height: size,
-          background: 'radial-gradient(circle at 40% 30%, #ef4934 0%, #d83a26 60%, #a81c0c 100%)',
-        }}
-      >
-        {!imageFailed ? (
-          <img
-            src="/IMG_1611.PNG"
-            alt="Crazy Tours Travels Emblem"
-            className="w-full h-full object-contain rounded-lg"
-            onError={() => setImageFailed(true)}
-          />
-        ) : (
-          <svg
-            viewBox="0 0 1227 1155"
-            className="w-full h-full p-0.5"
-            fill="#ffffff"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path d={OFFICIAL_LOGO_PATH} fill="#ffffff" />
-          </svg>
-        )}
-      </div>
-
-      {/* Wordmark Typography — Professional Haute Typography */}
+    <span className={`crazy-tours-logo ${light ? 'crazy-tours-logo-light' : ''} ${className}`}>
+      <span className="crazy-tours-mark" style={{ width: size, height: size }}>
+        <svg
+          width="57%"
+          height="57%"
+          viewBox="0 0 1227 1155"
+          fill="currentColor"
+          role={showWordmark ? undefined : 'img'}
+          aria-hidden={showWordmark ? true : undefined}
+          aria-label={showWordmark ? undefined : 'Crazy Tours & Travels'}
+        >
+          <path d={OFFICIAL_LOGO_PATH} />
+        </svg>
+      </span>
       {showWordmark && (
-        <div className="flex flex-col justify-center leading-none select-none">
-          <div className="flex items-center gap-1.5">
-            <span
-              className={`font-extrabold ${
-                light ? 'text-white' : 'text-[#072f2b]'
-              }`}
-              style={{
-                fontSize: size * 0.54,
-                fontFamily: "'Plus Jakarta Sans', 'Inter Tight', sans-serif",
-                letterSpacing: '-0.04em',
-                lineHeight: 1,
-              }}
-            >
-              CRAZY
-            </span>
-            <span className="w-1.5 h-1.5 rounded-full bg-[#ef4934] shadow-[0_0_6px_rgba(239,73,52,0.5)]"></span>
-          </div>
-          <span
-            className="font-bold uppercase text-[#ef4934] mt-1"
-            style={{
-              fontSize: Math.max(8.5, size * 0.22),
-              fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif",
-              letterSpacing: '0.26em',
-              lineHeight: 1,
-            }}
-          >
-            TOURS & TRAVELS
-          </span>
-        </div>
+        <span className="crazy-tours-wordmark">
+          <span className="crazy-tours-name">Crazy</span>
+          <span className="crazy-tours-descriptor">Tours &amp; Travels</span>
+        </span>
       )}
-    </div>
+    </span>
   )
 }

@@ -1,8 +1,9 @@
-import React, { FormEvent, useEffect, useRef, useState } from 'react'
+import React, { type CSSProperties, FormEvent, type RefObject, useEffect, useRef, useState } from 'react'
 import { Currency, DestinationItem, PackageItem, RouteName } from '../types/travel'
 import { Icon } from '../components/Icon'
 import { GoogleVerifiedBadge } from '../components/GoogleVerifiedBadge'
-import { HeroInquiryCard } from '../components/HeroInquiryCard'
+import { TripInquiry } from '../components/TripInquiry'
+import { WhatsAppFloat } from '../components/WhatsAppFloat'
 import { useDynamicStore } from '../services/dataStore'
 import {
   directoryGroups,
@@ -27,8 +28,9 @@ interface HomePageProps {
   currency: Currency
   onToast: (msg: string) => void
   onOpenStory: (story: any) => void
-  isHeroInquiryOpen?: boolean
-  onCloseHeroInquiry?: () => void
+  isHeroInquiryOpen: boolean
+  onCloseHeroInquiry: () => void
+  inquiryLauncherRef: RefObject<HTMLButtonElement | null>
 }
 
 export function HomePage({
@@ -39,30 +41,33 @@ export function HomePage({
   currency,
   onToast,
   onOpenStory,
-  isHeroInquiryOpen = true,
+  isHeroInquiryOpen,
   onCloseHeroInquiry,
+  inquiryLauncherRef,
 }: HomePageProps) {
   const store = useDynamicStore()
   const slides = store.heroSlides.length > 0 ? store.heroSlides : heroSlides
   const displayPackages = store.packages.length > 0 ? store.packages : allPackages
   const displayStays = store.stays.length > 0 ? store.stays : hotelStays
 
-  const [heroIndex, setHeroIndex] = useState(0)
+  const [selectedHeroIndex, setHeroIndex] = useState(0)
+  const heroIndex = selectedHeroIndex % slides.length
   const [activeService, setActiveService] = useState('Holidays')
   const [openFaq, setOpenFaq] = useState(0)
   const [directoryTab, setDirectoryTab] = useState<keyof typeof directoryGroups>('North India')
   const [searchDestination, setSearchDestination] = useState('')
   const [searchDate, setSearchDate] = useState('')
   const [searchTravellers, setSearchTravellers] = useState('2 adults')
-  const [showMotionModal, setShowMotionModal] = useState(false)
   const destinationTrack = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const timer = window.setInterval(() => {
+    if (slides.length < 2 || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+
+    const timer = window.setTimeout(() => {
       setHeroIndex((current) => (current + 1) % slides.length)
     }, 6500)
-    return () => window.clearInterval(timer)
-  }, [slides.length])
+    return () => window.clearTimeout(timer)
+  }, [heroIndex, slides.length])
 
   const moveHero = (direction: number) => {
     setHeroIndex((current) => (current + direction + slides.length) % slides.length)
@@ -89,97 +94,94 @@ export function HomePage({
   return (
     <main>
       {/* Hero Carousel Section */}
-      <section className="hero shell-wide relative overflow-hidden" aria-label="Featured journeys">
-        <div className="hero-track" style={{ transform: `translateX(-${heroIndex * 100}%)` }}>
-          {slides.map((slide, index) => (
-            <article
-              className="hero-slide"
-              key={slide.location}
-              aria-hidden={heroIndex !== index}
-              style={{
-                backgroundImage: `linear-gradient(90deg, rgba(7,47,43,.92) 0%, rgba(7,47,43,.50) 45%, rgba(7,47,43,.12) 75%), url(${slide.image})`,
-              }}
-            >
-              <div className="hero-content">
-                <span className="eyebrow keka-fade-1">
-                  <Icon name="sparkle" size={15} /> {slide.eyebrow}
-                </span>
-                <h1 className="text-white mt-4 keka-fade-2 font-inter-tight font-extrabold tracking-tight">
-                  {slide.title}
-                </h1>
-                <p className="text-[#edf7f4] mt-5 leading-relaxed keka-fade-3 text-base sm:text-lg">
-                  {slide.copy}
-                </p>
-                <div className="mt-8 flex items-center gap-4 keka-fade-4">
-                  <button
-                    onClick={() => navigate(slide.actionRoute as RouteName)}
-                    className="px-6 py-3 rounded-full bg-[#ef4934] hover:bg-[#df3a25] text-white font-bold text-sm flex items-center gap-2 shadow-lg hover:shadow-xl hover:shadow-[#ef4934]/30 active:scale-95 transition-all"
-                  >
-                    <span>Explore This Journey</span>
-                    <Icon name="arrow" size={16} />
-                  </button>
-                  <button
-                    onClick={() => navigate('packages')}
-                    className="px-6 py-3 rounded-full bg-white/10 hover:bg-white/20 text-white font-semibold text-sm backdrop-blur-sm active:scale-95 transition-all"
-                  >
-                    View All Holidays
-                  </button>
+      <div className="shell-wide relative home-hero-frame">
+        <section className="hero" aria-label="Featured journeys">
+          <div className="hero-track" style={{ transform: `translateX(-${heroIndex * 100}%)` }}>
+            {slides.map((slide, index) => (
+              <article
+                className="hero-slide"
+                key={slide.location}
+                aria-hidden={heroIndex !== index}
+                inert={heroIndex !== index}
+                style={{ '--hero-image': `url(${JSON.stringify(slide.image)})` } as CSSProperties}
+              >
+                <div className="hero-content">
+                  <span className="eyebrow keka-fade-1">
+                    <Icon name="sparkle" size={15} /> {slide.eyebrow}
+                  </span>
+                  <h1 className="text-white mt-4 keka-fade-2 font-inter-tight font-extrabold tracking-tight">
+                    {slide.title}
+                  </h1>
+                  <p className="text-[#edf7f4] mt-5 leading-relaxed keka-fade-3 text-base sm:text-lg">
+                    {slide.copy}
+                  </p>
+                  <div className="hero-actions mt-8 flex items-center gap-4 keka-fade-4">
+                    <button
+                      onClick={() => navigate(slide.actionRoute as RouteName)}
+                      className="hero-action-primary px-6 py-3 rounded-full bg-[#ef4934] hover:bg-[#df3a25] text-white font-bold text-sm flex items-center gap-2 shadow-lg hover:shadow-xl hover:shadow-[#ef4934]/30 active:scale-95 transition-all"
+                    >
+                      <span className="hidden md:inline">Explore This Journey</span>
+                      <span className="md:hidden">Explore trip</span>
+                      <Icon name="arrow" size={16} />
+                    </button>
+                    <button
+                      onClick={() => navigate('packages')}
+                      className="hero-action-secondary px-6 py-3 rounded-full bg-white/10 hover:bg-white/20 text-white font-semibold text-sm backdrop-blur-sm active:scale-95 transition-all"
+                    >
+                      <span className="hidden md:inline">View All Holidays</span>
+                      <span className="md:hidden">All holidays</span>
+                    </button>
+                  </div>
                 </div>
-              </div>
-              <div className="hero-note">
-                <span>Featured Journey</span>
-                <strong>{slide.location}</strong>
-              </div>
-            </article>
-          ))}
-        </div>
-        <button
-          className="hero-arrow hero-arrow-left"
-          onClick={() => moveHero(-1)}
-          aria-label="Previous featured journey"
-        >
-          <Icon name="chevron" />
-        </button>
-        <button
-          className="hero-arrow hero-arrow-right"
-          onClick={() => moveHero(1)}
-          aria-label="Next featured journey"
-        >
-          <Icon name="chevron" />
-        </button>
-        <div className="hero-dots">
-          {slides.map((slide, index) => (
-            <button
-              key={slide.location}
-              className={heroIndex === index ? 'active' : ''}
-              onClick={() => setHeroIndex(index)}
-              aria-label={`Show slide ${index + 1}`}
-            />
-          ))}
-        </div>
-
-        {/* Desktop Signature Clean Trip Details & Inquiry Stage (Direct Pop-Up, No Childish Flight Animation) */}
-        {isHeroInquiryOpen && (
-          <div className="hero-flight-stage hidden lg:flex flex-col items-center justify-center absolute right-[5%] xl:right-[7%] top-[45%] -translate-y-1/2 z-20 pointer-events-auto keka-hero-card-float">
-            <HeroInquiryCard
-              initialDestination={slides[heroIndex]?.location || 'Kashmir'}
-              onClose={onCloseHeroInquiry}
-            />
+                <div className="hero-note">
+                  <span>Featured Journey</span>
+                  <strong>{slide.location}</strong>
+                </div>
+              </article>
+            ))}
           </div>
-        )}
-      </section>
-
-      {/* Clean Modal for Trip Details & Inquiry */}
-      {showMotionModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="relative max-w-sm w-full flex justify-center">
-            <HeroInquiryCard
-              onClose={() => setShowMotionModal(false)}
-              initialDestination={slides[heroIndex]?.location || 'Kashmir'}
-            />
-          </div>
-        </div>
-      )}
+          {slides.length > 1 && (
+            <div className="hero-controls">
+              <div className="hero-dots">
+                {slides.map((slide, index) => (
+                  <button
+                    key={slide.location}
+                    type="button"
+                    className={heroIndex === index ? 'active' : ''}
+                    onClick={() => setHeroIndex(index)}
+                    aria-label={`Show slide ${index + 1}`}
+                    aria-current={heroIndex === index ? 'true' : undefined}
+                  />
+                ))}
+              </div>
+              <div className="hero-arrows">
+                <button
+                  type="button"
+                  className="hero-arrow hero-arrow-left"
+                  onClick={() => moveHero(-1)}
+                  aria-label="Previous featured journey"
+                >
+                  <Icon name="chevron" />
+                </button>
+                <button
+                  type="button"
+                  className="hero-arrow hero-arrow-right"
+                  onClick={() => moveHero(1)}
+                  aria-label="Next featured journey"
+                >
+                  <Icon name="chevron" />
+                </button>
+              </div>
+            </div>
+          )}
+        </section>
+        <TripInquiry
+          isOpen={isHeroInquiryOpen}
+          onClose={onCloseHeroInquiry}
+          launcherRef={inquiryLauncherRef}
+          initialDestination={slides[heroIndex]?.location}
+        />
+      </div>
 
       {/* Floating Dynamic Search Widget */}
       <section className="search-wrap shell">
@@ -222,7 +224,7 @@ export function HomePage({
                   type="text"
                   value={searchDate}
                   onChange={(e) => setSearchDate(e.target.value)}
-                  placeholder="Choose departure dates"
+                  placeholder="Travel dates"
                 />
               </span>
             </label>
@@ -247,6 +249,7 @@ export function HomePage({
             </button>
           </form>
         </div>
+        <WhatsAppFloat placement="mobile-inline" />
       </section>
 
       {/* Trust Strip */}

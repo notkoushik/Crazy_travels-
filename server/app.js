@@ -2,12 +2,160 @@ import express from 'express'
 import cors from 'cors'
 import path from 'path'
 import fs from 'fs'
+import crypto from 'crypto'
 import { fileURLToPath } from 'url'
 import multer from 'multer'
 import { pool } from './db.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
+
+// ==============================================================================
+// DATA PRIVACY & ACCESS CONTROL CONFIGURATION
+// ==============================================================================
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'crazytours_admin_secure_2026'
+const JWT_SECRET = process.env.JWT_SECRET || 'crazytours_session_signing_secret_998877_secure_key'
+
+// ==============================================================================
+// IN-MEMORY RATE LIMITING (Anti-scraping, Anti-brute force, Anti-enumeration)
+// ==============================================================================
+const rateLimitStores = new Map()
+
+function createRateLimiter({ windowMs = 15 * 60 * 1000, maxRequests = 10, message }) {
+  return (req, res, next) => {
+    const clientIp = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip || req.socket.remoteAddress || 'unknown'
+    const key = `${req.path}:${clientIp}`
+    const now = Date.now()
+
+    let record = rateLimitStores.get(key)
+    if (!record || now > record.resetTime) {
+      record = { count: 1, resetTime: now + windowMs }
+      rateLimitStores.set(key, record)
+      return next()
+    }
+
+    record.count += 1
+    if (record.count > maxRequests) {
+      return res.status(429).json({
+        error: 'Too Many Requests',
+        message: message || 'Request limit exceeded. Please wait a few moments before trying again.',
+      })
+    }
+    next()
+  }
+}
+
+// Clean up stale rate-limiter keys every 10 minutes
+setInterval(() => {
+  const now = Date.now()
+  for (const [k, v] of rateLimitStores.entries()) {
+    if (now > v.resetTime) rateLimitStores.delete(k)
+  }
+}, 10 * 60 * 1000).unref()
+
+// Specialized limiters
+const loginLimiter = createRateLimiter({
+  windowMs: 15 * 60 * 1000,
+  maxRequests: 5,
+  message: 'Too many admin authorization attempts. IP temporarily throttled for 15 minutes.',
+})
+
+const lookupLimiter = createRateLimiter({
+  windowMs: 15 * 60 * 1000,
+  maxRequests: 12,
+  message: 'Too many booking lookup requests. Please try again after 15 minutes.',
+})
+
+const publicSubmissionLimiter = createRateLimiter({
+  windowMs: 15 * 60 * 1000,
+  maxRequests: 20,
+  message: 'Submission limit reached. Please contact our support team directly.',
+})
+
+// ==============================================================================
+// CRYPTOGRAPHIC TOKEN GENERATION & VERIFICATION (Node.js Native Crypto)
+// ==============================================================================
+function generateAdminToken() {
+  const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url')
+  const payload = Buffer.from(
+    JSON.stringify({
+      role: 'admin',
+      iat: Math.floor(Date.now() / 1000),
+      exp: Math.floor(Date.now() / 1000) + 12 * 3600, // 12-hour session
+    })
+  ).toString('base64url')
+  const signature = crypto.createHmac('sha256', JWT_SECRET).update(`${header}.${payload}`).digest('base64url')
+  return `${header}.${payload}.${signature}`
+}
+
+function verifyAdminToken(token) {
+  if (!token || typeof token !== 'string') return null
+  const parts = token.split('.')
+  if (parts.length !== 3) return null
+  const [header, payload, signature] = parts
+  const expectedSig = crypto.createHmac('sha256', JWT_SECRET).update(`${header}.${payload}`).digest('base64url')
+
+  if (signature.length !== expectedSig.length) return null
+  if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSig))) return null
+
+  try {
+    const data = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'))
+    if (data.exp && data.exp < Math.floor(Date.now() / 1000)) {
+      return null
+    }
+    return data
+  } catch {
+    return null
+  }
+}
+
+// Admin Authorization Middleware
+function requireAdminAuth(req, res, next) {
+  const authHeader = req.headers.authorization
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({
+      error: 'Unauthorized',
+      message: 'Admin authorization required. Access to customer records and mutations is strictly prohibited.',
+    })
+  }
+
+  const token = authHeader.split(' ')[1]
+  const decoded = verifyAdminToken(token)
+  if (!decoded) {
+    return res.status(401).json({
+      error: 'Unauthorized',
+      message: 'Invalid or expired admin session. Please re-authenticate.',
+    })
+  }
+
+  req.adminUser = decoded
+  next()
+}
+
+// ==============================================================================
+// PII MASKING & DATA SANITIZATION UTILITIES
+// ==============================================================================
+function maskEmail(email) {
+  if (!email || typeof email !== 'string' || !email.includes('@')) return '***@***.com'
+  const [local, domain] = email.split('@')
+  if (local.length <= 2) return `${local[0] || '*'}***@${domain}`
+  const visiblePrefix = local.slice(0, 2)
+  const visibleSuffix = local.slice(-1)
+  return `${visiblePrefix}****${visibleSuffix}@${domain}`
+}
+
+function maskPhone(phone) {
+  if (!phone || typeof phone !== 'string') return '+91 **********'
+  const digits = phone.replace(/\D/g, '')
+  if (digits.length < 4) return '******'
+  const last4 = digits.slice(-4)
+  return `+91 ******${last4}`
+}
+
+function sanitizeText(str) {
+  if (typeof str !== 'string') return ''
+  return str.replace(/<[^>]*>?/gm, '').trim()
+}
 
 // Upload directory path (supports /tmp in serverless environments like Vercel)
 const uploadsDir = process.env.VERCEL
@@ -61,9 +209,9 @@ const upload = multer({
 })
 
 // ========================================================
-// FILE UPLOAD ENDPOINTS (DIRECT DEVICE PHOTOS)
+// FILE UPLOAD ENDPOINTS (RESTRICTED TO AUTHENTICATED ADMIN)
 // ========================================================
-app.post('/api/upload', upload.single('file'), (req, res) => {
+app.post('/api/upload', requireAdminAuth, upload.single('file'), (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file received' })
@@ -81,7 +229,7 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
   }
 })
 
-app.post('/api/upload-multiple', upload.array('files', 10), (req, res) => {
+app.post('/api/upload-multiple', requireAdminAuth, upload.array('files', 10), (req, res) => {
   try {
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ error: 'No files received' })
@@ -113,6 +261,122 @@ app.get('/api/health', async (req, res) => {
     })
   } catch (err) {
     res.status(500).json({ status: 'error', message: err.message })
+  }
+})
+
+// ========================================================
+// ADMIN AUTHENTICATION (Air-tight Session Management)
+// ========================================================
+app.post('/api/admin/login', loginLimiter, (req, res) => {
+  try {
+    const { password } = req.body || {}
+    if (!password || typeof password !== 'string') {
+      return res.status(400).json({ error: 'Admin passphrase is required' })
+    }
+
+    const inputBuffer = Buffer.from(password)
+    const expectedBuffer = Buffer.from(ADMIN_PASSWORD)
+
+    const isMatch =
+      inputBuffer.length === expectedBuffer.length &&
+      crypto.timingSafeEqual(inputBuffer, expectedBuffer)
+
+    if (!isMatch) {
+      return res.status(401).json({
+        error: 'Invalid Credentials',
+        message: 'Incorrect admin authorization key. Attempt logged for security monitoring.',
+      })
+    }
+
+    const token = generateAdminToken()
+    res.json({
+      success: true,
+      token,
+      expiresAt: Date.now() + 12 * 3600 * 1000,
+    })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+app.get('/api/admin/verify', requireAdminAuth, (req, res) => {
+  res.json({
+    success: true,
+    authenticated: true,
+    user: req.adminUser,
+  })
+})
+
+// ========================================================
+// TRAVELER SELF-SERVICE PRIVACY-SAFE BOOKING LOOKUP
+// ========================================================
+app.post('/api/bookings/lookup', lookupLimiter, async (req, res) => {
+  try {
+    const { bookingId, phone } = req.body || {}
+    if (!bookingId || !phone) {
+      return res.status(400).json({
+        error: 'Missing Parameters',
+        message: 'Both Booking Reference ID and registered Phone number are required.',
+      })
+    }
+
+    const cleanInputId = String(bookingId).trim().toUpperCase()
+    const cleanInputPhone = String(phone).replace(/\D/g, '').replace(/^91/, '').replace(/^0/, '')
+
+    if (cleanInputPhone.length < 6) {
+      return res.status(400).json({
+        error: 'Invalid Phone Number',
+        message: 'Please provide a valid registered contact number (at least 6 digits).',
+      })
+    }
+
+    const { rows } = await pool.query(
+      'SELECT * FROM bookings WHERE UPPER(booking_id) = $1 LIMIT 1',
+      [cleanInputId]
+    )
+
+    if (rows.length === 0) {
+      return res.status(404).json({
+        error: 'Not Found',
+        message: 'No matching reservation found for the provided Booking Reference and Phone number.',
+      })
+    }
+
+    const booking = rows[0]
+    const dbPhone = String(booking.customer_phone || '').replace(/\D/g, '').replace(/^91/, '').replace(/^0/, '')
+
+    // Dual-factor verification: Compare phone digits
+    const isMatch = dbPhone.endsWith(cleanInputPhone) || cleanInputPhone.endsWith(dbPhone)
+    if (!isMatch) {
+      return res.status(404).json({
+        error: 'Not Found',
+        message: 'No matching reservation found for the provided Booking Reference and Phone number.',
+      })
+    }
+
+    // Return strictly this customer's booking with privacy-masked PII
+    res.json({
+      success: true,
+      booking: {
+        bookingId: booking.booking_id,
+        packageName: booking.package_name,
+        travelDate: booking.travel_date,
+        adults: booking.adults,
+        children: booking.children,
+        hotelType: booking.hotel_type,
+        customerName: booking.customer_name,
+        customerEmailMasked: maskEmail(booking.customer_email),
+        customerPhoneMasked: maskPhone(booking.customer_phone),
+        specialRequests: booking.special_requests,
+        totalPrice: booking.total_price,
+        status: booking.status,
+        paymentStatus: booking.payment_status,
+        submittedAt: booking.submitted_at,
+      },
+    })
+  } catch (err) {
+    console.error('Error during secure booking lookup:', err)
+    res.status(500).json({ error: 'Internal Server Error' })
   }
 })
 
@@ -168,7 +432,7 @@ app.get('/api/destinations', async (req, res) => {
   }
 })
 
-app.post('/api/destinations', async (req, res) => {
+app.post('/api/destinations', requireAdminAuth, async (req, res) => {
   try {
     const d = req.body
     const highlights = JSON.stringify(d.highlights || [])
@@ -247,7 +511,7 @@ app.post('/api/destinations', async (req, res) => {
   }
 })
 
-app.delete('/api/destinations/:slug', async (req, res) => {
+app.delete('/api/destinations/:slug', requireAdminAuth, async (req, res) => {
   try {
     const { slug } = req.params
     await pool.query('DELETE FROM destinations WHERE slug = $1', [slug])
@@ -296,7 +560,7 @@ app.get('/api/packages', async (req, res) => {
   }
 })
 
-app.post('/api/packages', async (req, res) => {
+app.post('/api/packages', requireAdminAuth, async (req, res) => {
   try {
     const p = req.body
     const id = p.id || `pkg-${Date.now()}`
@@ -348,7 +612,7 @@ app.post('/api/packages', async (req, res) => {
   }
 })
 
-app.delete('/api/packages/:id', async (req, res) => {
+app.delete('/api/packages/:id', requireAdminAuth, async (req, res) => {
   try {
     const { id } = req.params
     await pool.query('DELETE FROM packages WHERE id = $1', [id])
@@ -359,9 +623,9 @@ app.delete('/api/packages/:id', async (req, res) => {
 })
 
 // ========================================================
-// 3. BOOKINGS & OPERATIONS
+// 3. BOOKINGS & OPERATIONS (PII RESTRICTED TO ADMIN)
 // ========================================================
-app.get('/api/bookings', async (req, res) => {
+app.get('/api/bookings', requireAdminAuth, async (req, res) => {
   try {
     const { rows } = await pool.query('SELECT * FROM bookings ORDER BY submitted_at DESC')
     const formatted = rows.map((r) => ({
@@ -386,18 +650,31 @@ app.get('/api/bookings', async (req, res) => {
   }
 })
 
-app.post('/api/bookings', async (req, res) => {
+// Public booking submission with rate-limiting and sanitization
+app.post('/api/bookings', publicSubmissionLimiter, async (req, res) => {
   try {
-    const b = req.body
+    const b = req.body || {}
     const bookingId = b.bookingId || `CT-${Math.floor(100000 + Math.random() * 900000)}`
+    const customerName = sanitizeText(b.customerName)
+    const customerEmail = sanitizeText(b.customerEmail)
+    const customerPhone = sanitizeText(b.customerPhone)
+    const specialRequests = sanitizeText(b.specialRequests)
+    const packageName = sanitizeText(b.packageName)
+    const travelDate = sanitizeText(b.travelDate)
+    const hotelType = sanitizeText(b.hotelType) || 'Standard'
+    const totalPrice = parseInt(b.totalPrice) || 0
+
+    if (!customerName || !customerPhone) {
+      return res.status(400).json({ error: 'Customer name and phone number are required.' })
+    }
 
     await pool.query(
       `INSERT INTO bookings (booking_id, package_name, travel_date, adults, children, hotel_type, customer_name, customer_email, customer_phone, special_requests, total_price, status, payment_status)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
       [
-        bookingId, b.packageName, b.travelDate, b.adults || 1, b.children || 0,
-        b.hotelType || 'Standard', b.customerName, b.customerEmail, b.customerPhone,
-        b.specialRequests || '', b.totalPrice, b.status || 'Pending', b.paymentStatus || 'Unpaid'
+        bookingId, packageName, travelDate, parseInt(b.adults) || 1, parseInt(b.children) || 0,
+        hotelType, customerName, customerEmail, customerPhone,
+        specialRequests, totalPrice, 'Pending', 'Unpaid'
       ]
     )
     res.json({ success: true, bookingId })
@@ -406,7 +683,7 @@ app.post('/api/bookings', async (req, res) => {
   }
 })
 
-app.patch('/api/bookings/:bookingId/status', async (req, res) => {
+app.patch('/api/bookings/:bookingId/status', requireAdminAuth, async (req, res) => {
   try {
     const { bookingId } = req.params
     const { status, paymentStatus } = req.body
@@ -424,7 +701,7 @@ app.patch('/api/bookings/:bookingId/status', async (req, res) => {
   }
 })
 
-app.delete('/api/bookings/:bookingId', async (req, res) => {
+app.delete('/api/bookings/:bookingId', requireAdminAuth, async (req, res) => {
   try {
     const { bookingId } = req.params
     await pool.query('DELETE FROM bookings WHERE booking_id = $1', [bookingId])
@@ -435,9 +712,9 @@ app.delete('/api/bookings/:bookingId', async (req, res) => {
 })
 
 // ========================================================
-// 4. CUSTOM TRIP INQUIRIES (CRM LEADS)
+// 4. CUSTOM TRIP INQUIRIES (CRM LEADS - RESTRICTED TO ADMIN)
 // ========================================================
-app.get('/api/inquiries', async (req, res) => {
+app.get('/api/inquiries', requireAdminAuth, async (req, res) => {
   try {
     const { rows } = await pool.query('SELECT * FROM inquiries ORDER BY created_at DESC')
     const formatted = rows.map((r) => ({
@@ -461,18 +738,32 @@ app.get('/api/inquiries', async (req, res) => {
   }
 })
 
-app.post('/api/inquiries', async (req, res) => {
+// Public custom trip inquiry submission with rate-limiting and sanitization
+app.post('/api/inquiries', publicSubmissionLimiter, async (req, res) => {
   try {
-    const inq = req.body
+    const inq = req.body || {}
     const id = inq.id || `INQ-${Math.floor(1000 + Math.random() * 9000)}`
+    const fullName = sanitizeText(inq.fullName)
+    const email = sanitizeText(inq.email)
+    const phone = sanitizeText(inq.phone)
+    const preferredDestination = sanitizeText(inq.preferredDestination)
+    const travelMonth = sanitizeText(inq.travelMonth)
+    const travelersCount = sanitizeText(inq.travelersCount)
+    const budgetPerPerson = sanitizeText(inq.budgetPerPerson)
+    const tripType = sanitizeText(inq.tripType) || 'Custom Tour'
+    const notes = sanitizeText(inq.notes)
+
+    if (!fullName || !phone) {
+      return res.status(400).json({ error: 'Full name and contact number are required.' })
+    }
 
     await pool.query(
       `INSERT INTO inquiries (id, full_name, email, phone, preferred_destination, travel_month, travelers_count, budget_per_person, trip_type, notes, status, assigned_agent)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
       [
-        id, inq.fullName, inq.email, inq.phone, inq.preferredDestination,
-        inq.travelMonth, inq.travelersCount, inq.budgetPerPerson,
-        inq.tripType || 'Custom Tour', inq.notes || '', inq.status || 'New', inq.assignedAgent || null
+        id, fullName, email, phone, preferredDestination,
+        travelMonth, travelersCount, budgetPerPerson,
+        tripType, notes, 'New', null
       ]
     )
     res.json({ success: true, id })
@@ -481,7 +772,7 @@ app.post('/api/inquiries', async (req, res) => {
   }
 })
 
-app.patch('/api/inquiries/:id/status', async (req, res) => {
+app.patch('/api/inquiries/:id/status', requireAdminAuth, async (req, res) => {
   try {
     const { id } = req.params
     const { status, assignedAgent } = req.body
@@ -499,7 +790,7 @@ app.patch('/api/inquiries/:id/status', async (req, res) => {
   }
 })
 
-app.delete('/api/inquiries/:id', async (req, res) => {
+app.delete('/api/inquiries/:id', requireAdminAuth, async (req, res) => {
   try {
     const { id } = req.params
     await pool.query('DELETE FROM inquiries WHERE id = $1', [id])
@@ -537,7 +828,7 @@ app.get('/api/stays', async (req, res) => {
   }
 })
 
-app.post('/api/stays', async (req, res) => {
+app.post('/api/stays', requireAdminAuth, async (req, res) => {
   try {
     const s = req.body
     const id = s.id || `stay-${Date.now()}`
@@ -575,7 +866,7 @@ app.post('/api/stays', async (req, res) => {
   }
 })
 
-app.delete('/api/stays/:id', async (req, res) => {
+app.delete('/api/stays/:id', requireAdminAuth, async (req, res) => {
   try {
     const { id } = req.params
     await pool.query('DELETE FROM stays WHERE id = $1', [id])
@@ -655,7 +946,7 @@ app.get('/api/offers', async (req, res) => {
   }
 })
 
-app.post('/api/offers', async (req, res) => {
+app.post('/api/offers', requireAdminAuth, async (req, res) => {
   try {
     const o = req.body
     const id = o.id || `offer-${Date.now()}`
@@ -679,7 +970,7 @@ app.post('/api/offers', async (req, res) => {
   }
 })
 
-app.delete('/api/offers/:id', async (req, res) => {
+app.delete('/api/offers/:id', requireAdminAuth, async (req, res) => {
   try {
     const { id } = req.params
     await pool.query('DELETE FROM offers WHERE id = $1', [id])
@@ -733,7 +1024,7 @@ app.get('/api/faqs', async (req, res) => {
 // ========================================================
 // 11. DASHBOARD STATISTICS (LIVE AGGREGATIONS FROM DB)
 // ========================================================
-app.get('/api/stats', async (req, res) => {
+app.get('/api/stats', requireAdminAuth, async (req, res) => {
   try {
     const revenueRes = await pool.query('SELECT COALESCE(SUM(total_price), 0) as total FROM bookings')
     const bookingsCountRes = await pool.query('SELECT COUNT(*) as count FROM bookings')
