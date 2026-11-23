@@ -1,14 +1,9 @@
 import express from 'express'
 import cors from 'cors'
-import path from 'path'
-import fs from 'fs'
 import crypto from 'crypto'
 import { fileURLToPath } from 'url'
-import multer from 'multer'
+import { registerCatalogMedia } from './catalog_media.js'
 import { pool } from './db.js'
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
 
 // ==============================================================================
 // DATA PRIVACY & ACCESS CONTROL CONFIGURATION
@@ -157,23 +152,11 @@ function sanitizeText(str) {
   return str.replace(/<[^>]*>?/gm, '').trim()
 }
 
-// Upload directory path (supports /tmp in serverless environments like Vercel)
-const uploadsDir = process.env.VERCEL
-  ? '/tmp'
-  : path.join(__dirname, '..', 'public', 'uploads')
-if (!fs.existsSync(uploadsDir)) {
-  try {
-    fs.mkdirSync(uploadsDir, { recursive: true })
-  } catch (err) {
-    // Ignore in read-only serverless environments
-  }
-}
-
 const app = express()
 
 app.use(cors())
 app.use(express.json({ limit: '50mb' }))
-app.use('/uploads', express.static(uploadsDir))
+app.use('/uploads', express.static(fileURLToPath(new URL('../public/uploads', import.meta.url))))
 
 // Normalize Vercel serverless function paths so /destinations maps to /api/destinations
 app.use((req, res, next) => {
@@ -183,71 +166,7 @@ app.use((req, res, next) => {
   next()
 })
 
-// Multer Storage Configuration
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, uploadsDir)
-  },
-  filename: function (req, file, cb) {
-    const ext = path.extname(file.originalname)
-    const base = path.basename(file.originalname, ext).replace(/[^a-zA-Z0-9_-]/g, '_')
-    const unique = `${Date.now()}-${Math.round(Math.random() * 1e6)}`
-    cb(null, `${base}-${unique}${ext}`)
-  },
-})
-
-const upload = multer({
-  storage,
-  limits: { fileSize: 15 * 1024 * 1024 }, // 15 MB limit
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
-      cb(null, true)
-    } else {
-      cb(new Error('Only image files (JPEG, PNG, WebP, AVIF) are allowed'))
-    }
-  },
-})
-
-// ========================================================
-// FILE UPLOAD ENDPOINTS (RESTRICTED TO AUTHENTICATED ADMIN)
-// ========================================================
-app.post('/api/upload', requireAdminAuth, upload.single('file'), (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ error: 'No file received' })
-    }
-    const fileUrl = `/uploads/${req.file.filename}`
-    res.json({
-      success: true,
-      url: fileUrl,
-      filename: req.file.filename,
-      size: req.file.size,
-      mimetype: req.file.mimetype,
-    })
-  } catch (err) {
-    res.status(500).json({ error: err.message })
-  }
-})
-
-app.post('/api/upload-multiple', requireAdminAuth, upload.array('files', 10), (req, res) => {
-  try {
-    if (!req.files || req.files.length === 0) {
-      return res.status(400).json({ error: 'No files received' })
-    }
-    const files = req.files.map((f) => ({
-      url: `/uploads/${f.filename}`,
-      filename: f.filename,
-      size: f.size,
-    }))
-    res.json({
-      success: true,
-      urls: files.map((f) => f.url),
-      files,
-    })
-  } catch (err) {
-    res.status(500).json({ error: err.message })
-  }
-})
+registerCatalogMedia(app, pool, requireAdminAuth)
 
 // Health check
 app.get('/api/health', async (req, res) => {

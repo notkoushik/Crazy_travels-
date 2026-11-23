@@ -1,6 +1,7 @@
-import React, { useState, useRef } from 'react'
-import { Icon } from './Icon'
+import { useId, useRef, useState, type DragEvent } from 'react'
 import { getAdminAuthHeaders } from '../services/dataStore'
+import { CatalogPhoto } from './CatalogPhoto'
+import { Icon } from './Icon'
 
 interface ImageDropzoneProps {
   value: string
@@ -12,231 +13,265 @@ interface ImageDropzoneProps {
   helperText?: string
 }
 
+const maxUploadBytes = 4 * 1024 * 1024
+const acceptedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif']
+
+async function loadPhoto(url: string) {
+  const image = new Image()
+  let timeout: number | undefined
+  const deadline = new Promise<never>((_, reject) => {
+    timeout = window.setTimeout(() => reject(new Error('The photo took too long to load.')), 12_000)
+  })
+  image.src = url
+  try {
+    await Promise.race([image.decode(), deadline])
+    return image
+  } finally {
+    window.clearTimeout(timeout)
+  }
+}
+
+export async function validateCoverPhoto(value: string, previous?: string) {
+  const url = value.trim()
+  if (!url) throw new Error('Add a cover photo before saving.')
+  if (url === previous?.trim()) return url
+  if (!/^(https?:\/\/|\/(?!\/))/i.test(url))
+    throw new Error('Enter a photo URL or upload an image from your device.')
+  try {
+    await loadPhoto(url)
+    return url
+  } catch {
+    throw new Error('The cover photo could not be opened. Choose a different photo or update its link.')
+  }
+}
+
+async function prepareUpload(file: File) {
+  if (!acceptedTypes.includes(file.type)) throw new Error('Choose a JPEG, PNG, WebP, AVIF, or GIF photo.')
+  if (file.size <= maxUploadBytes) return file
+  if (file.type === 'image/gif') throw new Error('Choose a GIF that is 4 MB or smaller.')
+  if (file.size > 15 * 1024 * 1024) throw new Error('Choose a photo smaller than 15 MB.')
+
+  const url = URL.createObjectURL(file)
+  try {
+    const photo = await loadPhoto(url)
+    const canvas = document.createElement('canvas')
+    const context = canvas.getContext('2d')
+    if (!context) throw new Error('This browser couldn’t resize the photo.')
+    for (const edge of [2048, 1536, 1080]) {
+      const scale = Math.min(edge / Math.max(photo.naturalWidth, photo.naturalHeight), 1)
+      canvas.width = Math.max(1, Math.round(photo.naturalWidth * scale))
+      canvas.height = Math.max(1, Math.round(photo.naturalHeight * scale))
+      context.drawImage(photo, 0, 0, canvas.width, canvas.height)
+      const resized = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/webp', 0.85))
+      if (resized && resized.size <= maxUploadBytes) return resized
+    }
+    throw new Error('This photo is too large to upload. Choose a smaller copy.')
+  } finally {
+    URL.revokeObjectURL(url)
+  }
+}
+
 export function ImageDropzone({
   value,
   onChange,
   onUploadingChange,
-  label = 'Cover Photo Image',
-  placeholder = 'https://images.unsplash.com/...',
+  label = 'Cover photo',
+  placeholder = 'https://example.com/photo.jpg',
   aspectRatio = 'aspect-16/10',
-  helperText = 'Drop high-res JPG, PNG, or WebP photo directly from your device (Max 15MB).',
+  helperText = 'Choose a photo or drop it here. Large photos are resized before upload.',
 }: ImageDropzoneProps) {
-  const [isDragging, setIsDragging] = useState(false)
-  const [isUploading, setIsUploading] = useState(false)
-  const [uploadError, setUploadError] = useState<string | null>(null)
-  const [inputMode, setInputMode] = useState<'upload' | 'url'>('upload')
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const fieldId = useId()
+  const fileInput = useRef<HTMLInputElement>(null)
+  const pending = useRef(false)
+  const [mode, setMode] = useState<'device' | 'url'>('device')
+  const [dragging, setDragging] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [error, setError] = useState('')
+  const [loadedUrl, setLoadedUrl] = useState<string>()
+  const [failedUrl, setFailedUrl] = useState<string>()
 
-  const handleUploadFile = async (file: File) => {
-    if (!file || isUploading) return
-    if (!file.type.startsWith('image/')) {
-      setUploadError('Please select a valid image file (JPEG, PNG, WebP).')
-      return
-    }
-
+  const uploadFile = async (file: File) => {
+    if (pending.current) return
+    pending.current = true
+    setUploading(true)
+    onUploadingChange?.(true)
+    setError('')
     try {
-      setIsUploading(true)
-      onUploadingChange?.(true)
-      setUploadError(null)
-
-      const formData = new FormData()
-      formData.append('file', file)
-
-      const res = await fetch('/api/upload', {
+      const photo = await prepareUpload(file)
+      const form = new FormData()
+      form.append('file', photo, photo === file ? file.name : 'catalog-photo.webp')
+      const response = await fetch('/api/upload', {
         method: 'POST',
         headers: getAdminAuthHeaders(),
-        body: formData,
+        body: form,
       })
-
-      if (!res.ok) {
-        throw new Error(`Upload failed with status ${res.status}`)
+      const result = await response.json().catch(() => null)
+      if (!response.ok) {
+        if (response.status === 401 || response.status === 403)
+          throw new Error('Sign in to the admin console again before uploading.')
+        throw new Error(result?.error || 'The upload did not finish. Try again.')
       }
-
-      const data = await res.json()
-      if (data.url) {
-        onChange(data.url)
-      } else {
-        throw new Error('Server did not return a valid file URL')
+      if (typeof result?.url !== 'string' || !result.url)
+        throw new Error('The server did not return a photo link.')
+      try {
+        await loadPhoto(result.url)
+      } catch {
+        throw new Error('The uploaded photo could not be opened. Try uploading it again.')
       }
-    } catch (err: any) {
-      console.error('File upload failed:', err)
-      setUploadError(err.message || 'Failed to upload photo from device')
+      setLoadedUrl(result.url)
+      setFailedUrl(undefined)
+      onChange(result.url)
+    } catch (failure) {
+      setError(failure instanceof Error ? failure.message : 'The photo could not be uploaded.')
     } finally {
-      setIsUploading(false)
+      pending.current = false
+      setUploading(false)
       onUploadingChange?.(false)
     }
   }
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(true)
-  }
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(false)
-  }
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(false)
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      handleUploadFile(e.dataTransfer.files[0])
-    }
+  const dropPhoto = (event: DragEvent) => {
+    event.preventDefault()
+    setDragging(false)
+    const file = event.dataTransfer.files[0]
+    if (file) void uploadFile(file)
   }
 
   return (
     <div className="space-y-2 font-inter">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <label className="block text-slate-700 font-semibold text-xs font-inter-tight">
+        <label
+          htmlFor={mode === 'url' ? fieldId : `${fieldId}-file`}
+          className="text-sm font-medium text-slate-800"
+        >
           {label}
         </label>
-        <div className="flex items-center gap-1 text-[11px] bg-slate-100 p-0.5 rounded-md">
+        <div className="flex gap-1 rounded-lg bg-slate-100 p-1 text-xs">
           <button
             type="button"
-            onClick={() => setInputMode('upload')}
-            className={`px-2 py-0.5 rounded font-medium transition-colors ${
-              inputMode === 'upload'
-                ? 'bg-white text-slate-900 shadow-2xs'
-                : 'text-slate-500 hover:text-slate-900'
-            }`}
+            aria-pressed={mode === 'device'}
+            disabled={uploading}
+            onClick={() => setMode('device')}
+            className={`rounded-md px-2 py-1 ${mode === 'device' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-600'}`}
           >
-            Device Upload
+            Device upload
           </button>
           <button
             type="button"
-            onClick={() => setInputMode('url')}
-            className={`px-2 py-0.5 rounded font-medium transition-colors ${
-              inputMode === 'url'
-                ? 'bg-white text-slate-900 shadow-2xs'
-                : 'text-slate-500 hover:text-slate-900'
-            }`}
+            aria-pressed={mode === 'url'}
+            disabled={uploading}
+            onClick={() => setMode('url')}
+            className={`rounded-md px-2 py-1 ${mode === 'url' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-600'}`}
           >
             Image URL
           </button>
         </div>
       </div>
 
-      {inputMode === 'upload' ? (
-        <div className="space-y-2">
-          {/* Dropzone Container */}
-          <div
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-            onClick={() => !isUploading && fileInputRef.current?.click()}
-            className={`relative rounded-xl border-2 border-dashed transition-all cursor-pointer p-4 flex flex-col items-center justify-center text-center overflow-hidden ${
-              isDragging
-                ? 'border-slate-900 bg-slate-100/80 scale-[0.99]'
-                : value
-                ? 'border-slate-200 bg-slate-50/50 hover:border-slate-300'
-                : 'border-slate-300 bg-slate-50/80 hover:bg-slate-100/60 hover:border-slate-400'
-            }`}
-          >
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => {
-                if (e.target.files && e.target.files[0]) {
-                  handleUploadFile(e.target.files[0])
+      <input
+        id={`${fieldId}-file`}
+        ref={fileInput}
+        type="file"
+        accept={acceptedTypes.join(',')}
+        className="hidden"
+        onChange={(event) => {
+          const file = event.currentTarget.files?.[0]
+          event.currentTarget.value = ''
+          if (file) void uploadFile(file)
+        }}
+      />
+
+      {mode === 'url' && (
+        <input
+          id={fieldId}
+          type="text"
+          inputMode="url"
+          value={value}
+          onChange={(event) => {
+            setError('')
+            onChange(event.target.value)
+          }}
+          placeholder={placeholder}
+          className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-emerald-800 focus:ring-2 focus:ring-emerald-800/15"
+        />
+      )}
+
+      {(mode === 'device' || value) && (
+        <div
+          onDragOver={
+            mode === 'device'
+              ? (event) => {
+                  event.preventDefault()
+                  setDragging(true)
                 }
+              : undefined
+          }
+          onDragLeave={() => setDragging(false)}
+          onDrop={mode === 'device' ? dropPhoto : undefined}
+          className={`flex flex-wrap items-center gap-3 rounded-xl border border-dashed p-3 ${dragging ? 'border-emerald-700 bg-emerald-50' : 'border-slate-300 bg-slate-50'}`}
+        >
+          {value && (
+            <CatalogPhoto
+              src={value}
+              alt="Cover photo preview"
+              className={`w-24 shrink-0 rounded-lg object-cover ${aspectRatio}`}
+              onLoad={() => {
+                setLoadedUrl(value)
+                setFailedUrl(undefined)
               }}
+              onError={() => setFailedUrl(value)}
             />
-
-            {value ? (
-              <div className="w-full flex items-center gap-4 text-left">
-                <div
-                  className={`w-28 ${aspectRatio} rounded-lg overflow-hidden border border-slate-200/80 shadow-2xs flex-none bg-slate-100 relative`}
-                >
-                  <img
-                    src={value}
-                    alt="Preview"
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      // Fallback if local image or URL breaks
-                      ;(e.target as HTMLImageElement).src =
-                        'https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=400&q=80'
-                    }}
-                  />
-                  {isUploading && (
-                    <div className="absolute inset-0 bg-black/60 backdrop-blur-2xs flex items-center justify-center">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex-1 min-w-0 text-xs">
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-slate-900 truncate">
-                      {value.startsWith('/uploads/') ? value.replace('/uploads/', '') : 'Custom Image'}
-                    </span>
-                    <span className="px-1.5 py-0.2 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                      Uploaded
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-slate-500 mt-0.5 truncate">{value}</p>
-                  <div className="mt-2 flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        fileInputRef.current?.click()
-                      }}
-                      className="px-2.5 py-1 rounded-md bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium text-[11px] transition-colors shadow-2xs"
-                    >
-                      Change Photo
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        onChange('')
-                      }}
-                      className="px-2 py-1 rounded-md text-slate-400 hover:text-rose-600 font-medium text-[11px] transition-colors"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="py-4 space-y-2">
-                <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 mx-auto">
-                  {isUploading ? (
-                    <div className="w-5 h-5 border-2 border-slate-900 border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <Icon name="camera" size={18} />
-                  )}
-                </div>
-                <div>
-                  <span className="text-xs font-semibold text-slate-800">
-                    {isUploading ? 'Uploading file from device...' : 'Click to upload or drag & drop'}
-                  </span>
-                  <p className="text-[11px] text-slate-500 mt-0.5">{helperText}</p>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {uploadError && (
-            <p className="text-xs text-rose-600 font-medium flex items-center gap-1">
-              <Icon name="x" size={12} /> {uploadError}
-            </p>
           )}
+          <div className="min-w-0 flex-1 text-sm">
+            {uploading ? (
+              <p role="status" className="font-medium text-slate-800">
+                Uploading photo…
+              </p>
+            ) : value && failedUrl === value ? (
+              <p role="status" className="font-medium text-amber-800">
+                Photo unavailable. Choose a replacement or update the link.
+              </p>
+            ) : value && loadedUrl === value ? (
+              <p role="status" className="font-medium text-emerald-800">
+                Photo ready
+              </p>
+            ) : value ? (
+              <p className="text-slate-600">Checking photo preview…</p>
+            ) : (
+              <p className="text-sm text-slate-600">{helperText}</p>
+            )}
+            <div className="mt-2 flex flex-wrap gap-2">
+              {mode === 'device' && (
+                <button
+                  type="button"
+                  disabled={uploading}
+                  onClick={() => fileInput.current?.click()}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 hover:bg-slate-100 disabled:opacity-60"
+                >
+                  <Icon name="camera" size={14} /> {value ? 'Change photo' : 'Choose photo'}
+                </button>
+              )}
+              {value && (
+                <button
+                  type="button"
+                  disabled={uploading}
+                  onClick={() => {
+                    setError('')
+                    onChange('')
+                  }}
+                  className="rounded-lg px-2 py-2 text-xs font-medium text-slate-600 hover:bg-rose-50 hover:text-rose-700 disabled:opacity-60"
+                >
+                  Remove
+                </button>
+              )}
+            </div>
+          </div>
         </div>
-      ) : (
-        <div className="space-y-1">
-          <input
-            type="url"
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            placeholder={placeholder}
-            className="w-full px-3 py-2 rounded-lg border border-slate-200 text-slate-900 text-xs outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900 font-mono"
-          />
-          <p className="text-[11px] text-slate-400">Paste external CDN or Unsplash photo link directly.</p>
-        </div>
+      )}
+      {error && (
+        <p role="alert" className="text-xs font-medium text-rose-700">
+          {error}
+        </p>
       )}
     </div>
   )

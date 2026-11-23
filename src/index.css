@@ -369,7 +369,14 @@ html:has(.inquiry-dialog[open]) { overflow: hidden; scrollbar-gutter: stable; }
   box-shadow: 0 24px 50px rgba(7, 47, 43, 0.26), 0 0 24px rgba(239, 73, 52, 0.2);
   border-color: rgba(239, 73, 52, 0.7);
 }
-.destination-card img {
+.catalog-photo-placeholder {
+  display: grid;
+  place-items: center;
+  background: linear-gradient(155deg, #d9e7e1, #a8c2b9);
+  color: #315a50;
+}
+.catalog-photo-placeholder > svg { max-width: 45%; }
+.destination-card img, .destination-card .catalog-photo-placeholder {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -447,7 +454,7 @@ html:has(.inquiry-dialog[open]) { overflow: hidden; scrollbar-gutter: stable; }
 .package-card { overflow: hidden; border-radius: 15px; background: #fff; color: var(--ink); }
 .package-card:hover { transform: translateY(-5px); box-shadow: 0 20px 45px rgba(0,0,0,.22); }
 .package-image { position: relative; height: 235px; overflow: hidden; }
-.package-image img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s; }
+.package-image img, .package-image .catalog-photo-placeholder { width: 100%; height: 100%; object-fit: cover; transition: transform .5s; }
 .package-card:hover .package-image img { transform: scale(1.04); }
 .package-image > span { position: absolute; left: 14px; top: 14px; padding: 6px 10px; border-radius: 20px; background: white; color: var(--forest); font-size: 10px; font-weight: 700; }
 .package-body { padding: 20px; }
@@ -474,9 +481,9 @@ html:has(.inquiry-dialog[open]) { overflow: hidden; scrollbar-gutter: stable; }
 .stays-section { background: #fff9e8; }
 .stays-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
 .stay-card { position: relative; height: 360px; overflow: hidden; border-radius: 18px; color: white; box-shadow: 0 9px 28px rgba(45,55,40,.09); }
-.stay-card img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s ease; }
+.stay-card img, .stay-card .catalog-photo-placeholder { width: 100%; height: 100%; object-fit: cover; transition: transform .5s ease; }
 .stay-card:hover img { transform: scale(1.04); }
-.stay-card > div { position: absolute; inset: 0; background: linear-gradient(0deg, rgba(5,28,25,.82), transparent 55%); }
+.stay-card-scrim { position: absolute; inset: 0; background: linear-gradient(0deg, rgba(5,28,25,.82), transparent 55%); }
 .stay-card > span { position: absolute; left: 19px; bottom: 49px; color: #dce9e5; font-size: 9px; text-transform: uppercase; letter-spacing: .12em; }
 .stay-card h3 { position: absolute; left: 19px; bottom: 19px; font-family: 'DM Serif Display', serif; font-size: 27px; font-weight: 400; }
 .stay-card button { position: absolute; right: 16px; bottom: 16px; width: 38px; height: 38px; display: grid; place-items: center; border-radius: 50%; background: var(--coral); color: white; }
@@ -604,7 +611,7 @@ html:has(.inquiry-dialog[open]) { overflow: hidden; scrollbar-gutter: stable; }
 
 .destination-page { background: var(--cream); }
 .destination-detail-hero { position: relative; height: min(740px, calc(100vh - 110px)); min-height: 600px; overflow: hidden; border-radius: 0 0 30px 30px; color: white; }
-.destination-detail-hero > img { width: 100%; height: 100%; object-fit: cover; animation: destinationReveal 1.1s ease-out both; }
+.destination-detail-hero > :is(img, .catalog-photo-placeholder) { width: 100%; height: 100%; object-fit: cover; animation: destinationReveal 1.1s ease-out both; }
 .destination-detail-shade { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(5,35,31,.82), rgba(5,35,31,.08) 65%), linear-gradient(0deg, rgba(5,35,31,.5), transparent 45%); }
 .destination-detail-title { position: absolute; left: 8%; top: 48%; max-width: 720px; transform: translateY(-50%); animation: contentRise .8s .15s ease-out both; }
 .destination-detail-title h1 { margin-top: 12px; font-family: 'Manrope', sans-serif; font-size: clamp(70px, 9vw, 130px); font-weight: 700; line-height: .9; letter-spacing: -.07em; }

@@ -1,6 +1,24 @@
 -- Crazy Tours & Travels: PostgreSQL Database Schema
 -- Database: crazy_tours_db
 
+CREATE TABLE IF NOT EXISTS catalog_images (
+  id UUID PRIMARY KEY,
+  content_type TEXT NOT NULL,
+  content BYTEA NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+ALTER TABLE catalog_images ENABLE ROW LEVEL SECURITY;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'catalog_images' AND policyname = 'Public can view catalog images'
+  ) THEN
+    CREATE POLICY "Public can view catalog images" ON catalog_images FOR SELECT USING (true);
+  END IF;
+END
+$$;
+
 CREATE TABLE IF NOT EXISTS destinations (
   slug VARCHAR(120) PRIMARY KEY,
   city VARCHAR(120) NOT NULL,
@@ -203,3 +221,4 @@ CREATE INDEX IF NOT EXISTS idx_packages_theme ON packages(theme, featured);
 CREATE INDEX IF NOT EXISTS idx_bookings_status ON bookings(status, submitted_at DESC);
 CREATE INDEX IF NOT EXISTS idx_inquiries_status ON inquiries(status, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_reels_order ON instagram_reels(display_order ASC);
+CREATE INDEX IF NOT EXISTS idx_catalog_images_created ON catalog_images(created_at DESC);

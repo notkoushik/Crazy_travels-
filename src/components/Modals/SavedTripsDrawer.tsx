@@ -1,4 +1,5 @@
 import React from 'react'
+import { CatalogPhoto } from '../CatalogPhoto'
 import { Currency, DestinationItem, PackageItem, RouteName } from '../../types/travel'
 import { Icon } from '../Icon'
 import { formatPrice } from '../../data/travelData'
@@ -88,7 +89,7 @@ export function SavedTripsDrawer({
                   key={dest.slug}
                   className="p-3 rounded-2xl border border-gray-100 bg-[#fbfaf7] hover:shadow-md transition-shadow flex gap-3 relative group"
                 >
-                  <img
+                  <CatalogPhoto
                     src={dest.image}
                     alt={dest.city}
                     className="w-24 h-24 rounded-xl object-cover flex-none"
@@ -140,7 +141,7 @@ export function SavedTripsDrawer({
                   key={pkg.id}
                   className="p-3 rounded-2xl border border-gray-100 bg-[#fbfaf7] hover:shadow-md transition-shadow flex gap-3 relative group"
                 >
-                  <img
+                  <CatalogPhoto
                     src={pkg.image}
                     alt={pkg.title}
                     className="w-24 h-24 rounded-xl object-cover flex-none"

@@ -1,4 +1,5 @@
 import React, { type CSSProperties, FormEvent, type RefObject, useEffect, useRef, useState } from 'react'
+import { CatalogPhoto } from '../components/CatalogPhoto'
 import { Currency, DestinationItem, InstagramReelItem, PackageItem, RouteName } from '../types/travel'
 import { Icon } from '../components/Icon'
 import { GoogleVerifiedBadge } from '../components/GoogleVerifiedBadge'
@@ -455,16 +456,22 @@ export function HomePage({
               {store.destinations.filter((destination) => destination.isTrending !== false).map((destination) => {
                 const isSaved = saved.includes(destination.city)
                 return (
-                  <article
-                    className="destination-card group cursor-pointer"
-                    key={destination.city}
-                    onClick={() => navigate(`destination/${destination.slug}` as RouteName)}
-                  >
-                    <img
+                  <article className="destination-card group" key={destination.slug}>
+                    <CatalogPhoto
                       src={destination.image}
                       alt={`${destination.city}, ${destination.country}`}
                     />
                     <div className="destination-scrim" />
+                    <a
+                      href={`#/destination/${destination.slug}`}
+                      aria-label={`Explore ${destination.city}`}
+                      className="absolute inset-0 z-10 focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-white"
+                      onClick={(event) => {
+                        if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return
+                        event.preventDefault()
+                        navigate(`destination/${destination.slug}`)
+                      }}
+                    />
 
                     {/* Top Arch Center: State & City Title (Rajasthan Fort Window style) */}
                     <div className="absolute top-10 inset-x-5 z-10 text-center pointer-events-none">
@@ -476,33 +483,7 @@ export function HomePage({
                       </h3>
                     </div>
 
-                    {/* Top Right: Wishlist Saved Heart Button - perfectly placed on arch shoulder */}
-                    <button
-                      className={`absolute top-[48px] right-3.5 z-20 w-8 h-8 rounded-full flex items-center justify-center transition-all shadow-md ${
-                        isSaved
-                          ? 'bg-[#ef4934] text-white shadow-[#ef4934]/40 scale-105'
-                          : 'bg-white/90 hover:bg-white text-[#072f2b] hover:text-[#ef4934] backdrop-blur-sm'
-                      }`}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        onToggleSave(destination.city)
-                        onToast(
-                          isSaved
-                            ? `Removed ${destination.city} from saved.`
-                            : `Saved ${destination.city} to your wishlist!`
-                        )
-                      }}
-                      aria-label={`Save ${destination.city}`}
-                    >
-                      <Icon
-                        name="heart"
-                        size={15}
-                        className={isSaved ? 'fill-white text-white' : ''}
-                      />
-                    </button>
-
-                    {/* Bottom Content Area */}
-                    <div className="absolute bottom-0 inset-x-0 p-5 z-10 flex flex-col justify-end">
+                    <div className="pointer-events-none absolute bottom-0 inset-x-0 z-20 flex flex-col justify-end p-4 sm:p-5">
                       {/* Google Verified Rating Badge */}
                       <div className="mb-2.5">
                         <GoogleVerifiedBadge
@@ -510,11 +491,11 @@ export function HomePage({
                           reviewsCount={destination.googleReviewsCount}
                           mapsUrl={destination.googleMapsUrl}
                           size="sm"
-                          className="bg-white/95 text-slate-800 shadow-sm"
+                          className="pointer-events-auto bg-white/95 text-slate-800 shadow-sm"
                         />
                       </div>
 
-                      <div className="flex items-end justify-between">
+                      <div className="flex items-end justify-between gap-2">
                         <div>
                           <span className="block text-[10px] uppercase tracking-wider text-white/70 mb-0.5">
                             Journeys from
@@ -524,8 +505,22 @@ export function HomePage({
                           </strong>
                         </div>
 
-                        <div className="w-9 h-9 rounded-full bg-[#ef4934] text-white flex items-center justify-center group-hover:scale-110 group-hover:bg-white group-hover:text-[#072f2b] transition-all shadow-md">
-                          <Icon name="arrow" size={16} />
+                        <div className="flex shrink-0 items-center gap-2">
+                          <button
+                            type="button"
+                            className={`pointer-events-auto grid size-10 place-items-center rounded-full border border-white/45 shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${isSaved ? 'bg-[#c83c2c] text-white' : 'bg-white text-[#072f2b] hover:bg-[#f9eee8] hover:text-[#c83c2c]'}`}
+                            onClick={() => {
+                              onToggleSave(destination.city)
+                              onToast(isSaved ? `Removed ${destination.city} from saved trips.` : `Saved ${destination.city} to your wishlist.`)
+                            }}
+                            aria-label={`Save ${destination.city}`}
+                            aria-pressed={isSaved}
+                          >
+                            <Icon name="heart" size={16} className={isSaved ? 'fill-current' : ''} />
+                          </button>
+                          <span aria-hidden="true" className="grid size-10 place-items-center rounded-full bg-white/15 text-white ring-1 ring-inset ring-white/60 transition-colors group-hover:bg-white group-hover:text-[#072f2b]">
+                            <Icon name="arrow" size={17} />
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -633,7 +628,7 @@ export function HomePage({
             {homePackages.map((trip) => (
               <article className="package-card" key={trip.id}>
                 <div className="package-image">
-                  <img src={trip.image} alt={trip.place} />
+                  <CatalogPhoto src={trip.image} alt={trip.place} />
                   <span>{trip.duration}</span>
                 </div>
                 <div className="package-body">
@@ -710,8 +705,8 @@ export function HomePage({
           <div className="stays-grid">
             {displayStays.map((stay) => (
               <article className="stay-card" key={stay.id}>
-                <img src={stay.image} alt={`${stay.type} in ${stay.city}`} />
-                <div />
+                <CatalogPhoto src={stay.image} alt={`${stay.type} in ${stay.city}`} />
+                <div className="stay-card-scrim" />
                 <span>{stay.type}</span>
                 <h3>{stay.city}</h3>
                 <button

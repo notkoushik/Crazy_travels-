@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { ImageDropzone } from '../../../components/ImageDropzone'
+import { ImageDropzone, validateCoverPhoto } from '../../../components/ImageDropzone'
 import type { DestinationItem } from '../../../types/travel'
 import {
   EditorSection,
@@ -42,7 +42,6 @@ export function DestinationEditor({
   const save = async (form: FormData) => {
     const city = requiredText(form, 'city', 'City or destination')
     const priceNum = requiredNumber(form, 'price', 'Starting price', 1)
-    if (!image.trim()) throw new Error('Add a cover photo before saving the destination.')
 
     if (!slug.current) {
       const prefix = city
@@ -63,7 +62,7 @@ export function DestinationEditor({
       region: textValue(form, 'region'),
       priceNum,
       price: rupees(priceNum),
-      image: image.trim(),
+      image: await validateCoverPhoto(image, destination?.image),
       season: textValue(form, 'season'),
       duration: requiredText(form, 'duration', 'Suggested trip length'),
       tagline: textValue(form, 'tagline'),

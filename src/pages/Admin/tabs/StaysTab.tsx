@@ -1,4 +1,5 @@
 import React from 'react'
+import { CatalogPhoto } from '../../../components/CatalogPhoto'
 import { StayItem } from '../../../types/travel'
 import { Icon } from '../../../components/Icon'
 import { stayTypes } from '../../../data/travelData'
@@ -70,7 +71,7 @@ export function StaysTab({
             className="rounded-xl bg-white border border-slate-200/80 overflow-hidden shadow-2xs hover:shadow-md transition-all flex flex-col group"
           >
             <div className="relative aspect-16/10 overflow-hidden bg-slate-100">
-              <img
+              <CatalogPhoto
                 src={stay.image}
                 alt={stay.name}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"

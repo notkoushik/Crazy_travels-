@@ -1,4 +1,5 @@
 import React from 'react'
+import { CatalogPhoto } from '../components/CatalogPhoto'
 import { Currency, DestinationItem, RouteName } from '../types/travel'
 import { Icon } from '../components/Icon'
 import { GoogleVerifiedBadge, isGoogleMapsLink } from '../components/GoogleVerifiedBadge'
@@ -59,7 +60,7 @@ export function DestinationPage({
 
       {/* Hero Banner */}
       <section className="destination-detail-hero shell-wide relative rounded-3xl overflow-hidden shadow-xl mb-6">
-        <img
+        <CatalogPhoto
           src={destination.image}
           alt={`${destination.city}, ${destination.country}`}
           className="w-full h-full object-cover"
@@ -217,7 +218,7 @@ export function DestinationPage({
       {!!destination.gallery.length && (
         <section className="shell mb-16" aria-label="Destination photos">
           <div className="grid gap-4 sm:grid-cols-2">
-            {destination.gallery.map((url, index) => <img key={`${url}-${index}`} src={url} alt={`${destination.city} photo ${index + 1}`} loading="lazy" className="aspect-4/3 w-full rounded-2xl object-cover" />)}
+            {destination.gallery.map((url, index) => <CatalogPhoto key={`${url}-${index}`} src={url} alt={`${destination.city} photo ${index + 1}`} loading="lazy" className="aspect-4/3 w-full rounded-2xl object-cover" />)}
           </div>
         </section>
       )}

@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { CatalogPhoto } from '../components/CatalogPhoto'
 import { Currency, RouteName, StayItem } from '../types/travel'
 import { Icon } from '../components/Icon'
 import { GoogleVerifiedBadge } from '../components/GoogleVerifiedBadge'
@@ -92,7 +93,7 @@ export function StaysPage({ navigate, onBook, currency }: StaysPageProps) {
             >
               <div>
                 <div className="relative h-60 overflow-hidden">
-                  <img
+                  <CatalogPhoto
                     src={stay.image}
                     alt={stay.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"

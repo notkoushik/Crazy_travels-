@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { CatalogPhoto } from '../components/CatalogPhoto'
 import { Currency, PackageItem, RouteName } from '../types/travel'
 import { Icon } from '../components/Icon'
 import { GoogleVerifiedBadge } from '../components/GoogleVerifiedBadge'
@@ -144,13 +145,13 @@ export function PackagesPage({
               <div>
                 {/* Package Image & Badges */}
                 <div className="relative h-64 overflow-hidden">
-                  <img
+                  <CatalogPhoto
                     src={pkg.image}
                     alt={pkg.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
-                  <div className="absolute top-4 left-4 flex gap-2">
+                  <div className="absolute left-4 right-16 top-4 flex flex-wrap gap-2">
                     <span className="px-3 py-1 rounded-full bg-white/90 backdrop-blur-xs text-[#072f2b] text-[11px] font-bold">
                       {pkg.duration}
                     </span>
@@ -161,15 +162,17 @@ export function PackagesPage({
                     )}
                   </div>
                   <button
+                    type="button"
                     onClick={() => onToggleSave(pkg.id)}
-                    className={`absolute top-4 right-4 p-2 rounded-full backdrop-blur-xs transition-colors ${
+                    className={`absolute right-4 top-4 grid size-10 place-items-center rounded-full backdrop-blur-xs transition-colors ${
                       saved.includes(pkg.id)
                         ? 'bg-[#ef4934] text-white'
                         : 'bg-white/80 hover:bg-white text-gray-700'
                     }`}
                     aria-label={`Save ${pkg.title}`}
+                    aria-pressed={saved.includes(pkg.id)}
                   >
-                    <Icon name="heart" size={17} />
+                    <Icon name="heart" size={17} className={saved.includes(pkg.id) ? 'fill-current' : ''} />
                   </button>
                   <div className="absolute bottom-4 left-4 text-white">
                     <span className="text-xs text-[#ffd0c7] font-semibold uppercase tracking-wider block">

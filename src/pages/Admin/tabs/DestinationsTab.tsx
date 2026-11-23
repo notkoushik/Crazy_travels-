@@ -1,4 +1,5 @@
 import React from 'react'
+import { CatalogPhoto } from '../../../components/CatalogPhoto'
 import { DestinationItem } from '../../../types/travel'
 import { Icon } from '../../../components/Icon'
 
@@ -44,7 +45,7 @@ export function DestinationsTab({
             <div className="flex items-start gap-4">
               {/* Mini Arch Window Preview */}
               <div className="w-20 h-28 flex-none rounded-t-[40px] rounded-b-lg overflow-hidden border border-slate-200 shadow-xs relative bg-slate-100">
-                <img src={dest.image} alt={dest.city} className="w-full h-full object-cover" />
+                <CatalogPhoto src={dest.image} alt={dest.city} className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/30" />
                 <span className="absolute bottom-1 inset-x-0 text-[9px] font-bold text-center text-white truncate px-1">
                   {dest.city}

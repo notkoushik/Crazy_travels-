@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ImageDropzone } from '../../../components/ImageDropzone'
+import { ImageDropzone, validateCoverPhoto } from '../../../components/ImageDropzone'
 import { stayTypes } from '../../../data/travelData'
 import type { StayItem } from '../../../types/travel'
 import {
@@ -43,7 +43,6 @@ export function StayEditor({
   const save = async (form: FormData) => {
     const priceNum = requiredNumber(form, 'price', 'Price per night', 1)
     const rating = numberValue(form, 'rating', 'Internal score', 1, 5)
-    if (!image.trim()) throw new Error('Add a cover photo before saving the property.')
 
     await onSave({
       ...stay,
@@ -55,7 +54,7 @@ export function StayEditor({
       priceNum,
       price: rupees(priceNum),
       rating: rating ?? 0,
-      image: image.trim(),
+      image: await validateCoverPhoto(image, stay?.image),
       description: stay
         ? textValue(form, 'description')
         : requiredText(form, 'description', 'Guest description'),

@@ -1,4 +1,5 @@
 import React from 'react'
+import { CatalogPhoto } from '../../../components/CatalogPhoto'
 import { PackageItem } from '../../../types/travel'
 import { Icon } from '../../../components/Icon'
 
@@ -53,7 +54,7 @@ export function PackagesTab({
                 <tr key={pkg.id} className="hover:bg-slate-50/70 transition-colors">
                   <td className="py-3.5 px-4">
                     <div className="flex items-center gap-3">
-                      <img
+                      <CatalogPhoto
                         src={pkg.image}
                         alt={pkg.title}
                         className="w-11 h-11 rounded-lg object-cover flex-none border border-slate-200"

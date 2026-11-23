@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { CatalogPhoto } from '../components/CatalogPhoto'
 import { Currency, PackageItem, RouteName } from '../types/travel'
 import { Icon } from '../components/Icon'
 import { GoogleVerifiedBadge } from '../components/GoogleVerifiedBadge'
@@ -42,7 +43,7 @@ export function PackageDetailPage({
       {/* Hero Banner Section */}
       <section className="shell mb-10">
         <div className="relative rounded-3xl overflow-hidden shadow-2xl h-[420px] sm:h-[480px]">
-          <img
+          <CatalogPhoto
             src={packageItem.image}
             alt={packageItem.title}
             className="w-full h-full object-cover"
@@ -231,7 +232,7 @@ export function PackageDetailPage({
               </div>
               {!!packageItem.gallery?.length && (
                 <div className="grid gap-3 sm:grid-cols-2" aria-label="Tour photos">
-                  {packageItem.gallery.map((url, index) => <img key={`${url}-${index}`} src={url} alt={`${packageItem.title} photo ${index + 1}`} loading="lazy" className="aspect-4/3 w-full rounded-xl object-cover" />)}
+                  {packageItem.gallery.map((url, index) => <CatalogPhoto key={`${url}-${index}`} src={url} alt={`${packageItem.title} photo ${index + 1}`} loading="lazy" className="aspect-4/3 w-full rounded-xl object-cover" />)}
                 </div>
               )}
             </div>

@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { Icon } from '../../../components/Icon'
-import { ImageDropzone } from '../../../components/ImageDropzone'
+import { ImageDropzone, validateCoverPhoto } from '../../../components/ImageDropzone'
 import type { ItineraryDay, PackageItem } from '../../../types/travel'
 import {
   EditorSection,
@@ -62,7 +62,6 @@ export function PackageEditor({
     const compareAt = numberValue(form, 'originalPrice', 'Regular price', 1)
     if (compareAt !== undefined && compareAt <= rate)
       throw new Error('Regular price must be higher than the starting price.')
-    if (!image.trim()) throw new Error('Add a cover photo before saving the package.')
 
     const itineraryChanged = !pkg || daysCount !== pkg.daysCount || days !== initialDays.current
     if (itineraryChanged && days.length !== daysCount) {
@@ -105,7 +104,7 @@ export function PackageEditor({
       featured: form.has('featured'),
       rating: pkg?.rating ?? 0,
       reviewCount: pkg?.reviewCount ?? 0,
-      image: image.trim(),
+      image: await validateCoverPhoto(image, pkg?.image),
       gallery: lineValues(form, 'gallery'),
       overview: pkg ? textValue(form, 'overview') : requiredText(form, 'overview', 'Trip overview'),
       highlights: lineValues(form, 'highlights'),
