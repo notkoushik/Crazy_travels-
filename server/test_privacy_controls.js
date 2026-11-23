@@ -60,7 +60,7 @@ server.listen(5099, async () => {
       const res = await fetch('http://localhost:5099/api/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password: 'crazytours_admin_secure_2026' }),
+        body: JSON.stringify({ password: 'Crazy_2026' }),
       })
       if (res.status !== 200) throw new Error(`Expected 200, got ${res.status}`)
       const data = await res.json()

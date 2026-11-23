@@ -35,33 +35,17 @@ import { OfferModal } from './modals/OfferModal'
 import { BookingDrawer } from './drawers/BookingDrawer'
 import { InquiryDrawer } from './drawers/InquiryDrawer'
 
-export function AdminPage({ navigate, onToast }: AdminPageProps) {
+function AdminDashboardContent({
+  navigate,
+  onToast,
+  onLogout,
+}: {
+  navigate: AdminPageProps['navigate']
+  onToast: AdminPageProps['onToast']
+  onLogout: () => void
+}) {
   const store = useDynamicStore()
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => store.isAdminAuthenticated())
   const [activeTab, setActiveTab] = useState<AdminTab>('dashboard')
-
-  // Synchronize admin customer data on authentication
-  useEffect(() => {
-    if (isAuthenticated) {
-      store.fetchAdminData().catch((err) => {
-        console.warn('Initial admin data hydration:', err)
-      })
-    }
-  }, [isAuthenticated])
-
-  // If not authenticated, render secure Authorization Gate
-  if (!isAuthenticated) {
-    return (
-      <AdminLoginScreen
-        onLoginSuccess={() => {
-          setIsAuthenticated(true)
-          store.fetchAdminData().catch(console.error)
-        }}
-        navigate={navigate}
-        onToast={onToast}
-      />
-    )
-  }
 
   // Modals state for editing
   const [editingDestination, setEditingDestination] = useState<DestinationItem | null>(null)
@@ -173,18 +157,18 @@ export function AdminPage({ navigate, onToast }: AdminPageProps) {
       reviewCount: 15,
       image:
         'https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=1200&q=88',
-      overview: '',
-      highlights: ['Heritage stay', 'Private transfers'],
-      inclusions: ['Luxury Stay', 'Breakfast & Dinner', 'Private Sightseeing'],
-      exclusions: ['Flights', 'Entry Fees'],
+      overview: 'Experience the royal heritage and majestic forts of Rajasthan.',
+      highlights: ['Heritage walk', 'Desert sunset', 'Palace dinner'],
+      inclusions: ['4-Star Stays', 'Breakfast & Dinner', 'Private Cab', 'Sightseeing Guide'],
+      exclusions: ['Flight / Train tickets', 'Personal expenses', 'Entry fees at monuments'],
       itinerary: [
         {
           day: 1,
-          title: 'Arrival & Welcome Dinner',
-          description: 'Private chauffeur transfer to hotel.',
+          title: 'Arrival & Royal Welcome',
+          description: 'Arrival at airport/station, transfer to heritage hotel, evening lake walk.',
         },
       ],
-      theme: 'Heritage' as any,
+      theme: 'Heritage',
       featured: true,
     })
     setIsNewPackage(true)
@@ -194,7 +178,7 @@ export function AdminPage({ navigate, onToast }: AdminPageProps) {
   const handleSaveStay = async (stay: StayItem) => {
     try {
       await store.saveStay(stay)
-      onToast(`Stay "${stay.name}" saved to PostgreSQL!`)
+      onToast(`Stay "${stay.name}" saved!`)
       setEditingStay(null)
     } catch (err: any) {
       onToast(`Failed to save stay: ${err.message}`)
@@ -202,7 +186,7 @@ export function AdminPage({ navigate, onToast }: AdminPageProps) {
   }
 
   const handleDeleteStay = async (stay: StayItem) => {
-    if (window.confirm(`Delete stay "${stay.name}" from PostgreSQL?`)) {
+    if (window.confirm(`Delete stay "${stay.name}"?`)) {
       try {
         await store.deleteStay(stay.id)
         onToast(`Deleted stay "${stay.name}"`)
@@ -215,17 +199,17 @@ export function AdminPage({ navigate, onToast }: AdminPageProps) {
   const handleOpenNewStay = () => {
     setEditingStay({
       id: `stay-${Date.now()}`,
-      city: 'Jaipur',
+      city: 'Udaipur',
       state: 'Rajasthan',
       type: 'Heritage Stays',
-      name: 'New Heritage Haveli',
+      name: '',
       price: '₹14,500',
       priceNum: 14500,
       rating: 4.9,
       image:
-        'https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=1200&q=80',
-      amenities: ['Private Pool', 'Courtyard Dining', 'Butler Service', 'Royal Suites'],
-      description: 'Opulent suites with hand-painted frescoes and royal courtyard dining.',
+        'https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=1200&q=88',
+      amenities: ['Pool', 'Spa', 'Heritage Dining', 'Wi-Fi', 'Lake View'],
+      description: 'Restored royal residence offering authentic hospitality and palatial suites.',
     })
     setIsNewStay(true)
   }
@@ -234,7 +218,7 @@ export function AdminPage({ navigate, onToast }: AdminPageProps) {
   const handleSaveOffer = async (offer: OfferItem) => {
     try {
       await store.saveOffer(offer)
-      onToast(`Offer "${offer.title}" saved to PostgreSQL!`)
+      onToast(`Promotion "${offer.code}" saved to database!`)
       setEditingOffer(null)
     } catch (err: any) {
       onToast(`Failed to save offer: ${err.message}`)
@@ -242,10 +226,10 @@ export function AdminPage({ navigate, onToast }: AdminPageProps) {
   }
 
   const handleDeleteOffer = async (offer: OfferItem) => {
-    if (window.confirm(`Delete offer "${offer.title}" (${offer.code}) from PostgreSQL?`)) {
+    if (window.confirm(`Delete promo code "${offer.code}"?`)) {
       try {
         await store.deleteOffer(offer.id)
-        onToast(`Deleted offer "${offer.title}"`)
+        onToast(`Deleted offer "${offer.code}"`)
       } catch (err: any) {
         onToast(`Failed to delete offer: ${err.message}`)
       }
@@ -255,40 +239,39 @@ export function AdminPage({ navigate, onToast }: AdminPageProps) {
   const handleOpenNewOffer = () => {
     setEditingOffer({
       id: `offer-${Date.now()}`,
-      code: 'SUMMER25',
-      title: 'Summer Getaway Discount',
-      discountText: 'Flat 20% Off',
-      tag: 'Seasonal Special',
+      code: 'ROYAL15',
+      title: 'Summer Palace Retreat',
+      discountText: '15% Off Heritage Bookings',
+      tag: 'Limited Time',
       validTill: '31 Aug 2026',
-      description: 'Save big on mountain retreats and luxury houseboat vacations across India.',
-      minBooking: 'Min booking ₹30,000',
+      description: 'Exclusive seasonal concession for couples and family departures.',
+      minBooking: 'Min. Booking ₹40,000',
       image:
-        'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=1200&q=88',
     })
     setIsNewOffer(true)
   }
 
-  // Handlers - Bookings & Inquiries
+  // Handlers - Bookings & Inquiries Status
   const handleUpdateBookingStatus = async (
     bookingId: string,
-    status: BookingSubmission['status'],
-    paymentStatus?: BookingSubmission['paymentStatus']
+    status: BookingSubmission['status']
   ) => {
     try {
-      await store.updateBookingStatus(bookingId, status, paymentStatus)
-      onToast(`Booking ${bookingId} updated in PostgreSQL to ${status}!`)
+      await store.updateBookingStatus(bookingId, status)
+      onToast(`Booking ${bookingId} updated to "${status}"`)
     } catch (err: any) {
       onToast(`Failed to update booking: ${err.message}`)
     }
   }
 
-  const handleIssueVoucher = async (bookingId: string) => {
+  const handleIssueVoucher = async (booking: BookingSubmission) => {
     try {
-      await store.updateBookingStatus(bookingId, 'Voucher Issued', 'Fully Paid')
-      onToast(`Voucher issued and marked Fully Paid for ${bookingId}!`)
+      await store.updateBookingStatus(booking.bookingId, 'Voucher Issued', 'Deposit Paid')
+      onToast(`Official Trip Voucher issued and sent for #${booking.bookingId}!`)
       setSelectedBooking(null)
     } catch (err: any) {
-      onToast(`Failed to issue voucher: ${err.message}`)
+      onToast(`Error issuing voucher: ${err.message}`)
     }
   }
 
@@ -318,11 +301,7 @@ export function AdminPage({ navigate, onToast }: AdminPageProps) {
       <AdminHeader
         navigate={navigate}
         isDatabaseConnected={store.isDatabaseConnected}
-        onLogout={() => {
-          store.adminLogout()
-          setIsAuthenticated(false)
-          onToast('Operations Console locked. Customer records cleared from memory.')
-        }}
+        onLogout={onLogout}
       />
 
       {/* Main Admin Workspace */}
@@ -331,52 +310,46 @@ export function AdminPage({ navigate, onToast }: AdminPageProps) {
         <AdminSidebar
           activeTab={activeTab}
           setActiveTab={setActiveTab}
-          destinationsCount={store.destinations.length}
-          packagesCount={store.packages.length}
-          staysCount={store.stays.length}
           bookingsCount={store.bookings.length}
-          newInquiriesCount={newInquiriesCount}
-          offersCount={store.offers.length}
+          inquiriesCount={newInquiriesCount}
         />
 
-        {/* Content Area */}
-        <main className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8 bg-slate-50/70">
+        {/* Dynamic Center Work Area */}
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
           {activeTab === 'dashboard' && (
             <DashboardTab
+              stats={store.stats}
               totalRevenue={totalRevenue}
               confirmedBookingsCount={confirmedBookingsCount}
               newInquiriesCount={newInquiriesCount}
-              destinationsCount={store.destinations.length}
               bookings={store.bookings}
               inquiries={store.inquiries}
-              setActiveTab={setActiveTab}
-              setSelectedBooking={setSelectedBooking}
-              setSelectedInquiry={setSelectedInquiry}
-              onAddNewDestination={handleOpenNewDestination}
-              onAddNewPackage={handleOpenNewPackage}
+              onNavigateTab={(tab) => setActiveTab(tab)}
+              onSelectBooking={setSelectedBooking}
+              onSelectInquiry={setSelectedInquiry}
             />
           )}
 
           {activeTab === 'destinations' && (
             <DestinationsTab
               destinations={store.destinations}
-              onEditDestination={(dest) => {
+              onAddNew={handleOpenNewDestination}
+              onEdit={(dest) => {
                 setEditingDestination(dest)
                 setIsNewDestination(false)
               }}
-              onAddNewDestination={handleOpenNewDestination}
-              onDeleteDestination={handleDeleteDestination}
+              onDelete={handleDeleteDestination}
             />
           )}
 
           {activeTab === 'packages' && (
             <PackagesTab
               packages={store.packages}
+              onAddNewPackage={handleOpenNewPackage}
               onEditPackage={(pkg) => {
                 setEditingPackage(pkg)
                 setIsNewPackage(false)
               }}
-              onAddNewPackage={handleOpenNewPackage}
               onDeletePackage={handleDeletePackage}
             />
           )}
@@ -498,5 +471,45 @@ export function AdminPage({ navigate, onToast }: AdminPageProps) {
         />
       )}
     </div>
+  )
+}
+
+export function AdminPage({ navigate, onToast }: AdminPageProps) {
+  const store = useDynamicStore()
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => store.isAdminAuthenticated())
+
+  // Synchronize admin customer data on authentication
+  useEffect(() => {
+    if (isAuthenticated) {
+      store.fetchAdminData().catch((err) => {
+        console.warn('Initial admin data hydration:', err)
+      })
+    }
+  }, [isAuthenticated])
+
+  // If not authenticated, render secure Authorization Gate
+  if (!isAuthenticated) {
+    return (
+      <AdminLoginScreen
+        onLoginSuccess={() => {
+          setIsAuthenticated(true)
+          store.fetchAdminData().catch(console.error)
+        }}
+        navigate={navigate}
+        onToast={onToast}
+      />
+    )
+  }
+
+  return (
+    <AdminDashboardContent
+      navigate={navigate}
+      onToast={onToast}
+      onLogout={() => {
+        store.adminLogout()
+        setIsAuthenticated(false)
+        onToast('Operations Console locked. Customer records cleared from memory.')
+      }}
+    />
   )
 }

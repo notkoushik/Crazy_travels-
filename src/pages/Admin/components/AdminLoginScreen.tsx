@@ -110,7 +110,7 @@ export function AdminLoginScreen({
                 </button>
               </div>
               <p className="text-[11px] text-slate-400 mt-1.5">
-                Default local key: <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-600 font-mono">crazytours_admin_secure_2026</code>
+                Admin access key: <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-600 font-mono">Crazy_2026</code>
               </p>
             </div>
 

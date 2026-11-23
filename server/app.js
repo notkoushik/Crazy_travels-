@@ -13,7 +13,7 @@ const __dirname = path.dirname(__filename)
 // ==============================================================================
 // DATA PRIVACY & ACCESS CONTROL CONFIGURATION
 // ==============================================================================
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'crazytours_admin_secure_2026'
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Crazy_2026'
 const JWT_SECRET = process.env.JWT_SECRET || 'crazytours_session_signing_secret_998877_secure_key'
 
 // ==============================================================================
