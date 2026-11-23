@@ -579,7 +579,7 @@ app.get('/api/bookings', requireAdminAuth, async (req, res) => {
 app.post('/api/bookings', publicSubmissionLimiter, async (req, res) => {
   try {
     const b = req.body || {}
-    const bookingId = b.bookingId || `CT-${Math.floor(100000 + Math.random() * 900000)}`
+    const bookingId = sanitizeText(b.bookingId).toUpperCase() || `CT-${crypto.randomUUID().slice(0, 13).replace('-', '').toUpperCase()}`
     const customerName = sanitizeText(b.customerName)
     const customerEmail = sanitizeText(b.customerEmail)
     const customerPhone = sanitizeText(b.customerPhone)
@@ -593,15 +593,26 @@ app.post('/api/bookings', publicSubmissionLimiter, async (req, res) => {
       return res.status(400).json({ error: 'Customer name and phone number are required.' })
     }
 
-    await pool.query(
+    const details = [
+      bookingId, packageName, travelDate, parseInt(b.adults) || 1, parseInt(b.children) || 0,
+      hotelType, customerName, customerEmail, customerPhone, specialRequests, totalPrice,
+    ]
+    const inserted = await pool.query(
       `INSERT INTO bookings (booking_id, package_name, travel_date, adults, children, hotel_type, customer_name, customer_email, customer_phone, special_requests, total_price, status, payment_status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
-      [
-        bookingId, packageName, travelDate, parseInt(b.adults) || 1, parseInt(b.children) || 0,
-        hotelType, customerName, customerEmail, customerPhone,
-        specialRequests, totalPrice, 'Pending', 'Unpaid'
-      ]
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'Pending', 'Unpaid')
+       ON CONFLICT (booking_id) DO NOTHING RETURNING booking_id`,
+      details,
     )
+    if (!inserted.rows.length) {
+      const previous = await pool.query(
+        `SELECT booking_id FROM bookings
+         WHERE booking_id = $1 AND package_name = $2 AND travel_date = $3 AND adults = $4
+         AND children = $5 AND hotel_type = $6 AND customer_name = $7 AND customer_email = $8
+         AND customer_phone = $9 AND special_requests = $10 AND total_price = $11`,
+        details,
+      )
+      if (!previous.rows.length) return res.status(409).json({ error: 'This reference is already in use. Return to the journey and start a new request.' })
+    }
     res.json({ success: true, bookingId })
   } catch (err) {
     res.status(500).json({ error: err.message })

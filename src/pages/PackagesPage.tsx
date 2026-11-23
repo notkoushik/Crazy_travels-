@@ -235,7 +235,7 @@ export function PackagesPage({
                     onClick={() => onBook(pkg.title, pkg.priceNum)}
                     className="px-4 py-2 rounded-xl bg-[#ef4934] hover:bg-[#df3a25] text-white text-xs font-bold transition-all shadow-md shadow-[#ef4934]/30"
                   >
-                    Book Now
+                    Request a quote
                   </button>
                 </div>
               </div>

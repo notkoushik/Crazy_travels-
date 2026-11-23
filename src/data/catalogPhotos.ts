@@ -28,11 +28,7 @@ const packageGalleryDefaults = new Map([
   ['sikkim-himalaya', tsomgoLake],
 ])
 
-export function getPackageGallery(id: string, gallery?: string[]) {
-  if (gallery?.length) return gallery
-  const photo = packageGalleryDefaults.get(id)
-  return photo ? [photo] : []
-}
+export const getStarterPackagePhoto = (id: string) => packageGalleryDefaults.get(id)
 
 export function catalogPhotoUrls(cover: string, gallery?: string[]) {
   const photos = new Map<string, string>()

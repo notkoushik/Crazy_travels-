@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { Icon } from '../../../components/Icon'
 import { ImageDropzone, validateCoverPhoto } from '../../../components/ImageDropzone'
-import { catalogPhotoUrls, getPackageGallery } from '../../../data/catalogPhotos'
+import { catalogPhotoUrls, getStarterPackagePhoto } from '../../../data/catalogPhotos'
 import type { ItineraryDay, PackageItem } from '../../../types/travel'
 import { GalleryEditor } from './GalleryEditor'
 import {
@@ -48,7 +48,7 @@ export function PackageEditor({
   const [id] = useState(() => pkg?.id ?? `pkg-${crypto.randomUUID()}`)
   const [image, setImage] = useState(pkg?.image ?? '')
   const [uploading, setUploading] = useState(false)
-  const [gallery, setGallery] = useState(() => catalogPhotoUrls(image, getPackageGallery(id, pkg?.gallery)).slice(image.trim() ? 1 : 0))
+  const [gallery, setGallery] = useState(() => catalogPhotoUrls(image, pkg?.gallery).slice(image.trim() ? 1 : 0))
   const [galleryBusy, setGalleryBusy] = useState(false)
   const [days, setDays] = useState(() =>
     pkg ? pkg.itinerary.map((day) => ({ key: crypto.randomUUID(), day })) : [newDay()]
@@ -317,7 +317,7 @@ export function PackageEditor({
           onUploadingChange={setUploading}
           label="Cover photo *"
         />
-        <GalleryEditor cover={image} value={gallery} onChange={setGallery} onBusyChange={setGalleryBusy} />
+        <GalleryEditor cover={image} value={gallery} onChange={setGallery} onBusyChange={setGalleryBusy} starterPhoto={getStarterPackagePhoto(id)} />
       </EditorSection>
       <GoogleReviewSection
         googleRating={pkg?.googleRating}

@@ -12,7 +12,6 @@ import {
 } from './TravelDatePicker'
 import type { InquiryContext } from './TripInquiry'
 
-const destinations = ['Kashmir', 'Kerala', 'Rajasthan', 'Andaman', 'Sikkim', 'Hampi']
 const seasons = [
   { name: 'Spring', label: 'Spring (Mar–May)', months: 'March–May' },
   { name: 'Summer', label: 'Summer (Jun–Aug)', months: 'June–August' },
@@ -20,8 +19,12 @@ const seasons = [
   { name: 'Winter', label: 'Winter holiday', months: 'December–February' },
 ]
 
-export function HeroInquiryCard({ context, onClose }: { context: InquiryContext; onClose: () => void }) {
-  const [selected, setSelected] = useState('Kashmir')
+export function HeroInquiryCard({ context, popularDestinations, onClose }: {
+  context: InquiryContext
+  popularDestinations: string[]
+  onClose: () => void
+}) {
+  const [selected, setSelected] = useState('')
   const [range, setRange] = useState<TravelRange>({ start: '', end: '' })
   const [season, setSeason] = useState('')
   const [name, setName] = useState('')
@@ -31,12 +34,16 @@ export function HeroInquiryCard({ context, onClose }: { context: InquiryContext;
   const [sent, setSent] = useState(false)
   const [error, setError] = useState('')
   const pending = useRef(false)
-  const destination = context.destination || selected
+  const destination = context.destination || selected.trim()
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (pending.current) return
     setError('')
+    if (!destination) {
+      setError('Enter a destination for your trip.')
+      return
+    }
     if (!name.trim() || !phone.trim()) {
       setError('Enter your name and phone number.')
       return
@@ -85,13 +92,13 @@ export function HeroInquiryCard({ context, onClose }: { context: InquiryContext;
   }
 
   return (
-    <div className="hero-inquiry-card rounded-2xl p-4 text-white">
+    <div className="hero-inquiry-card rounded-2xl p-4">
       <div className="mb-2 flex items-center justify-between gap-3">
-        <p className="text-[11px] font-bold uppercase tracking-wider text-white/90">Trip details & inquiry</p>
+        <p className="text-xs font-semibold text-[#51645d]">Private trip planning</p>
         <button
           type="button"
           onClick={onClose}
-          className="grid size-9 shrink-0 place-items-center rounded-full bg-white/15 hover:bg-white/25"
+          className="grid size-9 shrink-0 place-items-center rounded-full bg-[#edf3ef] hover:bg-[#dfece4]"
           aria-label="Minimize trip inquiry"
         >
           <Icon name="x" size={18} />
@@ -100,7 +107,7 @@ export function HeroInquiryCard({ context, onClose }: { context: InquiryContext;
       {sent ? (
         <div className="space-y-3 pb-2" role="status">
           <h2 className="text-xl font-bold">Inquiry received</h2>
-          <p className="text-sm text-white/90">
+          <p className="text-sm text-[#51645d]">
             Our team has your trip details for {destination}
             {range.start ? ` from ${dateLabel(range.start)} to ${dateLabel(range.end)}` : ''}.
           </p>
@@ -111,7 +118,7 @@ export function HeroInquiryCard({ context, onClose }: { context: InquiryContext;
               setName('')
               setPhone('')
             }}
-            className="rounded-lg bg-white px-3 py-2 text-sm font-semibold text-[#ab3526]"
+            className="rounded-lg border border-[#d5e2da] px-3 py-2 text-sm font-semibold text-[#0b4941]"
           >
             Send another inquiry
           </button>
@@ -119,18 +126,18 @@ export function HeroInquiryCard({ context, onClose }: { context: InquiryContext;
       ) : (
         <form onSubmit={submit} className="space-y-2.5">
           <div>
-            <h2 className="text-lg font-bold leading-tight">{context.heading}</h2>
-            <p className="mt-1 text-xs leading-normal text-white/90">{context.description}</p>
+            <h2 className="text-xl font-medium leading-tight">{context.heading}</h2>
+            <p className="mt-1 text-xs leading-relaxed text-[#51645d]">{context.description}</p>
           </div>
-          {!context.destination && (
-            <div className="flex flex-wrap gap-1.5" aria-label="Popular destinations">
-              {destinations.map((place) => (
+          {!context.destination && popularDestinations.length > 0 && (
+            <div className="flex flex-wrap gap-1.5" role="group" aria-label="Suggested destinations">
+              {popularDestinations.map((place) => (
                 <button
                   key={place}
                   type="button"
                   aria-pressed={place === selected}
                   onClick={() => setSelected(place)}
-                  className={`rounded-full px-2.5 py-1.5 text-xs font-semibold ${place === selected ? 'bg-white text-[#ab3526]' : 'bg-white/15 hover:bg-white/25'}`}
+                  className={`rounded-full px-2.5 py-1.5 text-xs font-semibold ${place === selected ? 'bg-[#0b4941] text-white' : 'bg-[#edf3ef] text-[#0b4941] hover:bg-[#dfece4]'}`}
                 >
                   {place}
                 </button>
@@ -142,7 +149,7 @@ export function HeroInquiryCard({ context, onClose }: { context: InquiryContext;
               aria-label="Destination"
               className="inquiry-field"
               value={selected}
-              placeholder="Destination"
+              placeholder="Where would you like to go?"
               maxLength={180}
               required
               onChange={(event) => setSelected(event.target.value)}
@@ -197,16 +204,16 @@ export function HeroInquiryCard({ context, onClose }: { context: InquiryContext;
             </select>
           </div>
           {error && (
-            <p role="alert" className="text-xs font-semibold text-white">
+            <p role="alert" className="text-xs font-semibold text-[#9b3225]">
               {error}
             </p>
           )}
           <button
             type="submit"
             disabled={busy}
-            className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-white px-3 text-sm font-bold text-[#ab3526] hover:bg-orange-50 disabled:opacity-70"
+            className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#0b4941] px-3 text-sm font-semibold text-white hover:bg-[#072f2b] disabled:opacity-70"
           >
-            {busy ? 'Sending…' : 'Request my itinerary'} <Icon name="arrow" size={16} />
+            {busy ? 'Sending…' : 'Request a tailored itinerary'} <Icon name="arrow" size={16} />
           </button>
         </form>
       )}

@@ -55,9 +55,9 @@ export function BookingDrawer({ booking, onClose, onIssueVoucher }: BookingDrawe
           )}
 
           <div className="p-4 rounded-xl bg-slate-100/70 border border-slate-200/80 flex items-center justify-between">
-            <span className="font-semibold text-slate-700 font-inter-tight">Total Price</span>
+            <span className="font-semibold text-slate-700 font-inter-tight">{booking.status === 'Pending' ? 'Starting estimate' : 'Recorded price'}</span>
             <span className="font-mono font-bold text-slate-900 text-base font-inter-tight">
-              ₹{booking.totalPrice.toLocaleString('en-IN')}
+              {booking.totalPrice ? `₹${booking.totalPrice.toLocaleString('en-IN')}` : 'Quote pending'}
             </span>
           </div>
 
@@ -66,7 +66,7 @@ export function BookingDrawer({ booking, onClose, onIssueVoucher }: BookingDrawe
               onClick={() => onIssueVoucher(booking.bookingId)}
               className="flex-1 py-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-semibold text-center shadow-xs"
             >
-              Issue Voucher
+              Mark voucher issued
             </button>
             <button
               onClick={onClose}

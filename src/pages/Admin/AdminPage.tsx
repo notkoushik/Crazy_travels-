@@ -196,8 +196,8 @@ function AdminDashboardContent({
 
   const handleIssueVoucher = async (booking: BookingSubmission) => {
     try {
-      await store.updateBookingStatus(booking.bookingId, 'Voucher Issued', 'Deposit Paid')
-      onToast(`Official Trip Voucher issued and sent for #${booking.bookingId}!`)
+      await store.updateBookingStatus(booking.bookingId, 'Voucher Issued')
+      onToast(`Voucher status updated for #${booking.bookingId}.`)
       setSelectedBooking(null)
     } catch (err: any) {
       onToast(`Error issuing voucher: ${err.message}`)

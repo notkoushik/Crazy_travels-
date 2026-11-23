@@ -4,7 +4,6 @@ import { Currency, PackageItem, RouteName } from '../types/travel'
 import { Icon } from '../components/Icon'
 import { GoogleVerifiedBadge } from '../components/GoogleVerifiedBadge'
 import { formatPrice } from '../data/travelData'
-import { getPackageGallery } from '../data/catalogPhotos'
 
 const packageTabs = [
   ['itinerary', 'Day-by-day plan'],
@@ -54,7 +53,7 @@ export function PackageDetailPage({
           key={packageItem.id}
           title={packageItem.title}
           cover={packageItem.image}
-          gallery={getPackageGallery(packageItem.id, packageItem.gallery)}
+          gallery={packageItem.gallery}
           frameClassName="h-[420px] sm:h-[480px]"
         >
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent" />
@@ -328,7 +327,7 @@ export function PackageDetailPage({
               className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#c83c2c] px-3 text-sm font-semibold text-white hover:bg-[#ae3224]"
             >
               <Icon name="calendar" size={17} className="shrink-0" />
-              <span>Book or request a free quote</span>
+              <span>Request a private quote</span>
             </button>
 
             <button

@@ -9,11 +9,13 @@ export function GalleryEditor({
   value,
   onChange,
   onBusyChange,
+  starterPhoto,
 }: {
   cover: string
   value: string[]
   onChange: (photos: string[]) => void
   onBusyChange: (busy: boolean) => void
+  starterPhoto?: string
 }) {
   const fileInput = useRef<HTMLInputElement>(null)
   const pending = useRef(false)
@@ -22,7 +24,7 @@ export function GalleryEditor({
   const [errors, setErrors] = useState<string[]>([])
   const busy = !!progress
 
-  const addPhotos = async (files?: File[]) => {
+  const addPhotos = async (files?: File[], photoUrl = url) => {
     if (pending.current) return
     pending.current = true
     onBusyChange(true)
@@ -41,8 +43,8 @@ export function GalleryEditor({
         }
       } else {
         setProgress('Checking photo link…')
-        added.push(await validatePhotoLink(url))
-        setUrl('')
+        added.push(await validatePhotoLink(photoUrl))
+        if (photoUrl === url) setUrl('')
       }
       const existing = catalogPhotoUrls(cover, value)
       const next = catalogPhotoUrls(cover, [...value, ...added])
@@ -106,6 +108,11 @@ export function GalleryEditor({
         <button type="button" disabled={busy || !url.trim()} onClick={() => void addPhotos()} className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-800 disabled:opacity-50">
           Add URL
         </button>
+        {starterPhoto && starterPhoto !== cover && !value.includes(starterPhoto) && (
+          <button type="button" disabled={busy} onClick={() => void addPhotos(undefined, starterPhoto)} className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-800 disabled:opacity-50">
+            Add starter photo
+          </button>
+        )}
       </div>
       {progress && <p role="status" className="text-xs text-slate-700">{progress}</p>}
       {!!errors.length && (

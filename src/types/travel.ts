@@ -245,6 +245,7 @@ export type RouteName =
   | 'contact'
   | 'help'
   | 'manage-booking'
+  | 'trip-request'
   | 'terms'
   | 'privacy'
   | 'admin'
@@ -271,7 +272,7 @@ export interface BookingSubmission {
   travelDate: string
   adults: number
   children: number
-  hotelType: 'Standard' | 'Deluxe' | 'Luxury 5-Star'
+  hotelType: 'Standard' | 'Deluxe' | 'Luxury 5-Star' | 'Flexible'
   customerName: string
   customerEmail: string
   customerPhone: string

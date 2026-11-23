@@ -9,7 +9,6 @@ import { shouldPlaySignatureIntro, SignatureLogoIntro } from './components/Signa
 // Modals & Drawers
 import { AuthModal } from './components/Modals/AuthModal'
 import { SavedTripsDrawer } from './components/Modals/SavedTripsDrawer'
-import { BookingModal } from './components/Modals/BookingModal'
 import { CurrencyModal } from './components/Modals/CurrencyModal'
 import { LiveChatDrawer } from './components/Modals/LiveChatDrawer'
 import { StoryViewerModal } from './components/Modals/StoryViewerModal'
@@ -29,6 +28,7 @@ import { AboutPage } from './pages/AboutPage'
 import { ContactPage } from './pages/ContactPage'
 import { HelpPage } from './pages/HelpPage'
 import { ManageBookingPage } from './pages/ManageBookingPage'
+import { TripRequestPage, type TripRequestIntent } from './pages/TripRequestPage'
 import { LegalPage } from './pages/LegalPage'
 import { AdminPage } from './pages/AdminPage'
 import { useDynamicStore } from './services/dataStore'
@@ -63,22 +63,19 @@ export default function App() {
   const [storyViewerOpen, setStoryViewerOpen] = useState(false)
   const [activeStory, setActiveStory] = useState<any>(null)
   const [activeReelIndex, setActiveReelIndex] = useState(0)
-  const [bookingModalOpen, setBookingModalOpen] = useState(false)
-  const [bookingItem, setBookingItem] = useState<{ title: string; price: number }>({
-    title: 'Custom Travel Inquiry',
-    price: 36800,
-  })
-
+  const catalogPackages = store.packagesLoaded || store.isLoading ? store.packages : allPackages
+  const catalogDestinations = store.destinationsLoaded || store.isLoading ? store.destinations : nationalDestinations
   const packageId = route.startsWith('package/') ? route.slice(8) : undefined
   const destinationId = route.startsWith('destination/') ? route.slice(12) : undefined
-  const routePackage = store.packages.find(({ id }) => id === packageId) ?? allPackages.find(({ id }) => id === packageId)
-  const routeDestination = store.destinations.find(({ slug }) => slug === destinationId) ?? nationalDestinations.find(({ slug }) => slug === destinationId)
+  const routePackage = catalogPackages.find(({ id }) => id === packageId)
+  const routeDestination = catalogDestinations.find(({ slug }) => slug === destinationId)
+  const tripRequest: TripRequestIntent | undefined = route === 'trip-request' ? window.history.state?.tripRequest : undefined
   const inquiryContext: InquiryContext = routeDestination
     ? { page: route, title: routeDestination.city, destination: routeDestination.city, heading: `Plan a trip to ${routeDestination.city}`, description: `Tell us when you’d like to visit and we’ll help plan your ${routeDestination.city} itinerary.` }
     : routePackage
       ? { page: route, title: routePackage.title, destination: routePackage.place, heading: `Enquire about ${routePackage.title}`, description: 'Share your travel timing and group size for a quote on this package.' }
       : { page: route, title: route === 'packages' ? 'Holidays & Packages' : undefined, heading: route === 'packages' ? 'Find your holiday package' : 'Where would you like to travel?', description: route === 'packages' ? 'Share your destination and travel dates so we can suggest matching packages.' : 'Tell us where and when you’d like to travel for a tailored itinerary.' }
-  const otherPanelOpen = authModalOpen || savedDrawerOpen || currencyModalOpen || liveChatOpen || storyViewerOpen || bookingModalOpen
+  const otherPanelOpen = authModalOpen || savedDrawerOpen || currencyModalOpen || liveChatOpen || storyViewerOpen
 
   // Sync hash changes
   useEffect(() => {
@@ -106,9 +103,27 @@ export default function App() {
     setSaved((prev) => (prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]))
   }
 
+  const openRequestRoute = (next: 'trip-request' | 'manage-booking', state: object) => {
+    window.history.pushState(state, '', `#/${next}`)
+    setRoute(next)
+    window.scrollTo({ top: 0, behavior: 'instant' })
+  }
+
   const handleOpenBooking = (title: string, price: number) => {
-    setBookingItem({ title, price })
-    setBookingModalOpen(true)
+    const pkg = routePackage?.title === title
+      ? routePackage
+      : catalogPackages.find((item) => item.title === title && item.priceNum === price)
+    const request: TripRequestIntent = {
+      entryId: crypto.randomUUID(),
+      title,
+      price,
+      returnTo: route,
+      perTraveller: !!pkg,
+      image: pkg?.image ?? routeDestination?.image,
+      detail: pkg?.duration ?? routeDestination?.city,
+    }
+    setSavedDrawerOpen(false)
+    openRequestRoute('trip-request', { tripRequest: request })
   }
 
   const handleOpenStory = (story: any, index?: number) => {
@@ -121,6 +136,21 @@ export default function App() {
 
   // Render current page based on route
   const renderCurrentPage = () => {
+    if (route === 'trip-request') {
+      return <TripRequestPage key={tripRequest?.entryId} request={tripRequest} currency={currency} navigate={navigate}
+        onTrack={(reference) => openRequestRoute('manage-booking', { bookingLookupReference: reference })} />
+    }
+
+    if ((packageId !== undefined && !routePackage) || (destinationId !== undefined && !routeDestination)) {
+      const loading = store.isLoading && (packageId !== undefined ? !store.packagesLoaded : !store.destinationsLoaded)
+      return (
+        <main className="shell space-y-4 py-16">
+          <h1 className="text-4xl">{loading ? 'Loading journey' : 'Journey unavailable'}</h1>
+          {!loading && <button type="button" onClick={() => navigate('packages')} className="quote-primary">Browse holiday packages</button>}
+        </main>
+      )
+    }
+
     if (route === 'packages') {
       return (
         <PackagesPage
@@ -133,8 +163,8 @@ export default function App() {
       )
     }
 
-    if (route.startsWith('package/')) {
-      const pkg = routePackage ?? store.packages[0] ?? allPackages[0]
+    if (routePackage) {
+      const pkg = routePackage
       return (
         <PackageDetailPage
           packageItem={pkg}
@@ -147,8 +177,8 @@ export default function App() {
       )
     }
 
-    if (route.startsWith('destination/')) {
-      const dest = routeDestination ?? store.destinations[0] ?? nationalDestinations[0]
+    if (routeDestination) {
+      const dest = routeDestination
       return (
         <DestinationPage
           destination={dest}
@@ -200,7 +230,7 @@ export default function App() {
     }
 
     if (route === 'manage-booking') {
-      return <ManageBookingPage navigate={navigate} onToast={showToast} />
+      return <ManageBookingPage navigate={navigate} initialReference={window.history.state?.bookingLookupReference} />
     }
 
     if (route === 'terms') {
@@ -312,16 +342,6 @@ export default function App() {
         onBook={handleOpenBooking}
       />
 
-      {/* Booking & Quote Modal */}
-      <BookingModal
-        isOpen={bookingModalOpen}
-        onClose={() => setBookingModalOpen(false)}
-        itemTitle={bookingItem.title}
-        basePrice={bookingItem.price}
-        currency={currency}
-        onToast={showToast}
-      />
-
       {/* Currency & Language Modal */}
       <CurrencyModal
         isOpen={currencyModalOpen}
@@ -348,7 +368,10 @@ export default function App() {
         onChangeIndex={setActiveReelIndex}
       />
 
-      <TripInquiry key={route} context={inquiryContext} paused={otherPanelOpen} />
+      {route !== 'trip-request' && route !== 'manage-booking' && (
+        <TripInquiry key={route} context={inquiryContext} paused={otherPanelOpen}
+          destinations={store.destinations} />
+      )}
     </div>
   )
 

@@ -168,7 +168,7 @@ export function HomePage({
 }: HomePageProps) {
   const store = useDynamicStore()
   const slides = store.heroSlides.length > 0 ? store.heroSlides : heroSlides
-  const displayPackages = store.packages.length > 0 ? store.packages : allPackages
+  const displayPackages = store.packagesLoaded || store.isLoading ? store.packages : allPackages
   const displayStays = store.stays.length > 0 ? store.stays : hotelStays
   const homePackages = [...displayPackages].sort((left, right) => Number(!!right.featured) - Number(!!left.featured)).slice(0, 3)
 

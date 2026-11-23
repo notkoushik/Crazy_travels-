@@ -1,6 +1,8 @@
 ﻿import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { HeroInquiryCard } from './HeroInquiryCard'
+import { Icon } from './Icon'
 import { WhatsAppFloat } from './WhatsAppFloat'
+import type { DestinationItem } from '../types/travel'
 
 export interface InquiryContext {
   page: string
@@ -10,15 +12,25 @@ export interface InquiryContext {
   description: string
 }
 
-export function TripInquiry({ context, paused }: { context: InquiryContext; paused: boolean }) {
+export function TripInquiry({ context, paused, destinations }: {
+  context: InquiryContext
+  paused: boolean
+  destinations: DestinationItem[]
+}) {
   const [ready, setReady] = useState(false)
-  const [manual, setManual] = useState<boolean>()
+  const [manual, setManual] = useState(false)
+  const [engaged, setEngaged] = useState(false)
   const id = useId()
   const launcher = useRef<HTMLButtonElement>(null)
   const panel = useRef<HTMLElement>(null)
   const animation = useRef<Animation | null>(null)
   const wasOpen = useRef(false)
-  const open = !paused && (manual ?? ready)
+  const open = !paused && manual
+  const showPrompt = !paused && ready && !engaged
+  const suggestions = [...new Set(destinations
+    .filter((destination) => destination.isTrending !== false)
+    .sort((left, right) => (left.displayOrder ?? 0) - (right.displayOrder ?? 0))
+    .map(({ city }) => city))].slice(0, 4)
 
   useEffect(() => {
     const timer = window.setTimeout(() => setReady(true), 3000)
@@ -59,25 +71,46 @@ export function TripInquiry({ context, paused }: { context: InquiryContext; paus
     requestAnimationFrame(() => launcher.current?.focus({ preventScroll: true }))
   }
 
+  const expand = () => {
+    setEngaged(true)
+    setManual(true)
+    requestAnimationFrame(() => panel.current?.querySelector('button')?.focus({ preventScroll: true }))
+  }
+
   return (
-    <div className="inquiry-dock">
+    <div className="inquiry-dock" inert={paused}>
       <button
         ref={launcher}
         type="button"
-        data-expanded={open}
+        data-expanded={open || showPrompt}
         aria-expanded={open}
         aria-controls={id}
         className="inquiry-dock-launcher"
-        onClick={() => {
-          setManual(true)
-          requestAnimationFrame(() => panel.current?.querySelector('button')?.focus({ preventScroll: true }))
-        }}
+        onClick={expand}
       >
         <svg className="shrink-0" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
           <path d="M12 2.5c1 0 1.8 1 1.8 2.3V9l6.7 4.1c.3.2.5.53.5.9v1.3a.5.5 0 0 1-.66.47l-6.54-2.23v4.17l2.22 1.61c.18.13.28.33.28.55v1.1a.45.45 0 0 1-.59.43L12 20.23 8.29 21.4a.45.45 0 0 1-.59-.43v-1.1c0-.22.1-.42.28-.55l2.22-1.61v-4.17l-6.54 2.23A.5.5 0 0 1 3 15.3V14c0-.37.2-.7.5-.9L10.2 9V4.8c0-1.3.8-2.3 1.8-2.3Z" />
         </svg>
         Trip inquiry
       </button>
+      {showPrompt && (
+        <div className="inquiry-dock-prompt">
+          <button className="inquiry-prompt-main" type="button" onClick={expand} aria-controls={id}>
+            <Icon name="messageSquare" size={19} />
+            <span>
+              <strong>Plan with a specialist</strong>
+              <small>{context.destination ? `Ask about ${context.destination}` : 'Get a personalised itinerary'}</small>
+            </span>
+            <Icon name="chevron" size={16} />
+          </button>
+          <button className="inquiry-prompt-dismiss" type="button" aria-label="Dismiss trip planning prompt" onClick={() => {
+            setEngaged(true)
+            minimize()
+          }}>
+            <Icon name="x" size={15} />
+          </button>
+        </div>
+      )}
       <aside
         id={id}
         ref={panel}
@@ -89,7 +122,7 @@ export function TripInquiry({ context, paused }: { context: InquiryContext; paus
           if (event.key === 'Escape') minimize()
         }}
       >
-        <HeroInquiryCard context={context} onClose={minimize} />
+        <HeroInquiryCard context={context} popularDestinations={suggestions} onClose={minimize} />
       </aside>
       <WhatsAppFloat placement="dock" />
     </div>

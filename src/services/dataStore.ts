@@ -37,6 +37,8 @@ export interface DynamicStoreStats {
 export interface DynamicStoreState {
   destinations: DestinationItem[]
   packages: PackageItem[]
+  destinationsLoaded: boolean
+  packagesLoaded: boolean
   stays: StayItem[]
   roadTrips: RoadTripItem[]
   stories: StoryItem[]
@@ -54,6 +56,8 @@ export interface DynamicStoreState {
 const emptyInitialState: DynamicStoreState = {
   destinations: [],
   packages: [],
+  destinationsLoaded: false,
+  packagesLoaded: false,
   stays: [],
   roadTrips: [],
   stories: [],
@@ -78,6 +82,7 @@ const emptyInitialState: DynamicStoreState = {
 }
 
 let currentStore: DynamicStoreState = { ...emptyInitialState }
+let catalogRequest = 0
 
 function notifyListeners() {
   if (typeof window !== 'undefined') {
@@ -95,6 +100,16 @@ function getAdminHeaders(): HeadersInit {
   return { 'Content-Type': 'application/json', ...getAdminAuthHeaders() }
 }
 
+async function fetchCatalogCollection<T>(path: string): Promise<T[] | null> {
+  try {
+    const response = await fetch(path)
+    const data = response.ok ? await response.json() : null
+    return Array.isArray(data) ? data : null
+  } catch {
+    return null
+  }
+}
+
 // ========================================================
 // CORE API CLIENT - PRIVACY-FIRST ZERO-TRUST ARCHITECTURE
 // ========================================================
@@ -106,6 +121,7 @@ export const dataStore = {
   // 1. PUBLIC CATALOG FETCH (Strictly Zero PII)
   // ------------------------------------------------------
   fetchInitialData: async () => {
+    const request = ++catalogRequest
     try {
       currentStore = { ...currentStore, isLoading: true }
       notifyListeners()
@@ -121,28 +137,31 @@ export const dataStore = {
         heroSlidesRes,
         reelsRes,
       ] = await Promise.all([
-        fetch('/api/destinations').then((r) => (r.ok ? r.json() : [])),
-        fetch('/api/packages').then((r) => (r.ok ? r.json() : [])),
-        fetch('/api/stays').then((r) => (r.ok ? r.json() : [])),
-        fetch('/api/road-trips').then((r) => (r.ok ? r.json() : [])),
-        fetch('/api/stories').then((r) => (r.ok ? r.json() : [])),
-        fetch('/api/offers').then((r) => (r.ok ? r.json() : [])),
-        fetch('/api/hero-slides').then((r) => (r.ok ? r.json() : [])),
-        fetch('/api/reels').then((r) => (r.ok ? r.json() : null)).catch(() => null),
+        fetchCatalogCollection<DestinationItem>('/api/destinations'),
+        fetchCatalogCollection<PackageItem>('/api/packages'),
+        fetchCatalogCollection<StayItem>('/api/stays'),
+        fetchCatalogCollection<RoadTripItem>('/api/road-trips'),
+        fetchCatalogCollection<StoryItem>('/api/stories'),
+        fetchCatalogCollection<OfferItem>('/api/offers'),
+        fetchCatalogCollection<HeroSlideItem>('/api/hero-slides'),
+        fetchCatalogCollection<InstagramReelItem>('/api/reels'),
       ])
 
+      if (request !== catalogRequest) return currentStore
       currentStore = {
         ...currentStore,
-        destinations: Array.isArray(destinationsRes) ? destinationsRes : [],
-        packages: Array.isArray(packagesRes) ? packagesRes : [],
-        stays: Array.isArray(staysRes) ? staysRes : [],
-        roadTrips: Array.isArray(roadTripsRes) ? roadTripsRes : [],
-        stories: Array.isArray(storiesRes) ? storiesRes : [],
-        offers: Array.isArray(offersRes) ? offersRes : [],
-        heroSlides: Array.isArray(heroSlidesRes) ? heroSlidesRes : [],
-        reels: Array.isArray(reelsRes) ? reelsRes : currentStore.reels,
+        destinations: destinationsRes ?? currentStore.destinations,
+        packages: packagesRes ?? currentStore.packages,
+        destinationsLoaded: currentStore.destinationsLoaded || destinationsRes !== null,
+        packagesLoaded: currentStore.packagesLoaded || packagesRes !== null,
+        stays: staysRes ?? currentStore.stays,
+        roadTrips: roadTripsRes ?? currentStore.roadTrips,
+        stories: storiesRes ?? currentStore.stories,
+        offers: offersRes ?? currentStore.offers,
+        heroSlides: heroSlidesRes ?? currentStore.heroSlides,
+        reels: reelsRes ?? currentStore.reels,
         isLoading: false,
-        isDatabaseConnected: true,
+        isDatabaseConnected: [destinationsRes, packagesRes, staysRes, roadTripsRes, storiesRes, offersRes, heroSlidesRes, reelsRes].some((collection) => collection !== null),
         lastSyncedAt: new Date().toISOString(),
       }
       notifyListeners()
@@ -156,6 +175,7 @@ export const dataStore = {
 
       return currentStore
     } catch (err) {
+      if (request !== catalogRequest) return currentStore
       console.error('Failed fetching catalog from API:', err)
       currentStore = {
         ...currentStore,
@@ -280,12 +300,15 @@ export const dataStore = {
       })
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}))
-        throw new Error(errData.message || 'Failed to submit booking')
+        throw new Error(errData.error || errData.message || 'We could not send your request. Please try again.')
       }
-      // If admin is browsing, sync admin records
+      const data = await res.json()
+      if (typeof data?.bookingId !== 'string' || !data.bookingId)
+        throw new Error('We could not verify that your request was received. Please try again.')
       if (dataStore.isAdminAuthenticated()) {
-        await dataStore.fetchAdminData()
+        void dataStore.fetchAdminData().catch(console.error)
       }
+      return data.bookingId as string
     } catch (err) {
       console.error('Error submitting booking:', err)
       throw err

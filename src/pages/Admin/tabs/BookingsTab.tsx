@@ -90,10 +90,10 @@ export function BookingsTab({
                   </td>
                   <td className="py-3.5 px-4">
                     <div className="font-mono font-bold text-slate-900 font-inter-tight">
-                      ₹{b.totalPrice.toLocaleString('en-IN')}
+                      {b.totalPrice ? `₹${b.totalPrice.toLocaleString('en-IN')}` : 'Quote pending'}
                     </div>
                     <span className="text-[10px] text-emerald-600 font-medium">
-                      {b.paymentStatus || 'Paid'}
+                      {b.paymentStatus || 'Unpaid'}
                     </span>
                   </td>
                   <td className="py-3.5 px-4">
