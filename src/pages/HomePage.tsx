@@ -11,7 +11,6 @@ import {
   heroSlides,
   hotelStays,
   nationalDestinations,
-  packages as legacyPackages,
   allPackages,
   reviews,
   services,

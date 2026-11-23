@@ -297,12 +297,12 @@ export function DestinationModal({
                     Recommended Stay Duration
                   </label>
                   <input
-                    type="number"
-                    value={destination.recommendedStayDays || 4}
+                    type="text"
+                    value={destination.recommendedStayDays || '4-5 Days'}
                     onChange={(e) =>
                       onChange({
                         ...destination,
-                        recommendedStayDays: Number(e.target.value),
+                        recommendedStayDays: e.target.value,
                       })
                     }
                     className="w-full px-3 py-2 rounded-lg border border-slate-200 text-slate-900 outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900"

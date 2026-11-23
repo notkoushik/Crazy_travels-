@@ -74,6 +74,7 @@ export function BookingModal({
         customerPhone: phone,
         specialRequests: notes,
         totalPrice: finalPrice,
+        submittedAt: new Date().toISOString(),
         status: 'Pending',
         paymentStatus: 'Deposit Paid',
       })

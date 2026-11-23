@@ -62,6 +62,7 @@ export function CustomTripPage({ navigate, onToast }: CustomTripPageProps) {
         notes: `Duration: ${duration}. Stay: ${stayType}. Transport: ${transport}. Notes: ${notes || 'None'}`,
         status: 'New',
         assignedAgent: 'Unassigned',
+        createdAt: new Date().toISOString(),
       })
       setSubmitted(true)
       onToast('Your tailor-made itinerary request has been submitted to PostgreSQL CRM!')

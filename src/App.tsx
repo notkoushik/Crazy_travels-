@@ -52,14 +52,8 @@ export default function App() {
   const [isHeroInquiryOpen, setIsHeroInquiryOpen] = useState(true)
   const [inquiryModalOpen, setInquiryModalOpen] = useState(false)
 
-  const handleOpenExpressInterest = () => {
-    if (route === 'home') {
-      setIsHeroInquiryOpen(true)
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-    } else {
-      setInquiryModalOpen(true)
-    }
-  }
+  // Modals state
+  const [authModalOpen, setAuthModalOpen] = useState(false)
   const [savedDrawerOpen, setSavedDrawerOpen] = useState(false)
   const [currencyModalOpen, setCurrencyModalOpen] = useState(false)
   const [liveChatOpen, setLiveChatOpen] = useState(false)
@@ -70,6 +64,15 @@ export default function App() {
     title: 'Custom Travel Inquiry',
     price: 36800,
   })
+
+  const handleOpenExpressInterest = () => {
+    if (route === 'home') {
+      setIsHeroInquiryOpen(true)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    } else {
+      setInquiryModalOpen(true)
+    }
+  }
 
   // Sync hash changes
   useEffect(() => {
