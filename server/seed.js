@@ -822,7 +822,7 @@ async function runSeed() {
     const reviews = [
       {
         id: 'rev-1',
-        quote: 'Our Kashmir journey with Crazy Tours Travels felt completely personal. The quiet houseboat on Nigeen Lake and family orchard lunch were moments we would never have found ourselves.',
+        quote: 'Our Kashmir journey with Crazy Tours Travel felt completely personal. The quiet houseboat on Nigeen Lake and family orchard lunch were moments we would never have found ourselves.',
         name: 'Anika & Rohan Sengupta',
         trip: 'Kashmir Spring Tour, April 2025',
         rating: 5,
@@ -838,7 +838,7 @@ async function runSeed() {
       },
       {
         id: 'rev-3',
-        quote: 'The Rajasthan road trip balanced royal haveli stays with true local discoveries. Even our teenagers said it was the best vacation our family has ever taken. Crazy Tours Travels is now our go-to!',
+        quote: 'The Rajasthan road trip balanced royal haveli stays with true local discoveries. Even our teenagers said it was the best vacation our family has ever taken. Crazy Tours Travel is now our go-to!',
         name: 'The Iyer Family',
         trip: 'Royal Rajasthan Circuit, January 2026',
         rating: 5,
@@ -859,7 +859,7 @@ async function runSeed() {
 
     const faqs = [
       {
-        question: 'What makes Crazy Tours Travels different from regular booking websites?',
+        question: 'What makes Crazy Tours Travel different from regular booking websites?',
         answer: 'We do not sell cookie-cutter packages. Every journey is curated by travel designers who have personally visited the destinations, stayed in the properties, and verified local drivers and guides. You get human travel design with transparent pricing and 24/7 on-trip concierge assistance.',
         category: 'About Us',
       },

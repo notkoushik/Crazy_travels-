@@ -4,24 +4,26 @@ import { Icon } from './Icon'
 interface WhatsAppFloatProps {
   phoneNumber?: string
   defaultMessage?: string
-  placement?: 'floating' | 'desktop-floating' | 'mobile-inline'
+  placement?: 'floating' | 'desktop-floating' | 'mobile-inline' | 'dock'
 }
 
 export function WhatsAppFloat({
   phoneNumber = '918894998808',
-  defaultMessage = 'Hi Crazy Tours Travels, I would like to plan a trip with your expert concierge.',
+  defaultMessage = 'Hi Crazy Tours Travel, I would like to plan a trip with your expert concierge.',
   placement = 'floating',
 }: WhatsAppFloatProps) {
   const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(defaultMessage)}`
   const inline = placement === 'mobile-inline'
+  const docked = placement === 'dock'
   const placementClass = inline
     ? 'mt-3 md:hidden'
+    : docked ? 'relative flex items-center justify-end group'
     : `fixed right-5 bottom-5 z-40 items-center group ${placement === 'desktop-floating' ? 'hidden md:flex' : 'flex'}`
 
   return (
     <aside aria-label="WhatsApp live concierge support" className={placementClass}>
       {/* Tooltip on Desktop */}
-      <div className="hidden md:flex flex-col items-end mr-3 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0 pointer-events-none">
+      <div className={`hidden md:flex flex-col items-end mr-3 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0 pointer-events-none ${docked ? 'absolute right-full w-max' : ''}`}>
         <div className="bg-[#072f2b] text-white px-3.5 py-1.5 rounded-xl shadow-xl text-xs font-medium border border-emerald-900/40 flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-[#25D366] animate-pulse"></span>
           <span>Online Concierge · +91 88949 98808</span>
@@ -34,10 +36,10 @@ export function WhatsAppFloat({
         href={whatsappUrl}
         target="_blank"
         rel="noopener noreferrer"
-        aria-label={inline ? 'Ask a travel expert on WhatsApp' : 'Chat with Crazy Tours Travels on WhatsApp: 88949 98808'}
+        aria-label={inline ? 'Ask a travel expert on WhatsApp' : 'Chat with Crazy Tours Travel on WhatsApp: 88949 98808'}
         className={inline
           ? 'flex min-h-12 items-center gap-2.5 rounded-xl border border-[#dce8e1] bg-[#eef5ef] px-3 py-2 text-sm font-semibold text-[#103f36] hover:bg-[#e3efe6]'
-          : 'relative flex items-center gap-2.5 pl-3.5 pr-4 py-2.5 rounded-full bg-gradient-to-r from-[#25D366] to-[#128C7E] hover:from-[#1EBE5D] hover:to-[#075E54] text-white font-bold text-xs sm:text-sm shadow-xl shadow-[#25D366]/35 hover:shadow-2xl hover:shadow-[#25D366]/50 transition-all duration-300 hover:scale-105 active:scale-95 border border-white/25'}
+          : `relative flex items-center gap-2.5 rounded-full bg-gradient-to-r from-[#25D366] to-[#128C7E] hover:from-[#1EBE5D] hover:to-[#075E54] text-white font-bold text-xs sm:text-sm shadow-xl shadow-[#25D366]/35 hover:shadow-2xl hover:shadow-[#25D366]/50 transition-all duration-300 hover:scale-105 active:scale-95 border border-white/25 ${docked ? 'size-12 justify-center sm:w-auto sm:pl-3.5 sm:pr-4' : 'pl-3.5 pr-4 py-2.5'}`}
       >
         {/* Pulsing Ring Badge */}
         <span className="relative flex h-7 w-7 items-center justify-center flex-none">
@@ -55,7 +57,7 @@ export function WhatsAppFloat({
         </span>
 
         {/* Text Label */}
-        <div className="flex flex-col leading-tight text-left">
+        <div className={`${docked ? 'hidden sm:flex' : 'flex'} flex-col leading-tight text-left`}>
           <span className="font-bold tracking-tight text-[13px] sm:text-[14px]">
             {inline ? 'Ask a travel expert' : 'Ask a Travel Expert'}
           </span>

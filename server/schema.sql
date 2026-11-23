@@ -1,4 +1,4 @@
--- Crazy Tours & Travels: PostgreSQL Database Schema
+-- Crazy Tours Travel: PostgreSQL Database Schema
 -- Database: crazy_tours_db
 
 CREATE TABLE IF NOT EXISTS catalog_images (
@@ -164,6 +164,7 @@ CREATE TABLE IF NOT EXISTS inquiries (
   phone VARCHAR(60) NOT NULL,
   preferred_destination VARCHAR(255) NOT NULL,
   travel_month VARCHAR(120) NOT NULL,
+  travel_details JSONB,
   travelers_count VARCHAR(120) NOT NULL,
   budget_per_person VARCHAR(120) NOT NULL,
   trip_type VARCHAR(120) NOT NULL,
@@ -172,6 +173,8 @@ CREATE TABLE IF NOT EXISTS inquiries (
   assigned_agent VARCHAR(120),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+ALTER TABLE inquiries ADD COLUMN IF NOT EXISTS travel_details JSONB;
 
 CREATE TABLE IF NOT EXISTS hero_slides (
   id SERIAL PRIMARY KEY,
@@ -214,6 +217,24 @@ CREATE TABLE IF NOT EXISTS instagram_reels (
   display_order INTEGER DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+CREATE TABLE IF NOT EXISTS reel_videos (
+  id UUID PRIMARY KEY,
+  content_type TEXT NOT NULL,
+  size INTEGER NOT NULL,
+  complete BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS reel_video_parts (
+  video_id UUID REFERENCES reel_videos(id) ON DELETE CASCADE,
+  part INTEGER,
+  content BYTEA NOT NULL,
+  PRIMARY KEY (video_id, part)
+);
+
+ALTER TABLE reel_videos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE reel_video_parts ENABLE ROW LEVEL SECURITY;
 
 -- Indexes for lightning fast lookups
 CREATE INDEX IF NOT EXISTS idx_destinations_trending ON destinations(is_trending, display_order);

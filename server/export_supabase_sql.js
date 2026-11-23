@@ -9,7 +9,7 @@ async function generateRelationalSchema() {
   const validDestSlugs = new Set(['udaipur', 'munnar', 'hampi', 'srinagar', 'gangtok', 'andaman'])
 
   let sqlOut = `-- ============================================================================\n`
-  sqlOut += `-- CRAZY TOURS & TRAVELS — FULLY RELATIONAL PRODUCTION SUPABASE SCHEMA & SEED\n`
+  sqlOut += `-- Crazy Tours Travel — FULLY RELATIONAL PRODUCTION SUPABASE SCHEMA & SEED\n`
   sqlOut += `-- Database Engine: PostgreSQL 15 / 16 / 17 (Supabase Compatible)\n`
   sqlOut += `-- Features: Relational Foreign Keys, Cascades, Indexes, and Validated Seed Data\n`
   sqlOut += `-- ============================================================================\n\n`

@@ -31,6 +31,48 @@ async function auditAndSync() {
       `)
       console.log('   ✓ catalog_images table and policy verified.')
 
+      // 1b. Inquiries travel_details column
+      console.log('1b. Checking inquiries.travel_details column...')
+      await client.query('ALTER TABLE inquiries ADD COLUMN IF NOT EXISTS travel_details JSONB;')
+      console.log('   ✓ inquiries.travel_details verified.')
+
+      // 1c. Reel videos and chunked video parts
+      console.log('1c. Checking reel_videos and reel_video_parts tables...')
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS reel_videos (
+          id UUID PRIMARY KEY,
+          content_type TEXT NOT NULL,
+          size INTEGER NOT NULL,
+          complete BOOLEAN NOT NULL DEFAULT FALSE,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+        CREATE TABLE IF NOT EXISTS reel_video_parts (
+          video_id UUID REFERENCES reel_videos(id) ON DELETE CASCADE,
+          part INTEGER,
+          content BYTEA NOT NULL,
+          PRIMARY KEY (video_id, part)
+        );
+        ALTER TABLE reel_videos ENABLE ROW LEVEL SECURITY;
+        ALTER TABLE reel_video_parts ENABLE ROW LEVEL SECURITY;
+      `)
+      await client.query(`
+        DO $$
+        BEGIN
+          IF NOT EXISTS (
+            SELECT 1 FROM pg_policies WHERE tablename = 'reel_videos' AND policyname = 'Public can stream completed reel videos'
+          ) THEN
+            CREATE POLICY "Public can stream completed reel videos" ON reel_videos FOR SELECT USING (true);
+          END IF;
+          IF NOT EXISTS (
+            SELECT 1 FROM pg_policies WHERE tablename = 'reel_video_parts' AND policyname = 'Public can stream reel video parts'
+          ) THEN
+            CREATE POLICY "Public can stream reel video parts" ON reel_video_parts FOR SELECT USING (true);
+          END IF;
+        END
+        $$;
+      `)
+      console.log('   ✓ reel_videos and reel_video_parts verified.')
+
       // 2. Ensure all indexes from schema.sql exist
       console.log('2. Verifying performance & search indexes...')
       await client.query(`

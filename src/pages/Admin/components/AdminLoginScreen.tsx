@@ -56,7 +56,7 @@ export function AdminLoginScreen({
           <div className="w-16 h-16 rounded-2xl bg-[#ef4934] p-1 mx-auto mb-4 shadow-lg ring-4 ring-white/10 flex items-center justify-center">
             <img
               src="/IMG_1611.PNG"
-              alt="Crazy Tours"
+              alt="Crazy Tours Travel"
               className="w-full h-full object-cover rounded-xl"
             />
           </div>

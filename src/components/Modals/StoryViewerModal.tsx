@@ -207,7 +207,7 @@ export function StoryViewerModal({
                 <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-amber-500 to-rose-600 p-[1.5px]">
                   <img
                     src="/IMG_1611.PNG"
-                    alt="Crazy Tours"
+                    alt="Crazy Tours Travel"
                     className="w-full h-full object-cover rounded-full bg-black"
                   />
                 </div>

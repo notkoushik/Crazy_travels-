@@ -106,7 +106,7 @@ export function BookingModal({
           </button>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-[#ef4934] p-0.5">
-              <img src="/IMG_1611.PNG" alt="Crazy Tours Travels" className="w-full h-full object-cover rounded-lg" />
+              <img src="/IMG_1611.PNG" alt="Crazy Tours Travel" className="w-full h-full object-cover rounded-lg" />
             </div>
             <div>
               <span className="text-[#ef4934] text-[10px] uppercase font-bold tracking-widest block">
@@ -128,7 +128,7 @@ export function BookingModal({
                 Inquiry Confirmed!
               </h3>
               <p className="text-sm text-gray-600 max-w-md mx-auto">
-                Your dedicated Crazy Tours Travels designer has received your itinerary preferences. We are holding your dates and will contact you via WhatsApp / Call within <strong>30 minutes</strong>.
+                Your dedicated Crazy Tours Travel designer has received your itinerary preferences. We are holding your dates and will contact you via WhatsApp / Call within <strong>30 minutes</strong>.
               </p>
               <div className="bg-[#fbfaf7] border border-gray-200 rounded-2xl p-4 text-left max-w-sm mx-auto text-xs space-y-1.5">
                 <div className="flex justify-between">

@@ -296,6 +296,11 @@ export interface InquirySubmission {
   phone: string
   preferredDestination: string
   travelMonth: string
+  travelStart?: string
+  travelEnd?: string
+  travelSeason?: string
+  sourcePage?: string
+  sourceTitle?: string
   travelersCount: string
   budgetPerPerson: string
   tripType: string

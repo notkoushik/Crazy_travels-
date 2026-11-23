@@ -7,9 +7,9 @@ interface CrazyToursLogoProps {
 
 /**
  * 100% Exact Official Vector Polygon extracted directly from master asset
- * Crazy Tours Travels/public/IMG_1611.PNG (2500x2500 master emblem)
+ * Crazy Tours Travel/public/IMG_1611.PNG (2500x2500 master emblem)
  */
-const OFFICIAL_LOGO_PATH =
+export const OFFICIAL_LOGO_PATH =
   'M 1006 20 L 1020 21 L 1031 26 L 1118 112 L 1185 114 L 1200 126 L 1207 145 ' +
   'L 1201 168 L 1183 182 L 1117 183 L 1033 267 L 1022 273 L 1003 274 L 991 269 ' +
   'L 982 261 L 975 246 L 975 231 L 980 219 L 1013 185 L 1012 183 L 500 184 ' +
@@ -56,15 +56,15 @@ export function CrazyToursLogo({
           fill="currentColor"
           role={showWordmark ? undefined : 'img'}
           aria-hidden={showWordmark ? true : undefined}
-          aria-label={showWordmark ? undefined : 'Crazy Tours & Travels'}
+          aria-label={showWordmark ? undefined : 'Crazy Tours Travel'}
         >
           <path d={OFFICIAL_LOGO_PATH} />
         </svg>
       </span>
       {showWordmark && (
         <span className="crazy-tours-wordmark">
-          <span className="crazy-tours-name">Crazy</span>
-          <span className="crazy-tours-descriptor">Tours &amp; Travels</span>
+          <span className="crazy-tours-name">Crazy Tours</span>{' '}
+          <span className="crazy-tours-descriptor">Travel</span>
         </span>
       )}
     </span>

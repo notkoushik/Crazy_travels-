@@ -1,4 +1,4 @@
-import { useState, type RefObject } from 'react'
+import { useState } from 'react'
 import type { Currency, RouteName } from '../types/travel'
 import { Icon } from './Icon'
 import { CrazyToursLogo } from './CrazyToursLogo'
@@ -20,9 +20,6 @@ interface HeaderProps {
   onOpenCurrency: () => void
   currentCurrency: Currency
   user: { name: string; email: string } | null
-  inlineInquiryOpen: boolean
-  inquiryLauncherRef: RefObject<HTMLButtonElement | null>
-  onOpenExpressInterest: () => void
 }
 
 export function Header({
@@ -34,9 +31,6 @@ export function Header({
   onOpenCurrency,
   currentCurrency,
   user,
-  inlineInquiryOpen,
-  inquiryLauncherRef,
-  onOpenExpressInterest,
 }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const accountLabel = user?.name.split(' ')[0] || 'Sign In'
@@ -56,7 +50,7 @@ export function Header({
           type="button"
           onClick={() => handleNav('home')}
           className="site-brand"
-          aria-label="Crazy Tours & Travels home"
+          aria-label="Crazy Tours Travel home"
         >
           <CrazyToursLogo />
         </button>
@@ -92,25 +86,6 @@ export function Header({
           >
             <Icon name="user" size={17} />
             <span>{accountLabel}</span>
-          </button>
-          <button
-            ref={inquiryLauncherRef}
-            type="button"
-            onClick={() => {
-              setMobileMenuOpen(false)
-              onOpenExpressInterest()
-            }}
-            className="site-nav-action site-inquiry-launcher"
-            data-inline-open={inlineInquiryOpen}
-            aria-label="Open trip details and inquiry"
-            title="Trip Details & Inquiry"
-          >
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true">
-              <path
-                transform="rotate(32 12 12)"
-                d="M12 2.1c.85 0 1.55.83 1.55 1.85V9.4l7.4 4.25a.65.65 0 0 1 .33.56v1.43a.38.38 0 0 1-.49.36l-7.24-2.19v4.1l2.05 1.5c.18.13.28.34.28.56v.93a.36.36 0 0 1-.48.34L12 20.09l-3.4 1.15a.36.36 0 0 1-.48-.34v-.93c0-.22.1-.43.28-.56l2.05-1.5v-4.1L3.21 16a.38.38 0 0 1-.49-.36v-1.43c0-.23.13-.45.33-.56l7.4-4.25V3.95c0-1.02.7-1.85 1.55-1.85Z"
-              />
-            </svg>
           </button>
           <button
             type="button"

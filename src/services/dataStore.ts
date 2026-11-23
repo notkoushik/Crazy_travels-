@@ -10,7 +10,6 @@ import {
   BookingSubmission,
   InquirySubmission,
 } from '../types/travel'
-import { instagramReels as fallbackReels } from '../data/travelData'
 
 const EVENT_NAME = 'crazy_tours_store_updated'
 const ADMIN_TOKEN_KEY = 'crazy_tours_admin_token'
@@ -60,7 +59,7 @@ const emptyInitialState: DynamicStoreState = {
   stories: [],
   offers: [],
   heroSlides: [],
-  reels: fallbackReels,
+  reels: [],
   bookings: [],
   inquiries: [],
   stats: {
@@ -129,7 +128,7 @@ export const dataStore = {
         fetch('/api/stories').then((r) => (r.ok ? r.json() : [])),
         fetch('/api/offers').then((r) => (r.ok ? r.json() : [])),
         fetch('/api/hero-slides').then((r) => (r.ok ? r.json() : [])),
-        fetch('/api/reels').then((r) => (r.ok ? r.json() : fallbackReels)).catch(() => fallbackReels),
+        fetch('/api/reels').then((r) => (r.ok ? r.json() : null)).catch(() => null),
       ])
 
       currentStore = {
@@ -141,7 +140,7 @@ export const dataStore = {
         stories: Array.isArray(storiesRes) ? storiesRes : [],
         offers: Array.isArray(offersRes) ? offersRes : [],
         heroSlides: Array.isArray(heroSlidesRes) ? heroSlidesRes : [],
-        reels: Array.isArray(reelsRes) && reelsRes.length > 0 ? reelsRes : fallbackReels,
+        reels: Array.isArray(reelsRes) ? reelsRes : currentStore.reels,
         isLoading: false,
         isDatabaseConnected: true,
         lastSyncedAt: new Date().toISOString(),
@@ -302,7 +301,7 @@ export const dataStore = {
       })
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}))
-        throw new Error(errData.message || 'Failed to record inquiry')
+        throw new Error(errData.error || errData.message || 'Failed to record inquiry')
       }
       if (dataStore.isAdminAuthenticated()) {
         await dataStore.fetchAdminData()
@@ -528,12 +527,22 @@ export const dataStore = {
         headers: getAdminHeaders(),
         body: JSON.stringify(reel),
       })
-      if (!res.ok) throw new Error('Failed to save Instagram reel')
+      if (!res.ok) {
+        const failure = await res.json().catch(() => ({}))
+        throw new Error(failure.error || 'Could not save the reel.')
+      }
       await dataStore.fetchInitialData()
     } catch (err) {
       console.error('Error in saveReel:', err)
       throw err
     }
+  },
+
+  deleteReel: async (id: string) => {
+    const res = await fetch(`/api/reels/${encodeURIComponent(id)}`, { method: 'DELETE', headers: getAdminHeaders() })
+    if (!res.ok) throw new Error('Could not delete the reel.')
+    currentStore = { ...currentStore, reels: currentStore.reels.filter((reel) => reel.id !== id) }
+    notifyListeners()
   },
 
   refresh: async () => {

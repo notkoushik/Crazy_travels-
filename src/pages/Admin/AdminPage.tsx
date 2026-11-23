@@ -360,7 +360,8 @@ function AdminDashboardContent({
           {activeTab === 'reels' && (
             <ReelsTab
               reels={store.reels}
-              onUpdateReel={store.updateReel}
+              onSaveReel={store.saveReel}
+              onDeleteReel={store.deleteReel}
               onToast={onToast}
             />
           )}

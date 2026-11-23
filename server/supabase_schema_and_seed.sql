@@ -1,5 +1,5 @@
 -- ============================================================================
--- CRAZY TOURS & TRAVELS — FULLY RELATIONAL PRODUCTION SUPABASE SCHEMA & SEED
+-- Crazy Tours Travel — FULLY RELATIONAL PRODUCTION SUPABASE SCHEMA & SEED
 -- Database Engine: PostgreSQL 15 / 16 / 17 (Supabase Compatible)
 -- Features: Relational Foreign Keys, Cascades, Indexes, and Validated Seed Data
 -- ============================================================================
@@ -327,13 +327,13 @@ ON CONFLICT (id) DO NOTHING;
 
 -- Data for reviews (3 rows)
 INSERT INTO reviews (id, quote, name, trip, rating, avatar, package_id)
-VALUES ('rev-1', 'Our Kashmir journey with Crazy Tours Travels felt completely personal. The quiet houseboat on Nigeen Lake and family orchard lunch were moments we would never have found ourselves.', 'Anika & Rohan Sengupta', 'Kashmir Spring Tour, April 2025', 5, 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80', 'kashmir-tulips')
+VALUES ('rev-1', 'Our Kashmir journey with Crazy Tours Travel felt completely personal. The quiet houseboat on Nigeen Lake and family orchard lunch were moments we would never have found ourselves.', 'Anika & Rohan Sengupta', 'Kashmir Spring Tour, April 2025', 5, 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80', 'kashmir-tulips')
 ON CONFLICT (id) DO NOTHING;
 INSERT INTO reviews (id, quote, name, trip, rating, avatar, package_id)
 VALUES ('rev-2', 'Everything was calm, considered, and impeccably organized—from the first planning call with their travel designer to our drive through Kerala’s tea country. 24/7 on-trip support was outstanding.', 'Meera & Rajesh Shah', 'Kerala Backwaters & Tea Trails, June 2025', 5, 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80', 'kerala-backwaters')
 ON CONFLICT (id) DO NOTHING;
 INSERT INTO reviews (id, quote, name, trip, rating, avatar, package_id)
-VALUES ('rev-3', 'The Rajasthan road trip balanced royal haveli stays with true local discoveries. Even our teenagers said it was the best vacation our family has ever taken. Crazy Tours Travels is now our go-to!', 'The Iyer Family', 'Royal Rajasthan Circuit, January 2026', 5, 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80', 'rajasthan-royals')
+VALUES ('rev-3', 'The Rajasthan road trip balanced royal haveli stays with true local discoveries. Even our teenagers said it was the best vacation our family has ever taken. Crazy Tours Travel is now our go-to!', 'The Iyer Family', 'Royal Rajasthan Circuit, January 2026', 5, 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80', 'rajasthan-royals')
 ON CONFLICT (id) DO NOTHING;
 
 -- Data for road_trips (3 rows)
@@ -382,7 +382,7 @@ ON CONFLICT (id) DO NOTHING;
 
 -- Data for faqs (4 rows)
 INSERT INTO faqs (id, question, answer, category)
-VALUES (1, 'What makes Crazy Tours Travels different from regular booking websites?', 'We do not sell cookie-cutter packages. Every journey is curated by travel designers who have personally visited the destinations, stayed in the properties, and verified local drivers and guides. You get human travel design with transparent pricing and 24/7 on-trip concierge assistance.', 'About Us')
+VALUES (1, 'What makes Crazy Tours Travel different from regular booking websites?', 'We do not sell cookie-cutter packages. Every journey is curated by travel designers who have personally visited the destinations, stayed in the properties, and verified local drivers and guides. You get human travel design with transparent pricing and 24/7 on-trip concierge assistance.', 'About Us')
 ON CONFLICT (id) DO NOTHING;
 INSERT INTO faqs (id, question, answer, category)
 VALUES (2, 'Can I customise any tour package on the website?', 'Yes, 100%! All our itineraries are flexible starting points. You can add days, upgrade hotels to 5-star heritage properties, swap experiences, or request custom private transport. Click "Plan This Journey" or use our Custom Trip Builder.', 'Customization')

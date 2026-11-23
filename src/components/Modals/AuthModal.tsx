@@ -64,10 +64,10 @@ export function AuthModal({
             <Icon name="x" size={18} />
           </button>
           <div className="w-12 h-12 rounded-xl bg-[#ef4934] p-0.5 mx-auto mb-3 shadow-lg">
-            <img src="/IMG_1611.PNG" alt="Crazy Tours Travels" className="w-full h-full object-cover rounded-lg" />
+            <img src="/IMG_1611.PNG" alt="Crazy Tours Travel" className="w-full h-full object-cover rounded-lg" />
           </div>
           <h3 className="text-xl font-bold font-serif text-white">
-            {user ? 'My Travel Account' : 'Welcome to Crazy Tours Travels'}
+            {user ? 'My Travel Account' : 'Welcome to Crazy Tours Travel'}
           </h3>
           <p className="text-xs text-[#dce9e6]/80 mt-1">
             {user ? 'Manage your bookings and saved itineraries' : 'Sign in to access exclusive member pricing and manage trips'}

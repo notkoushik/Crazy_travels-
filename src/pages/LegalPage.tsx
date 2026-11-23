@@ -23,7 +23,7 @@ export function LegalPage({ initialTab = 'terms', navigate }: LegalPageProps) {
               Trust, Transparency & Safety
             </h1>
             <p className="text-[#dce9e6] text-sm leading-relaxed">
-              Clear terms, traveler protection standards, cancellation timelines, and data privacy policies for Crazy Tours Travels.
+              Clear terms, traveler protection standards, cancellation timelines, and data privacy policies for Crazy Tours Travel.
             </p>
           </div>
         </div>
@@ -59,7 +59,7 @@ export function LegalPage({ initialTab = 'terms', navigate }: LegalPageProps) {
               <div className="space-y-4">
                 <h4 className="font-bold text-gray-900 text-base">1. Booking & Confirmation</h4>
                 <p>
-                  All bookings are subject to availability of requested hotel categories and transport permits. A booking is considered confirmed upon receipt of the stipulated minimum 25% advance deposit and issuance of an official Crazy Tours Travels booking voucher.
+                  All bookings are subject to availability of requested hotel categories and transport permits. A booking is considered confirmed upon receipt of the stipulated minimum 25% advance deposit and issuance of an official Crazy Tours Travel booking voucher.
                 </p>
 
                 <h4 className="font-bold text-gray-900 text-base">2. Cancellation & Refund Schedule</h4>
@@ -72,7 +72,7 @@ export function LegalPage({ initialTab = 'terms', navigate }: LegalPageProps) {
 
                 <h4 className="font-bold text-gray-900 text-base">3. Force Majeure & Weather Conditions</h4>
                 <p>
-                  In the event of unforeseen natural occurrences, landslides, sudden pass closures in Ladakh/Sikkim, or government flight advisories, Crazy Tours Travels will assist with alternative route planning and hotel adjustments.
+                  In the event of unforeseen natural occurrences, landslides, sudden pass closures in Ladakh/Sikkim, or government flight advisories, Crazy Tours Travel will assist with alternative route planning and hotel adjustments.
                 </p>
               </div>
             </div>
@@ -89,7 +89,7 @@ export function LegalPage({ initialTab = 'terms', navigate }: LegalPageProps) {
 
                 <h4 className="font-bold text-gray-900 text-base">2. Data Security & Storage</h4>
                 <p>
-                  Crazy Tours Travels never sells or shares your personal details with third-party advertisers. Your information is securely encrypted and used solely for hotel registrations, airline ticketing, and on-trip concierge communications.
+                  Crazy Tours Travel never sells or shares your personal details with third-party advertisers. Your information is securely encrypted and used solely for hotel registrations, airline ticketing, and on-trip concierge communications.
                 </p>
               </div>
             </div>

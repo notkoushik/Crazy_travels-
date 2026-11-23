@@ -19,7 +19,7 @@ export function LiveChatDrawer({ isOpen, onClose, onToast }: LiveChatDrawerProps
   const [messages, setMessages] = useState<Message[]>([
     {
       sender: 'expert',
-      text: 'Namaste! I am Ananya from the Crazy Tours Travels concierge team. How can I help plan your dream journey today?',
+      text: 'Namaste! I am Ananya from the Crazy Tours Travel concierge team. How can I help plan your dream journey today?',
       time: 'Just now',
     },
   ])
@@ -63,7 +63,7 @@ export function LiveChatDrawer({ isOpen, onClose, onToast }: LiveChatDrawerProps
             <div>
               <h4 className="font-bold text-sm text-white">Ananya · Travel Specialist</h4>
               <p className="text-[11px] text-[#dce9e6]/80 flex items-center gap-1">
-                <span>Crazy Tours Travels Concierge</span> · <span className="text-green-400">Online</span>
+                <span>Crazy Tours Travel Concierge</span> · <span className="text-green-400">Online</span>
               </p>
             </div>
           </div>

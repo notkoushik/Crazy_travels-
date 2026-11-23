@@ -14,7 +14,7 @@ export function Footer({ navigate, onToast }: FooterProps) {
   const handleSubscribe = (e: React.FormEvent) => {
     e.preventDefault()
     if (!email) return
-    onToast('Thank you! You are now subscribed to Crazy Tours Travels exclusive postcards & secret offers.')
+    onToast('Thank you! You are now subscribed to Crazy Tours Travel exclusive postcards & secret offers.')
     setEmail('')
   }
 
@@ -57,7 +57,7 @@ export function Footer({ navigate, onToast }: FooterProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-12 border-b border-white/10">
           {/* Col 1: Brand Info & Accreditation */}
           <div className="lg:col-span-2 space-y-4 pr-4">
-            <button onClick={() => navigate('home')} className="flex items-center text-left group">
+            <button onClick={() => navigate('home')} aria-label="Crazy Tours Travel home" className="flex items-center text-left group">
               <CrazyToursLogo size={42} showWordmark={true} light={true} />
             </button>
             <p className="text-sm text-[#dce9e6]/75 leading-relaxed">
@@ -163,7 +163,7 @@ export function Footer({ navigate, onToast }: FooterProps) {
             <ul className="space-y-2 text-sm text-[#dce9e6]/75">
               <li>
                 <button onClick={() => navigate('about')} className="hover:text-white transition-colors">
-                  About Crazy Tours Travels
+                  About Crazy Tours Travel
                 </button>
               </li>
               <li>
@@ -192,7 +192,7 @@ export function Footer({ navigate, onToast }: FooterProps) {
 
         {/* Bottom Copyright & Disclaimer */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-[#dce9e6]/50 gap-4">
-          <p>© 2026 Crazy Tours Travels Co. All rights reserved. GST & Ministry of Tourism registered.</p>
+          <p>© 2026 Crazy Tours Travel All rights reserved. GST & Ministry of Tourism registered.</p>
           <div className="flex items-center gap-6">
             <button onClick={() => navigate('terms')} className="hover:underline">
               Terms & Conditions

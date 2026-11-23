@@ -62,6 +62,7 @@ export function InquiriesTab({
                 <div className="flex justify-between">
                   <span className="text-slate-400">Month:</span>
                   <span className="font-semibold text-slate-900">{inq.travelMonth}</span>
+                  {inq.travelSeason && <span className="ml-1 text-slate-500">· {inq.travelSeason}</span>}
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-400">Travelers:</span>

@@ -1,10 +1,8 @@
-import React, { type CSSProperties, FormEvent, type RefObject, useEffect, useRef, useState } from 'react'
+import React, { type CSSProperties, FormEvent, useEffect, useRef, useState } from 'react'
 import { CatalogPhoto } from '../components/CatalogPhoto'
 import { Currency, DestinationItem, InstagramReelItem, PackageItem, RouteName } from '../types/travel'
 import { Icon } from '../components/Icon'
 import { GoogleVerifiedBadge } from '../components/GoogleVerifiedBadge'
-import { TripInquiry } from '../components/TripInquiry'
-import { WhatsAppFloat } from '../components/WhatsAppFloat'
 import { useDynamicStore } from '../services/dataStore'
 import {
   directoryGroups,
@@ -17,7 +15,6 @@ import {
   reviews,
   services,
   socialStories,
-  instagramReels,
 } from '../data/travelData'
 import kashmirImage from '../assets/wayfare-kashmir.png'
 import socialHimachal from '../assets/wayfare-social-himachal.png'
@@ -30,9 +27,6 @@ interface HomePageProps {
   currency: Currency
   onToast: (msg: string) => void
   onOpenStory: (story: any, index?: number) => void
-  isHeroInquiryOpen: boolean
-  onCloseHeroInquiry: () => void
-  inquiryLauncherRef: RefObject<HTMLButtonElement | null>
 }
 
 function ReelVideoCard({
@@ -171,9 +165,6 @@ export function HomePage({
   currency,
   onToast,
   onOpenStory,
-  isHeroInquiryOpen,
-  onCloseHeroInquiry,
-  inquiryLauncherRef,
 }: HomePageProps) {
   const store = useDynamicStore()
   const slides = store.heroSlides.length > 0 ? store.heroSlides : heroSlides
@@ -316,12 +307,6 @@ export function HomePage({
             </div>
           )}
         </section>
-        <TripInquiry
-          isOpen={isHeroInquiryOpen}
-          onClose={onCloseHeroInquiry}
-          launcherRef={inquiryLauncherRef}
-          initialDestination={slides[heroIndex]?.location}
-        />
       </div>
 
       {/* Floating Dynamic Search Widget */}
@@ -390,7 +375,6 @@ export function HomePage({
             </button>
           </form>
         </div>
-        <WhatsAppFloat placement="mobile-inline" />
       </section>
 
       {/* Trust Strip */}
@@ -725,7 +709,7 @@ export function HomePage({
       <section className="why-section shell section">
         <div className="section-heading">
           <div>
-            <span className="kicker">Why travel with Crazy Tours Travels</span>
+            <span className="kicker">Why travel with Crazy Tours Travel</span>
             <h2>Expertly planned. Genuinely personal.</h2>
           </div>
         </div>
@@ -761,7 +745,7 @@ export function HomePage({
       <section className="love-section">
         <div className="shell section">
           <div className="love-heading">
-            <span className="kicker">The Crazy Tours Travels difference</span>
+            <span className="kicker">The Crazy Tours Travel difference</span>
             <h2>Why travellers return to us</h2>
           </div>
           <div className="stats-row">
@@ -801,7 +785,7 @@ export function HomePage({
       </section>
 
       {/* Social Moments Stories & Instagram Reels Video Section */}
-      <section className="social-section" id="instagram-reels">
+      {store.reels.length > 0 && <section className="social-section" id="instagram-reels">
         <div className="shell social-layout">
           <div className="social-intro">
             <span className="kicker">Follow @crazytourstravels</span>
@@ -842,7 +826,7 @@ export function HomePage({
           </div>
 
           <div className="social-track" ref={socialTrackRef}>
-            {(store.reels && store.reels.length > 0 ? store.reels : instagramReels).map(
+            {store.reels.map(
               (reel, index) => (
                 <ReelVideoCard
                   key={reel.id || index}
@@ -854,7 +838,7 @@ export function HomePage({
             )}
           </div>
         </div>
-      </section>
+      </section>}
 
       {/* Custom Trip Planner CTA */}
       <section className="planner shell">

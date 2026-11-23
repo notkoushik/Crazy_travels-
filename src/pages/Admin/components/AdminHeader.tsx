@@ -17,13 +17,13 @@ export function AdminHeader({ navigate, isDatabaseConnected, onLogout }: AdminHe
           className="flex items-center gap-3 text-left group"
           title="Return to Public Customer Website"
         >
-          <div className="w-8 h-8 rounded-lg bg-slate-900 p-0.5 shadow-xs flex items-center justify-center group-hover:scale-105 transition-transform">
-            <img src="/IMG_1611.PNG" alt="Crazy Tours" className="w-full h-full object-cover rounded-md" />
+          <div className="w-8 h-8 shrink-0 rounded-lg bg-slate-900 p-0.5 shadow-xs flex items-center justify-center group-hover:scale-105 transition-transform">
+            <img src="/IMG_1611.PNG" alt="" className="w-full h-full object-cover rounded-md" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-extrabold text-base text-slate-900 tracking-tight font-inter-tight">
-                Crazy Tours
+              <span className="admin-heading text-sm leading-tight font-extrabold text-slate-900 sm:text-base">
+                Crazy Tours Travel
               </span>
               <span className="hidden rounded-md border border-slate-200/80 bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-700 lg:inline">
                 Operations Console
@@ -35,7 +35,7 @@ export function AdminHeader({ navigate, isDatabaseConnected, onLogout }: AdminHe
           </div>
         </button>
 
-        <div className="hidden md:flex items-center gap-2.5 ml-6 pl-6 border-l border-slate-200 text-xs">
+        <div className="hidden lg:flex items-center gap-2.5 ml-6 pl-6 border-l border-slate-200 text-xs">
           <span
             className={`w-2 h-2 rounded-full ${
               isDatabaseConnected ? 'bg-emerald-500 ring-2 ring-emerald-200' : 'bg-amber-400'

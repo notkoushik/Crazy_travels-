@@ -48,7 +48,7 @@ export function ManageBookingPage({ navigate, onToast }: ManageBookingPageProps)
         hotel: `${result.hotelType} Category`,
         status: result.status || 'Confirmed',
         payment: result.paymentStatus || 'Verified',
-        assignedSpecialist: 'Dedicated Crazy Tours Concierge',
+        assignedSpecialist: 'Crazy Tours Travel concierge',
         emailMasked: result.customerEmailMasked,
         phoneMasked: result.customerPhoneMasked,
       })

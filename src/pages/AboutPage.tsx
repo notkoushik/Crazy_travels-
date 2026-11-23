@@ -20,7 +20,7 @@ export function AboutPage({ navigate }: AboutPageProps) {
               We believe travel should be deeply human.
             </h1>
             <p className="text-[#dce9e6] text-sm sm:text-base leading-relaxed">
-              Crazy Tours Travels was born from a simple belief: the most memorable journeys aren’t assembled by algorithms or rushed through checklists. They are designed by passionate travellers who listen, care, and know every turn of the road.
+              Crazy Tours Travel was born from a simple belief: the most memorable journeys aren’t assembled by algorithms or rushed through checklists. They are designed by passionate travellers who listen, care, and know every turn of the road.
             </p>
           </div>
         </div>
@@ -35,7 +35,7 @@ export function AboutPage({ navigate }: AboutPageProps) {
               18 Years of Exploring the Indian Subcontinent
             </h2>
             <p className="text-sm text-gray-700 leading-relaxed">
-              Founded in 2008 by a small collective of mountaineers, cultural historians, and slow travellers, Crazy Tours Travels began as an intimate journey organizer for friends who wanted to see Kashmir beyond the tourist buses and Rajasthan beyond the souvenir shops.
+              Founded in 2008 by a small collective of mountaineers, cultural historians, and slow travellers, Crazy Tours Travel began as an intimate journey organizer for friends who wanted to see Kashmir beyond the tourist buses and Rajasthan beyond the souvenir shops.
             </p>
             <p className="text-sm text-gray-700 leading-relaxed">
               Today, with offices in Mumbai, New Delhi, and Bengaluru, we have curated more than 24,000 journeys across 28 Indian states. Yet our core approach remains identical: every single itinerary is vetted by a human travel designer who has walked the ground.
@@ -59,7 +59,7 @@ export function AboutPage({ navigate }: AboutPageProps) {
           <div className="rounded-3xl overflow-hidden shadow-xl border border-gray-100 h-96">
             <img
               src="https://images.unsplash.com/photo-1521336575822-6da63fb45455?auto=format&fit=crop&w=1200&q=88"
-              alt="Crazy Tours Travels Team"
+              alt="Crazy Tours Travel Team"
               className="w-full h-full object-cover"
             />
           </div>

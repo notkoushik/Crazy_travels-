@@ -3,6 +3,7 @@ import cors from 'cors'
 import crypto from 'crypto'
 import { fileURLToPath } from 'url'
 import { registerCatalogMedia } from './catalog_media.js'
+import { registerReelMedia } from './reel_media.js'
 import { pool } from './db.js'
 
 // ==============================================================================
@@ -167,6 +168,7 @@ app.use((req, res, next) => {
 })
 
 registerCatalogMedia(app, pool, requireAdminAuth)
+registerReelMedia(app, pool, requireAdminAuth)
 
 // Health check
 app.get('/api/health', async (req, res) => {
@@ -647,6 +649,11 @@ app.get('/api/inquiries', requireAdminAuth, async (req, res) => {
       phone: r.phone,
       preferredDestination: r.preferred_destination,
       travelMonth: r.travel_month,
+      travelStart: r.travel_details?.travelStart,
+      travelEnd: r.travel_details?.travelEnd,
+      travelSeason: r.travel_details?.travelSeason,
+      sourcePage: r.travel_details?.sourcePage,
+      sourceTitle: r.travel_details?.sourceTitle,
       travelersCount: r.travelers_count,
       budgetPerPerson: r.budget_per_person,
       tripType: r.trip_type,
@@ -660,6 +667,21 @@ app.get('/api/inquiries', requireAdminAuth, async (req, res) => {
     res.status(500).json({ error: err.message })
   }
 })
+
+let inquiryDetailsSchema
+const ensureInquiryDetailsSchema = () => {
+  inquiryDetailsSchema ??= pool.query('ALTER TABLE inquiries ADD COLUMN IF NOT EXISTS travel_details JSONB').catch((error) => {
+    inquiryDetailsSchema = undefined
+    throw error
+  })
+  return inquiryDetailsSchema
+}
+
+function isTravelDate(value) {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false
+  const time = new Date(`${value}T12:00:00Z`)
+  return Number.isFinite(time.valueOf()) && time.toISOString().slice(0, 10) === value
+}
 
 // Public custom trip inquiry submission with rate-limiting and sanitization
 app.post('/api/inquiries', publicSubmissionLimiter, async (req, res) => {
@@ -680,14 +702,35 @@ app.post('/api/inquiries', publicSubmissionLimiter, async (req, res) => {
       return res.status(400).json({ error: 'Full name and contact number are required.' })
     }
 
-    await pool.query(
+    const { travelStart, travelEnd } = inq
+    if ((travelStart || travelEnd) && (!isTravelDate(travelStart) || !isTravelDate(travelEnd) || travelEnd < travelStart)) {
+      return res.status(400).json({ error: 'Choose a valid travel date range.' })
+    }
+    const details = {
+      travelStart: travelStart || undefined,
+      travelEnd: travelEnd || undefined,
+      travelSeason: sanitizeText(inq.travelSeason).slice(0, 40) || undefined,
+      sourcePage: sanitizeText(inq.sourcePage).slice(0, 255) || undefined,
+      sourceTitle: sanitizeText(inq.sourceTitle).slice(0, 255) || undefined,
+    }
+    const values = [id, fullName, email, phone, preferredDestination, travelMonth, travelersCount, budgetPerPerson, tripType, notes, 'New', null]
+    if (Object.values(details).some(Boolean)) {
+      const save = () => pool.query(
+        `INSERT INTO inquiries (id, full_name, email, phone, preferred_destination, travel_month, travelers_count, budget_per_person, trip_type, notes, status, assigned_agent, travel_details)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
+        [...values, JSON.stringify(details)],
+      )
+      try {
+        await save()
+      } catch (error) {
+        if (error.code !== '42703') throw error
+        await ensureInquiryDetailsSchema()
+        await save()
+      }
+    } else await pool.query(
       `INSERT INTO inquiries (id, full_name, email, phone, preferred_destination, travel_month, travelers_count, budget_per_person, trip_type, notes, status, assigned_agent)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
-      [
-        id, fullName, email, phone, preferredDestination,
-        travelMonth, travelersCount, budgetPerPerson,
-        tripType, notes, 'New', null
-      ]
+      values,
     )
     res.json({ success: true, id })
   } catch (err) {
@@ -906,145 +949,9 @@ app.delete('/api/offers/:id', requireAdminAuth, async (req, res) => {
 // ========================================================
 // 8.5 INSTAGRAM REELS & CUSTOMER VIDEO REVIEWS
 // ========================================================
-const fallbackReels = [
-  {
-    id: 'reel-1',
-    title: 'Floating in Kashmir Shikara Waters',
-    place: 'Dal Lake & Gulmarg, Kashmir',
-    customerName: 'Anika & Rohan Sengupta',
-    rating: 5.0,
-    reviewQuote: 'Waking up to misty waters in a heritage cedar houseboat was pure magic. Crazy Tours planned every single detail to perfection.',
-    videoUrl: '/Instagram_videos/compressed/reel_01.mp4',
-    posterUrl: '/Instagram_videos/thumbnails/reel_01_poster.jpg',
-    instagramUrl: 'https://www.instagram.com/crazytourstravels/',
-    duration: '0:56',
-    displayOrder: 1,
-  },
-  {
-    id: 'reel-2',
-    title: 'Tea Garden Mornings & Mist',
-    place: 'Munnar & Kochi, Kerala',
-    customerName: 'Meera & Rajesh Shah',
-    rating: 5.0,
-    reviewQuote: 'Unbelievable serenity walking through private plantation trails. The vehicle and private chauffeur made the mountain roads effortless.',
-    videoUrl: '/Instagram_videos/compressed/reel_02.mp4',
-    posterUrl: '/Instagram_videos/thumbnails/reel_02_poster.jpg',
-    instagramUrl: 'https://www.instagram.com/crazytourstravels/',
-    duration: '1:10',
-    displayOrder: 2,
-  },
-  {
-    id: 'reel-3',
-    title: 'Living Royal History in Desert Forts',
-    place: 'Jaisalmer Citadel, Rajasthan',
-    customerName: 'The Kapoor Family',
-    rating: 5.0,
-    reviewQuote: 'Our children were mesmerized by the golden havelis and camel desert camp. Best holiday we have ever booked!',
-    videoUrl: '/Instagram_videos/compressed/reel_03.mp4',
-    posterUrl: '/Instagram_videos/thumbnails/reel_03_poster.jpg',
-    instagramUrl: 'https://www.instagram.com/crazytourstravels/',
-    duration: '1:18',
-    displayOrder: 3,
-  },
-  {
-    id: 'reel-4',
-    title: 'High Mountain Passes & Monasteries',
-    place: 'Nubra Valley & Pangong, Ladakh',
-    customerName: 'Vikram & Friends',
-    rating: 5.0,
-    reviewQuote: 'Crazy Tours secured our inner line permits and high-altitude stays seamlessly. Pure adrenaline and breathtaking vistas.',
-    videoUrl: '/Instagram_videos/compressed/reel_04.mp4',
-    posterUrl: '/Instagram_videos/thumbnails/reel_04_poster.jpg',
-    instagramUrl: 'https://www.instagram.com/crazytourstravels/',
-    duration: '0:46',
-    displayOrder: 4,
-  },
-  {
-    id: 'reel-5',
-    title: 'Sacred Valley Walks & Pine Forests',
-    place: 'Manali & Solang Valley, Himachal',
-    customerName: 'Pooja & Siddharth',
-    rating: 5.0,
-    reviewQuote: 'Quiet pine forest hideaway away from tourist crowds. Thank you Crazy Tours for handpicking the boutique riverside stay!',
-    videoUrl: '/Instagram_videos/compressed/reel_05.mp4',
-    posterUrl: '/Instagram_videos/thumbnails/reel_05_poster.jpg',
-    instagramUrl: 'https://www.instagram.com/crazytourstravels/',
-    duration: '0:44',
-    displayOrder: 5,
-  },
-  {
-    id: 'reel-6',
-    title: 'Ganga Aarti by Twilight',
-    place: 'Varanasi Ghats, Uttar Pradesh',
-    customerName: 'Arun & Sunita Verma',
-    rating: 5.0,
-    reviewQuote: 'Private sunrise boat ride and privileged access to the evening prayers. Truly a spiritually transformative journey.',
-    videoUrl: '/Instagram_videos/compressed/reel_06.mp4',
-    posterUrl: '/Instagram_videos/thumbnails/reel_06_poster.jpg',
-    instagramUrl: 'https://www.instagram.com/crazytourstravels/',
-    duration: '1:17',
-    displayOrder: 6,
-  },
-  {
-    id: 'reel-7',
-    title: 'Golden Sunset & Secret Coves',
-    place: 'South Goa Coastal Retreat',
-    customerName: 'Kavya & Arjun',
-    rating: 5.0,
-    reviewQuote: 'Clean private beaches, heritage Portuguese villa, and authentic coastal dining. We did not want to leave!',
-    videoUrl: '/Instagram_videos/compressed/reel_07.mp4',
-    posterUrl: '/Instagram_videos/thumbnails/reel_07_poster.jpg',
-    instagramUrl: 'https://www.instagram.com/crazytourstravels/',
-    duration: '0:47',
-    displayOrder: 7,
-  },
-  {
-    id: 'reel-8',
-    title: 'Houseboat Living on Palm Backwaters',
-    place: 'Alleppey & Kumarakom, Kerala',
-    customerName: 'Divya & Nikhil',
-    rating: 5.0,
-    reviewQuote: 'Traditional spice meals cooked fresh on the boat as we drifted past paddy fields. 10/10 hospitality!',
-    videoUrl: '/Instagram_videos/compressed/reel_08.mp4',
-    posterUrl: '/Instagram_videos/thumbnails/reel_08_poster.jpg',
-    instagramUrl: 'https://www.instagram.com/crazytourstravels/',
-    duration: '1:14',
-    displayOrder: 8,
-  },
-  {
-    id: 'reel-9',
-    title: 'Ancient Stone Temples & Sunlit Boulders',
-    place: 'Hampi Ruins, Karnataka',
-    customerName: 'Tanvi S.',
-    rating: 5.0,
-    reviewQuote: 'Cycling through UNESCO ruins with an exceptional storyteller guide arranged by Crazy Tours.',
-    videoUrl: '/Instagram_videos/compressed/reel_09.mp4',
-    posterUrl: '/Instagram_videos/thumbnails/reel_09_poster.jpg',
-    instagramUrl: 'https://www.instagram.com/crazytourstravels/',
-    duration: '0:52',
-    displayOrder: 9,
-  },
-  {
-    id: 'reel-10',
-    title: 'Snow Peaks & Houseboats on Dal Lake',
-    place: 'Gulmarg & Srinagar, Kashmir',
-    customerName: 'Sameer & Preeti',
-    rating: 5.0,
-    reviewQuote: 'The gondola ride up to Phase 2 and cozy cedar houseboat made this our favorite anniversary trip ever.',
-    videoUrl: '/Instagram_videos/compressed/reel_10.mp4',
-    posterUrl: '/Instagram_videos/thumbnails/reel_10_poster.jpg',
-    instagramUrl: 'https://www.instagram.com/crazytourstravels/',
-    duration: '1:05',
-    displayOrder: 10,
-  },
-]
-
 app.get('/api/reels', async (req, res) => {
   try {
     const { rows } = await pool.query('SELECT * FROM instagram_reels ORDER BY display_order ASC, id ASC')
-    if (!rows || rows.length === 0) {
-      return res.json(fallbackReels)
-    }
     const formatted = rows.map((r) => ({
       id: r.id,
       title: r.title,
@@ -1060,8 +967,8 @@ app.get('/api/reels', async (req, res) => {
     }))
     res.json(formatted)
   } catch (err) {
-    console.warn('Using fallback reels due to query exception:', err.message)
-    res.json(fallbackReels)
+    console.error('Could not load reels:', err.message)
+    res.status(503).json({ error: 'Could not load reels.' })
   }
 })
 
@@ -1123,8 +1030,21 @@ app.patch('/api/reels/:id', requireAdminAuth, async (req, res) => {
 
 app.post('/api/reels', requireAdminAuth, async (req, res) => {
   try {
-    const r = req.body
+    const r = req.body ?? {}
     const id = r.id || `reel-${Date.now()}`
+    const rating = Number(r.rating)
+    const isMediaUrl = (value) => typeof value === 'string' && /^(?:https?:\/\/|\/(?!\/))\S+$/i.test(value)
+    if (!sanitizeText(r.title) || !sanitizeText(r.place) || !sanitizeText(r.customerName) || !sanitizeText(r.reviewQuote) ||
+      !Number.isFinite(rating) || rating < 1 || rating > 5 || !isMediaUrl(r.videoUrl) || !isMediaUrl(r.posterUrl) ||
+      !/^\d{1,3}:[0-5]\d$/.test(r.duration) || !Number.isSafeInteger(r.displayOrder) || r.displayOrder < 0 || r.displayOrder > 2147483647) {
+      return res.status(400).json({ error: 'Provide the reel details, video, cover, duration, and display order.' })
+    }
+    if (r.videoUrl.startsWith('/api/reel-videos/')) {
+      const videoId = /^\/api\/reel-videos\/([a-f0-9-]{36})$/i.exec(r.videoUrl)?.[1]
+      if (!videoId || !(await pool.query('SELECT 1 FROM reel_videos WHERE id::text = $1 AND complete', [videoId])).rows.length) {
+        return res.status(400).json({ error: 'Finish uploading the reel video before saving.' })
+      }
+    }
     await pool.query(
       `INSERT INTO instagram_reels (id, title, place, customer_name, rating, review_quote, video_url, poster_url, instagram_url, duration, display_order)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
@@ -1136,7 +1056,7 @@ app.post('/api/reels', requireAdminAuth, async (req, res) => {
          review_quote = EXCLUDED.review_quote,
          video_url = EXCLUDED.video_url,
          poster_url = EXCLUDED.poster_url,
-         instagram_url = COALESCE(EXCLUDED.instagram_url, instagram_reels.instagram_url),
+         instagram_url = EXCLUDED.instagram_url,
          duration = EXCLUDED.duration,
          display_order = EXCLUDED.display_order`,
       [
@@ -1144,7 +1064,7 @@ app.post('/api/reels', requireAdminAuth, async (req, res) => {
         r.title,
         r.place,
         r.customerName,
-        r.rating || 5.0,
+        rating,
         r.reviewQuote,
         r.videoUrl,
         r.posterUrl,
@@ -1157,6 +1077,11 @@ app.post('/api/reels', requireAdminAuth, async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
+})
+
+app.delete('/api/reels/:id', requireAdminAuth, async (req, res) => {
+  await pool.query('DELETE FROM instagram_reels WHERE id = $1', [req.params.id])
+  res.sendStatus(204)
 })
 
 // ========================================================

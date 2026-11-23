@@ -1,4 +1,4 @@
-# Crazy Tours & Travels ✈️
+# Crazy Tours Travel ✈️
 
 > **Enterprise Travel Management & Handcrafted Indian Journeys**  
 > A high-performance, modern fullstack travel experience built with **React 19**, **Vite**, **Tailwind CSS v4**, **Node.js/Express**, and **PostgreSQL (Supabase)**.
@@ -7,10 +7,9 @@
 
 ## 🌟 Key Features
 
-### 1. Signature Hero Airplane-to-Logo Motion
-- Custom mathematical 1.8-second flight animation where an airplane dynamically traces the authentic Crazy Tours "CT" monogram across 6 cinematic stages.
-- Smooth aerodynamic banking (`atan2`), engine exhaust flare, luminous contrails, and spring-ease settle.
-- 100% sub-pixel faithful to the master brand identity.
+### 1. Signature Homepage Intro
+- A 2.3-second SVG flight traces the CT monogram, morphs the airplane into the logo's arrowhead, and reveals the Crazy Tours Travel wordmark.
+- The intro plays before the homepage hero once per browser tab session. Visitors who prefer reduced motion go straight to the homepage.
 
 ### 2. Deep 18-Dimension Tourism Logistics & Cultural Explorer
 - Comprehensive destination profiles beyond simple photos:
@@ -90,4 +89,4 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 ---
 
 ## 📄 License
-Private & Proprietary — © Crazy Tours & Travels. All Rights Reserved.
+Private & Proprietary — © Crazy Tours Travel. All Rights Reserved.

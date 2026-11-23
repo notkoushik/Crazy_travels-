@@ -1,9 +1,10 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { Currency, RouteName } from './types/travel'
-import { allPackages, nationalDestinations } from './data/travelData'
+import { allPackages, heroSlides, nationalDestinations } from './data/travelData'
 import { Header } from './components/Header'
 import { Footer } from './components/Footer'
 import { Icon } from './components/Icon'
+import { shouldPlaySignatureIntro, SignatureLogoIntro } from './components/SignatureLogo'
 
 // Modals & Drawers
 import { AuthModal } from './components/Modals/AuthModal'
@@ -12,8 +13,7 @@ import { BookingModal } from './components/Modals/BookingModal'
 import { CurrencyModal } from './components/Modals/CurrencyModal'
 import { LiveChatDrawer } from './components/Modals/LiveChatDrawer'
 import { StoryViewerModal } from './components/Modals/StoryViewerModal'
-import { WhatsAppFloat } from './components/WhatsAppFloat'
-import { TripInquiry } from './components/TripInquiry'
+import { TripInquiry, type InquiryContext } from './components/TripInquiry'
 
 // Pages
 import { HomePage } from './pages/HomePage'
@@ -43,16 +43,17 @@ export default function App() {
   }
 
   const [route, setRoute] = useState<RouteName>(getInitialRoute)
+  const [introStage, setIntroStage] = useState<'pending' | 'revealing' | 'done'>(
+    () => shouldPlaySignatureIntro() ? 'pending' : 'done',
+  )
+  const revealHomepage = useCallback(() => setIntroStage('revealing'), [])
+  const finishIntro = useCallback(() => setIntroStage('done'), [])
+  const showIntro = route === 'home' && introStage !== 'done'
+  const introPlaying = showIntro && introStage === 'pending'
   const [saved, setSaved] = useState<string[]>(['Udaipur', 'kashmir-tulips'])
   const [currency, setCurrency] = useState<Currency>('INR')
   const [user, setUser] = useState<{ name: string; email: string } | null>(null)
   const [toastMessage, setToastMessage] = useState<string>('')
-
-  // Express Interest / Hero Inquiry State
-  const [isHeroInquiryOpen, setIsHeroInquiryOpen] = useState(true)
-  const [reopenHeroInquiry, setReopenHeroInquiry] = useState(false)
-  const [inquiryModalOpen, setInquiryModalOpen] = useState(false)
-  const inquiryLauncherRef = useRef<HTMLButtonElement>(null)
 
   // Modals state
   const [authModalOpen, setAuthModalOpen] = useState(false)
@@ -68,48 +69,16 @@ export default function App() {
     price: 36800,
   })
 
-  const handleOpenExpressInterest = () => {
-    if (route !== 'home' || !window.matchMedia('(min-width: 64rem)').matches) {
-      setInquiryModalOpen(true)
-      return
-    }
-
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (reduceMotion || window.scrollY <= 4) {
-      window.scrollTo({ top: 0, behavior: 'auto' })
-      setIsHeroInquiryOpen(true)
-      return
-    }
-
-    setReopenHeroInquiry(true)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }
-
-  useEffect(() => {
-    if (!reopenHeroInquiry) return
-    if (route !== 'home') {
-      setReopenHeroInquiry(false)
-      return
-    }
-
-    const revealAtTop = () => {
-      if (window.scrollY > 4) return
-      setIsHeroInquiryOpen(true)
-      setReopenHeroInquiry(false)
-    }
-    const finishScroll = () => {
-      revealAtTop()
-      setReopenHeroInquiry(false)
-    }
-
-    revealAtTop()
-    window.addEventListener('scroll', revealAtTop, { passive: true })
-    document.addEventListener('scrollend', finishScroll)
-    return () => {
-      window.removeEventListener('scroll', revealAtTop)
-      document.removeEventListener('scrollend', finishScroll)
-    }
-  }, [reopenHeroInquiry, route])
+  const packageId = route.startsWith('package/') ? route.slice(8) : undefined
+  const destinationId = route.startsWith('destination/') ? route.slice(12) : undefined
+  const routePackage = store.packages.find(({ id }) => id === packageId) ?? allPackages.find(({ id }) => id === packageId)
+  const routeDestination = store.destinations.find(({ slug }) => slug === destinationId) ?? nationalDestinations.find(({ slug }) => slug === destinationId)
+  const inquiryContext: InquiryContext = routeDestination
+    ? { page: route, title: routeDestination.city, destination: routeDestination.city, heading: `Plan a trip to ${routeDestination.city}`, description: `Tell us when you’d like to visit and we’ll help plan your ${routeDestination.city} itinerary.` }
+    : routePackage
+      ? { page: route, title: routePackage.title, destination: routePackage.place, heading: `Enquire about ${routePackage.title}`, description: 'Share your travel timing and group size for a quote on this package.' }
+      : { page: route, title: route === 'packages' ? 'Holidays & Packages' : undefined, heading: route === 'packages' ? 'Find your holiday package' : 'Where would you like to travel?', description: route === 'packages' ? 'Share your destination and travel dates so we can suggest matching packages.' : 'Tell us where and when you’d like to travel for a tailored itinerary.' }
+  const otherPanelOpen = authModalOpen || savedDrawerOpen || currencyModalOpen || liveChatOpen || storyViewerOpen || bookingModalOpen
 
   // Sync hash changes
   useEffect(() => {
@@ -165,8 +134,7 @@ export default function App() {
     }
 
     if (route.startsWith('package/')) {
-      const pkgId = route.replace('package/', '')
-      const pkg = store.packages.find((p) => p.id === pkgId) || store.packages[0]
+      const pkg = routePackage ?? store.packages[0] ?? allPackages[0]
       return (
         <PackageDetailPage
           packageItem={pkg}
@@ -180,12 +148,7 @@ export default function App() {
     }
 
     if (route.startsWith('destination/')) {
-      const slug = route.replace('destination/', '')
-      const dest =
-        store.destinations.find((d) => d.slug === slug) ??
-        nationalDestinations.find((d) => d.slug === slug) ??
-        store.destinations[0] ??
-        nationalDestinations[0]
+      const dest = routeDestination ?? store.destinations[0] ?? nationalDestinations[0]
       return (
         <DestinationPage
           destination={dest}
@@ -258,9 +221,6 @@ export default function App() {
         currency={currency}
         onToast={showToast}
         onOpenStory={handleOpenStory}
-        isHeroInquiryOpen={isHeroInquiryOpen}
-        onCloseHeroInquiry={() => setIsHeroInquiryOpen(false)}
-        inquiryLauncherRef={inquiryLauncherRef}
       />
     )
   }
@@ -268,7 +228,7 @@ export default function App() {
   // Full-screen dedicated Operations Admin Layout
   if (route === 'admin' || route.startsWith('admin/')) {
     return (
-      <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
+      <div className="admin-shell min-h-screen bg-slate-50 text-slate-900 font-sans">
         <AdminPage route={route} navigate={navigate} onToast={showToast} />
         {toastMessage && (
           <div className="global-toast animate-bounce-in flex items-center gap-3">
@@ -286,8 +246,11 @@ export default function App() {
     )
   }
 
-  return (
-    <div className="min-h-screen bg-[#fbfaf7] text-[#173631] font-sans flex flex-col justify-between selection:bg-[#ef4934] selection:text-white">
+  const site = introPlaying ? null : (
+    <div
+      className="travel-site min-h-screen bg-[#fbfaf7] text-[#173631] font-sans flex flex-col justify-between selection:bg-[#ef4934] selection:text-white"
+      inert={showIntro}
+    >
       {/* Global Navigation Header */}
       <Header
         currentRoute={route}
@@ -298,9 +261,6 @@ export default function App() {
         onOpenCurrency={() => setCurrencyModalOpen(true)}
         currentCurrency={currency}
         user={user}
-        inlineInquiryOpen={isHeroInquiryOpen && route === 'home'}
-        inquiryLauncherRef={inquiryLauncherRef}
-        onOpenExpressInterest={handleOpenExpressInterest}
       />
 
       {/* Main Routed Page Content */}
@@ -310,7 +270,6 @@ export default function App() {
       <Footer navigate={navigate} onToast={showToast} />
 
       {/* High-Quality WhatsApp Live Concierge Button */}
-      <WhatsAppFloat placement={route === 'home' ? 'desktop-floating' : 'floating'} />
 
       {/* Global Toast Alert */}
       {toastMessage && (
@@ -389,12 +348,17 @@ export default function App() {
         onChangeIndex={setActiveReelIndex}
       />
 
-      <TripInquiry
-        modal
-        isOpen={inquiryModalOpen}
-        onClose={() => setInquiryModalOpen(false)}
-        launcherRef={inquiryLauncherRef}
-      />
+      <TripInquiry key={route} context={inquiryContext} paused={otherPanelOpen} />
     </div>
+  )
+
+  return (
+    <>
+      {site}
+      {introPlaying && (
+        <link rel="preload" as="image" href={(store.heroSlides[0] ?? heroSlides[0]).image} />
+      )}
+      {showIntro && <SignatureLogoIntro onReveal={revealHomepage} onFinish={finishIntro} />}
+    </>
   )
 }

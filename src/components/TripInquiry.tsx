@@ -1,118 +1,95 @@
-import { useLayoutEffect, useRef, type RefObject } from 'react'
+﻿import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { HeroInquiryCard } from './HeroInquiryCard'
+import { WhatsAppFloat } from './WhatsAppFloat'
+import { Icon } from './Icon'
 
-interface TripInquiryProps {
-  isOpen: boolean
-  onClose: () => void
-  launcherRef: RefObject<HTMLButtonElement | null>
-  initialDestination?: string
-  modal?: boolean
+export interface InquiryContext {
+  page: string
+  title?: string
+  destination?: string
+  heading: string
+  description: string
 }
 
-export function TripInquiry({
-  isOpen,
-  onClose,
-  launcherRef,
-  initialDestination,
-  modal = false,
-}: TripInquiryProps) {
-  const dialogRef = useRef<HTMLDialogElement>(null)
-  const panelRef = useRef<HTMLDivElement>(null)
-  const animationRef = useRef<Animation | null>(null)
-  const previousOpen = useRef<boolean | null>(null)
+export function TripInquiry({ context, paused }: { context: InquiryContext; paused: boolean }) {
+  const [ready, setReady] = useState(false)
+  const [manual, setManual] = useState<boolean>()
+  const id = useId()
+  const launcher = useRef<HTMLButtonElement>(null)
+  const panel = useRef<HTMLElement>(null)
+  const animation = useRef<Animation | null>(null)
+  const wasOpen = useRef(false)
+  const open = !paused && (manual ?? ready)
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setReady(true), 3000)
+    return () => window.clearTimeout(timer)
+  }, [])
 
   useLayoutEffect(() => {
-    const panel = panelRef.current
-    if (!panel || previousOpen.current === isOpen) return
-    const wasOpen = previousOpen.current
-    previousOpen.current = isOpen
-    if (!isOpen && !wasOpen) return
-
-    const dialog = dialogRef.current
-    const launcher = launcherRef.current
-    if (isOpen && dialog && !dialog.open) dialog.showModal()
-
-    const focusLauncher = () => launcher?.focus({ preventScroll: true })
-    const finishClose = () => {
-      dialog?.close()
-      focusLauncher()
-    }
-
-    const running = animationRef.current
-    const current = running && running.playState !== 'finished' ? getComputedStyle(panel) : null
-    const interruptedFrame = current && { transform: current.transform, opacity: current.opacity }
+    if (!panel.current || !launcher.current || open === wasOpen.current) return
+    wasOpen.current = open
+    const surface = panel.current
+    const running = animation.current
+    const interrupted = running && running.playState === 'running' ? getComputedStyle(surface) : null
+    const from = interrupted && { transform: interrupted.transform, opacity: interrupted.opacity }
     running?.cancel()
-    animationRef.current = null
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
-    if (wasOpen !== null || modal) {
-      if (isOpen) panel.querySelector('button')?.focus({ preventScroll: true })
-      else if (!dialog) focusLauncher()
+    const card = surface.getBoundingClientRect()
+    const button = launcher.current.getBoundingClientRect()
+    const folded = {
+      transform: `translate(${button.left - card.left}px, ${button.top - card.top}px) scale(${button.width / card.width}, ${button.height / card.height})`,
+      opacity: 0,
     }
-
-    const bounds = panel.getBoundingClientRect()
-    if (!bounds.width || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      if (!isOpen) finishClose()
-      return
-    }
-
-    const button = launcher?.getBoundingClientRect()
-    const toButton = button?.width
-      ? `translate(${button.left - bounds.left}px, ${button.top - bounds.top}px) scale(${button.width / bounds.width}, ${button.height / bounds.height})`
-      : 'translateY(-14px) scale(.96)'
-    const folded = { transform: toButton, opacity: 0 }
     const settled = { transform: 'none', opacity: 1 }
-    const frames: Keyframe[] = isOpen
-      ? [
-          interruptedFrame ?? folded,
-          { transform: 'translateY(2px) scale(1.008, 1.006)', opacity: 1, offset: 0.78 },
-          settled,
-        ]
-      : [interruptedFrame ?? settled, folded]
-
-    const animation = panel.animate(
-      frames.map((frame) => ({ ...frame, visibility: 'visible' })),
+    animation.current = surface.animate(
+      (open ? [from ?? folded, settled] : [from ?? settled, folded]).map((frame) => ({
+        ...frame,
+        visibility: 'visible',
+      })),
       {
-        duration: isOpen ? 470 : 360,
-        easing: isOpen ? 'cubic-bezier(.19,.75,.28,1)' : 'cubic-bezier(.55,.04,.76,.46)',
-      },
+        duration: open ? 390 : 300,
+        easing: open ? 'cubic-bezier(.19,.75,.28,1)' : 'cubic-bezier(.55,.04,.76,.46)',
+      }
     )
-    animationRef.current = animation
-    if (!isOpen && dialog) animation.onfinish = finishClose
-  }, [isOpen, launcherRef, modal])
+  }, [open])
 
-  const panel = (
-    <div ref={panelRef} className="inquiry-motion" data-open={isOpen} inert={!isOpen}>
-      <HeroInquiryCard
-        initialDestination={initialDestination}
-        onClose={onClose}
-        closeLabel={modal ? 'Close trip details and inquiry' : 'Minimize trip details and inquiry'}
-      />
-    </div>
-  )
-
-  if (!modal) {
-    return (
-      <aside className="inquiry-inline" aria-label="Trip details and inquiry" aria-hidden={!isOpen}>
-        {panel}
-      </aside>
-    )
+  const minimize = () => {
+    setManual(false)
+    requestAnimationFrame(() => launcher.current?.focus({ preventScroll: true }))
   }
 
   return (
-    <dialog
-      ref={dialogRef}
-      className="inquiry-dialog"
-      data-open={isOpen}
-      aria-label="Trip details and inquiry"
-      onCancel={(event) => {
-        event.preventDefault()
-        onClose()
-      }}
-      onClick={(event) => {
-        if (event.target === event.currentTarget) onClose()
-      }}
-    >
-      {panel}
-    </dialog>
+    <div className="inquiry-dock">
+      <button
+        ref={launcher}
+        type="button"
+        data-expanded={open}
+        aria-expanded={open}
+        aria-controls={id}
+        className="inquiry-dock-launcher"
+        onClick={() => {
+          setManual(true)
+          requestAnimationFrame(() => panel.current?.querySelector('button')?.focus({ preventScroll: true }))
+        }}
+      >
+        <Icon name="flight" size={18} /> Trip inquiry
+      </button>
+      <aside
+        id={id}
+        ref={panel}
+        className="inquiry-dock-panel"
+        data-open={open}
+        inert={!open}
+        aria-label="Trip details and inquiry"
+        onKeyDown={(event) => {
+          if (event.key === 'Escape') minimize()
+        }}
+      >
+        <HeroInquiryCard context={context} onClose={minimize} />
+      </aside>
+      <WhatsAppFloat placement="dock" />
+    </div>
   )
 }

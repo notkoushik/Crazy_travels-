@@ -1,6 +1,7 @@
 import React from 'react'
 import { InquirySubmission } from '../../../types/travel'
 import { Icon } from '../../../components/Icon'
+import { dateLabel } from '../../../components/TravelDatePicker'
 
 interface InquiryDrawerProps {
   inquiry: InquirySubmission
@@ -43,6 +44,9 @@ export function InquiryDrawer({ inquiry, onClose, onUpdateStatus }: InquiryDrawe
               Destination: <strong className="text-slate-900 font-inter-tight">{inquiry.preferredDestination}</strong>
             </div>
             <div className="text-slate-600">Month: {inquiry.travelMonth}</div>
+            {inquiry.travelSeason && <div className="text-slate-600">Season: {inquiry.travelSeason}</div>}
+            {inquiry.travelStart && inquiry.travelEnd && <div className="text-slate-600">Dates: {dateLabel(inquiry.travelStart)} – {dateLabel(inquiry.travelEnd)}</div>}
+            {(inquiry.sourceTitle || inquiry.sourcePage) && <div className="text-slate-600">Page: {inquiry.sourceTitle || inquiry.sourcePage}</div>}
             <div className="text-slate-600">Travelers: {inquiry.travelersCount}</div>
             <div className="text-slate-600 font-mono">Budget: {inquiry.budgetPerPerson}</div>
           </div>

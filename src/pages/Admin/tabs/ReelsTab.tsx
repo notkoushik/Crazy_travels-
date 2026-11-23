@@ -1,265 +1,395 @@
-import React, { useState } from 'react'
-import { InstagramReelItem } from '../../../types/travel'
+﻿import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Icon } from '../../../components/Icon'
+import { CatalogPhoto } from '../../../components/CatalogPhoto'
+import { ImageDropzone, validateCoverPhoto } from '../../../components/ImageDropzone'
+import { getAdminAuthHeaders } from '../../../services/dataStore'
+import type { InstagramReelItem } from '../../../types/travel'
+import {
+  Field,
+  NumberField,
+  TextArea,
+  requiredNumber,
+  requiredText,
+  textValue,
+} from '../components/InventoryEditor'
 
 interface ReelsTabProps {
   reels: InstagramReelItem[]
-  onUpdateReel: (id: string, updates: Partial<InstagramReelItem>) => Promise<any>
-  onToast: (msg: string) => void
+  onSaveReel: (reel: InstagramReelItem) => Promise<void>
+  onDeleteReel: (id: string) => Promise<void>
+  onToast: (message: string) => void
 }
 
-export function ReelsTab({ reels, onUpdateReel, onToast }: ReelsTabProps) {
-  // Local edit states per reel id
-  const [editingData, setEditingData] = useState<Record<string, Partial<InstagramReelItem>>>({})
-  const [savingId, setSavingId] = useState<string | null>(null)
-  const [savedSuccessId, setSavedSuccessId] = useState<string | null>(null)
+const deleteUpload = (url: string) =>
+  fetch(url, { method: 'DELETE', headers: getAdminAuthHeaders() }).catch(() => undefined)
 
-  const handleFieldChange = (id: string, field: keyof InstagramReelItem, value: any) => {
-    setEditingData((prev) => ({
-      ...prev,
-      [id]: {
-        ...prev[id],
-        [field]: value,
-      },
-    }))
+async function reelResponse(response: Response) {
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) throw new Error(data.error || 'The reel upload did not finish. Try again.')
+  return data
+}
+
+async function videoDuration(file: File) {
+  const url = URL.createObjectURL(file)
+  const video = document.createElement('video')
+  video.preload = 'metadata'
+  try {
+    const duration = await new Promise<number>((resolve, reject) => {
+      const fail = () => reject(new Error('Choose a video that plays in your browser.'))
+      const timer = window.setTimeout(fail, 10000)
+      video.onloadedmetadata = () => {
+        window.clearTimeout(timer)
+        resolve(video.duration)
+      }
+      video.onerror = () => {
+        window.clearTimeout(timer)
+        fail()
+      }
+      video.src = url
+    })
+    if (!Number.isFinite(duration) || duration <= 0) throw new Error('Could not read the video duration.')
+    const seconds = Math.ceil(duration)
+    return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`
+  } finally {
+    video.removeAttribute('src')
+    URL.revokeObjectURL(url)
+  }
+}
+
+export function ReelsTab({ reels, onSaveReel, onDeleteReel, onToast }: ReelsTabProps) {
+  const [editor, setEditor] = useState<{ id: string; record?: InstagramReelItem }>()
+  const [cover, setCover] = useState('')
+  const [video, setVideo] = useState('')
+  const [duration, setDuration] = useState('')
+  const [uploading, setUploading] = useState<number>()
+  const [uploadingCover, setUploadingCover] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+  const draftUpload = useRef<string | undefined>(undefined)
+  const mounted = useRef(true)
+  const busy = saving || uploading !== undefined || uploadingCover
+
+  useEffect(() => {
+    mounted.current = true
+    return () => {
+      mounted.current = false
+      if (draftUpload.current) void deleteUpload(draftUpload.current)
+    }
+  }, [])
+
+  const discardUpload = () => {
+    if (draftUpload.current) void deleteUpload(draftUpload.current)
+    draftUpload.current = undefined
   }
 
-  const handleSave = async (reel: InstagramReelItem) => {
-    const changes = editingData[reel.id]
-    if (!changes || Object.keys(changes).length === 0) {
-      onToast('No changes to save.')
+  const openEditor = (record?: InstagramReelItem) => {
+    discardUpload()
+    setError('')
+    setEditor({ id: record?.id ?? `reel-${crypto.randomUUID()}`, record })
+    setCover(record?.posterUrl || '')
+    setVideo(record?.videoUrl || '')
+    setDuration(record?.duration || '')
+  }
+
+  const uploadVideo = async (file: File) => {
+    setError('')
+    if (!['video/mp4', 'video/webm'].includes(file.type) || !file.size || file.size > 60 * 1024 * 1024) {
+      setError('Choose an MP4 or WebM video up to 60 MB.')
       return
     }
-
+    setUploading(0)
+    let url: string | undefined
     try {
-      setSavingId(reel.id)
-      await onUpdateReel(reel.id, changes)
-      setSavedSuccessId(reel.id)
-      setTimeout(() => setSavedSuccessId(null), 3000)
-      onToast(`Saved Instagram Reel “${reel.title}” to PostgreSQL!`)
-    } catch (err: any) {
-      onToast(`Error saving reel: ${err.message || 'Unknown error'}`)
+      const length = await videoDuration(file)
+      const session = await reelResponse(
+        await fetch('/api/reel-videos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...getAdminAuthHeaders() },
+          body: JSON.stringify({ type: file.type, size: file.size }),
+        })
+      )
+      if (typeof session.id !== 'string' || !Number.isInteger(session.chunkSize) || session.chunkSize <= 0) {
+        throw new Error('The server did not return a valid upload session.')
+      }
+      url = `/api/reel-videos/${session.id}`
+      for (let offset = 0; offset < file.size; offset += session.chunkSize) {
+        const next = Math.min(offset + session.chunkSize, file.size)
+        if (!mounted.current) throw new Error('Upload closed.')
+        const response = await fetch(`${url}/${offset / session.chunkSize}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/octet-stream', ...getAdminAuthHeaders() },
+          body: file.slice(offset, next),
+        })
+        if (!response.ok) await reelResponse(response)
+        setUploading(Math.round((next / file.size) * 100))
+      }
+      await reelResponse(await fetch(`${url}/complete`, { method: 'POST', headers: getAdminAuthHeaders() }))
+      if (!mounted.current) throw new Error('Upload closed.')
+      discardUpload()
+      draftUpload.current = url
+      setVideo(url)
+      setDuration(length)
+    } catch (failure) {
+      if (url) void deleteUpload(url)
+      if (mounted.current)
+        setError(failure instanceof Error ? failure.message : 'Could not upload the video.')
     } finally {
-      setSavingId(null)
+      if (mounted.current) setUploading(undefined)
+    }
+  }
+
+  const save = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (busy || !editor) return
+    const form = new FormData(event.currentTarget)
+    setSaving(true)
+    setError('')
+    try {
+      const videoUrl = video.trim()
+      if (!/^(?:https?:\/\/|\/(?!\/))\S+$/i.test(videoUrl))
+        throw new Error('Upload a video or provide a direct video URL.')
+      const durationValue = duration.trim()
+      if (!/^\d{1,3}:[0-5]\d$/.test(durationValue)) throw new Error('Enter a duration such as 1:20.')
+      await onSaveReel({
+        id: editor.id,
+        title: requiredText(form, 'title', 'Title'),
+        place: requiredText(form, 'place', 'Destination'),
+        customerName: requiredText(form, 'customerName', 'Customer name'),
+        reviewQuote: requiredText(form, 'quote', 'Review quote'),
+        rating: requiredNumber(form, 'rating', 'Rating', 1, 5),
+        displayOrder: requiredNumber(form, 'displayOrder', 'Display order', 0),
+        videoUrl,
+        duration: durationValue,
+        instagramUrl: textValue(form, 'instagramUrl'),
+        posterUrl: await validateCoverPhoto(cover, editor.record?.posterUrl),
+      })
+      if (draftUpload.current === videoUrl) draftUpload.current = undefined
+      discardUpload()
+      setEditor(undefined)
+      onToast('Reel saved.')
+    } catch (failure) {
+      setError(failure instanceof Error ? failure.message : 'Could not save the reel.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const remove = async (reel: InstagramReelItem) => {
+    if (!window.confirm(`Remove “${reel.title}” from the customer site?`)) return
+    setSaving(true)
+    try {
+      await onDeleteReel(reel.id)
+      if (editor?.record?.id === reel.id) {
+        discardUpload()
+        setEditor(undefined)
+      }
+      onToast('Reel deleted.')
+    } catch (failure) {
+      onToast(failure instanceof Error ? failure.message : 'Could not delete the reel.')
+    } finally {
+      setSaving(false)
     }
   }
 
   return (
-    <div className="space-y-6 max-w-7xl font-inter">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-200">
+    <div className="mx-auto max-w-6xl space-y-5">
+      <header className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 pb-4">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight font-inter-tight">
-              Instagram Video Reels & Customer Reviews
-            </h1>
-            <span className="px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 text-[11px] font-bold flex items-center gap-1">
-              <Icon name="instagram" size={12} className="text-rose-600" />
-              10 Active Reels
-            </span>
-          </div>
-          <p className="text-xs md:text-sm text-slate-500 mt-1">
-            Manage high-speed streaming 9:16 videos, customer quotes, traveler identities, and live Instagram post links.
-          </p>
+          <h1 className="text-2xl font-bold text-slate-950">Customer reels</h1>
+          <p className="mt-1 text-sm text-slate-600">Manage videos and reviews shown on the homepage.</p>
         </div>
-      </div>
-
-      {/* Architecture & Solution Banner */}
-      <div className="rounded-xl border border-indigo-100 bg-gradient-to-r from-indigo-50/60 via-purple-50/40 to-slate-50 p-4 text-xs text-slate-700 shadow-2xs space-y-2">
-        <div className="flex items-center gap-2 font-bold text-slate-900">
-          <Icon name="sparkle" size={15} className="text-indigo-600" />
-          <span>Instagram Link Architecture & Solution:</span>
-        </div>
-        <p className="text-[12px] leading-relaxed text-slate-600">
-          The video files are compressed with H.264/AAC with header faststart (<code className="bg-white px-1.5 py-0.5 rounded border border-slate-200 font-mono text-[11px]">+faststart</code>) for zero-buffering instant web playback. Each video is mapped to an Instagram link below. You can paste any live Instagram URL (e.g. <code className="bg-white px-1.5 py-0.5 rounded border border-slate-200 font-mono text-[11px]">https://www.instagram.com/reel/C...</code>), and click <strong>Save & Sync</strong> to update the live site immediately without rebuilding.
-        </p>
-      </div>
-
-      {/* Reels List */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {reels.map((reel, idx) => {
-          const currentChanges = editingData[reel.id] || {}
-          const currentLink =
-            currentChanges.instagramUrl !== undefined ? currentChanges.instagramUrl : reel.instagramUrl || ''
-          const currentQuote =
-            currentChanges.reviewQuote !== undefined ? currentChanges.reviewQuote : reel.reviewQuote
-          const currentCustomer =
-            currentChanges.customerName !== undefined ? currentChanges.customerName : reel.customerName
-          const currentTitle =
-            currentChanges.title !== undefined ? currentChanges.title : reel.title
-          const currentPlace =
-            currentChanges.place !== undefined ? currentChanges.place : reel.place
-
-          const isSaving = savingId === reel.id
-          const isSavedSuccess = savedSuccessId === reel.id
-          const hasUnsavedChanges = Object.keys(currentChanges).length > 0
-
-          return (
-            <div
-              key={reel.id}
-              className={`rounded-2xl bg-white border transition-all duration-200 overflow-hidden shadow-2xs hover:shadow-md flex flex-col md:flex-row gap-4 p-4 ${
-                hasUnsavedChanges ? 'border-amber-400 bg-amber-50/10' : 'border-slate-200/90'
-              }`}
-            >
-              {/* Video Thumbnail & Info */}
-              <div className="relative w-full md:w-44 h-56 md:h-auto rounded-xl overflow-hidden bg-black shrink-0 group">
-                <img
-                  src={reel.posterUrl}
-                  alt={reel.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => openEditor()}
+          className="inline-flex items-center gap-2 rounded-lg bg-[#10493f] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+        >
+          <Icon name="plus" size={16} /> Add reel
+        </button>
+      </header>
+      {editor && (
+        <form
+          key={editor.id}
+          onSubmit={save}
+          className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6"
+        >
+          <h2 className="mb-4 text-lg font-bold text-slate-950">
+            {editor.record ? 'Edit reel' : 'Add reel'}
+          </h2>
+          <fieldset disabled={busy} className="min-w-0 space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field
+                label="Title"
+                name="title"
+                defaultValue={editor.record?.title}
+                maxLength={255}
+                required
+              />
+              <Field
+                label="Destination"
+                name="place"
+                defaultValue={editor.record?.place}
+                maxLength={120}
+                required
+              />
+              <Field
+                label="Customer name"
+                name="customerName"
+                defaultValue={editor.record?.customerName}
+                maxLength={120}
+                required
+              />
+              <NumberField
+                label="Rating out of 5"
+                name="rating"
+                decimal
+                pattern="[0-9]+([.,][0-9])?"
+                defaultValue={editor.record?.rating}
+                required
+              />
+              <NumberField
+                label="Display order"
+                name="displayOrder"
+                defaultValue={
+                  editor.record?.displayOrder ?? Math.max(-1, ...reels.map((reel) => reel.displayOrder)) + 1
+                }
+                required
+              />
+              <Field
+                label="Duration"
+                name="duration"
+                value={duration}
+                onChange={(event) => setDuration(event.target.value)}
+                placeholder="0:45"
+                required
+              />
+            </div>
+            <TextArea
+              label="Customer review quote"
+              name="quote"
+              defaultValue={editor.record?.reviewQuote}
+              required
+            />
+            <Field
+              label="Instagram URL"
+              name="instagramUrl"
+              type="url"
+              defaultValue={editor.record?.instagramUrl}
+            />
+            <div className="grid gap-3 rounded-xl border border-slate-200 p-3">
+              <label className="grid gap-1.5 text-sm font-medium text-slate-800">
+                Upload reel video
+                <input
+                  type="file"
+                  accept="video/mp4,video/webm"
+                  className="max-w-full text-sm text-slate-600"
+                  onChange={(event) => {
+                    const file = event.currentTarget.files?.[0]
+                    event.currentTarget.value = ''
+                    if (file) void uploadVideo(file)
+                  }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 pointer-events-none" />
-
-                <span className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-md text-[10px] font-bold text-amber-300 border border-white/20">
-                  #{idx + 1} Reel
-                </span>
-
-                <span className="absolute bottom-2 left-2 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-md text-[10px] font-mono text-white/90 border border-white/20">
-                  {reel.duration}
-                </span>
-
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 backdrop-blur-[1px]">
-                  <a
-                    href={reel.videoUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="p-2.5 rounded-full bg-white text-slate-900 shadow-lg hover:scale-110 transition-transform"
-                    title="Open Raw Video"
-                  >
-                    <Icon name="play" size={16} className="translate-x-0.5" />
-                  </a>
-                </div>
-              </div>
-
-              {/* Form Controls */}
-              <div className="flex-1 flex flex-col justify-between space-y-3">
-                <div className="space-y-2.5">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1">
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                        Title & Destination
-                      </label>
-                      <input
-                        type="text"
-                        value={currentTitle}
-                        onChange={(e) => handleFieldChange(reel.id, 'title', e.target.value)}
-                        className="w-full text-xs font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-400"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                        Customer / Travelers
-                      </label>
-                      <input
-                        type="text"
-                        value={currentCustomer}
-                        onChange={(e) => handleFieldChange(reel.id, 'customerName', e.target.value)}
-                        className="w-full text-xs font-medium text-slate-700 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-400"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                        Location Tag
-                      </label>
-                      <input
-                        type="text"
-                        value={currentPlace}
-                        onChange={(e) => handleFieldChange(reel.id, 'place', e.target.value)}
-                        className="w-full text-xs font-medium text-slate-700 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-400"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                      Customer Review Quote (Displayed on card & player)
-                    </label>
-                    <textarea
-                      rows={2}
-                      value={currentQuote}
-                      onChange={(e) => handleFieldChange(reel.id, 'reviewQuote', e.target.value)}
-                      className="w-full text-xs text-slate-700 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-400 leading-snug resize-none"
-                    />
-                  </div>
-
-                  {/* Instagram Link Field */}
-                  <div className="pt-1">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-rose-500 flex items-center gap-1">
-                      <Icon name="instagram" size={11} />
-                      Instagram Reel URL
-                    </label>
-                    <div className="flex items-center gap-1.5 mt-1">
-                      <input
-                        type="url"
-                        value={currentLink}
-                        placeholder="https://www.instagram.com/reel/..."
-                        onChange={(e) => handleFieldChange(reel.id, 'instagramUrl', e.target.value)}
-                        className="flex-1 text-xs font-mono text-slate-800 bg-rose-50/30 border border-rose-200 rounded-lg px-2.5 py-1.5 focus:bg-white focus:outline-none focus:ring-1 focus:ring-rose-400"
-                      />
-                      {currentLink && (
-                        <a
-                          href={currentLink}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-xs font-medium flex items-center gap-1 transition-colors"
-                          title="Open in Instagram"
-                        >
-                          <Icon name="arrow" size={12} className="-rotate-45" />
-                          <span>Test</span>
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Card Action Footer */}
-                <div className="pt-2 flex items-center justify-between border-t border-slate-100">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] text-amber-500 font-bold flex items-center gap-0.5">
-                      {[...Array(5)].map((_, i) => (
-                        <Icon key={i} name="star" size={10} className="fill-amber-400" />
-                      ))}
-                    </span>
-                    <span className="text-[11px] text-slate-400 font-mono">5.0 Star</span>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => handleSave(reel)}
-                    disabled={isSaving}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shadow-2xs ${
-                      isSavedSuccess
-                        ? 'bg-emerald-600 text-white'
-                        : hasUnsavedChanges
-                          ? 'bg-amber-600 hover:bg-amber-700 text-white animate-pulse'
-                          : 'bg-slate-900 hover:bg-slate-800 text-white'
-                    }`}
-                  >
-                    {isSaving ? (
-                      <>
-                        <Icon name="refresh" size={12} className="animate-spin" />
-                        <span>Saving...</span>
-                      </>
-                    ) : isSavedSuccess ? (
-                      <>
-                        <Icon name="check" size={12} />
-                        <span>Saved to DB!</span>
-                      </>
-                    ) : (
-                      <>
-                        <Icon name="check" size={12} />
-                        <span>Save Link & Review</span>
-                      </>
-                    )}
-                  </button>
-                </div>
+              </label>
+              <Field
+                label="Direct video URL"
+                name="videoUrl"
+                value={video}
+                onChange={(event) => setVideo(event.target.value)}
+                placeholder="Upload from your device or enter a video URL"
+                required
+              />
+              {video && (
+                <video
+                  key={video}
+                  src={video}
+                  preload="metadata"
+                  controls
+                  playsInline
+                  className="max-h-56 w-full rounded-lg bg-black"
+                />
+              )}
+            </div>
+            <ImageDropzone
+              label="Reel cover photo *"
+              value={cover}
+              onChange={setCover}
+              onUploadingChange={setUploadingCover}
+            />
+          </fieldset>
+          {uploading !== undefined && (
+            <p role="status" className="mt-3 text-sm text-emerald-900">
+              Uploading video… {uploading}%
+            </p>
+          )}
+          {error && (
+            <p role="alert" className="mt-3 text-sm text-red-700">
+              {error}
+            </p>
+          )}
+          <div className="mt-4 flex justify-end gap-2">
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => {
+                discardUpload()
+                setEditor(undefined)
+              }}
+              className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={busy}
+              className="rounded-lg bg-[#10493f] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+            >
+              {saving ? 'Saving…' : 'Save reel'}
+            </button>
+          </div>
+        </form>
+      )}
+      {!reels.length && (
+        <p className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-600">
+          No reels are published.
+        </p>
+      )}
+      <div className="grid gap-3 lg:grid-cols-2">
+        {reels.map((reel) => (
+          <article
+            key={reel.id}
+            className="flex min-w-0 gap-4 rounded-xl border border-slate-200 bg-white p-3"
+          >
+            <CatalogPhoto
+              src={reel.posterUrl}
+              alt={reel.title}
+              className="h-24 w-16 shrink-0 rounded-md object-cover"
+            />
+            <div className="min-w-0 flex-1">
+              <h2 className="font-semibold text-slate-900">{reel.title}</h2>
+              <p className="mt-1 text-sm text-slate-600">
+                {reel.customerName} · {reel.place} · {reel.duration}
+              </p>
+              <div className="mt-2 flex gap-3 text-sm">
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => openEditor(reel)}
+                  className="font-semibold text-emerald-900"
+                >
+                  Edit / replace
+                </button>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void remove(reel)}
+                  className="font-semibold text-red-700"
+                >
+                  Delete
+                </button>
               </div>
             </div>
-          )
-        })}
+          </article>
+        ))}
       </div>
     </div>
   )
