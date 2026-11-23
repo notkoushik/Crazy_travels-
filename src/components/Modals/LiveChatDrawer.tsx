@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Icon } from '../Icon'
+import { CrazyToursLogo } from '../CrazyToursLogo'
 
 interface LiveChatDrawerProps {
   isOpen: boolean
@@ -38,7 +39,7 @@ export function LiveChatDrawer({ isOpen, onClose, onToast }: LiveChatDrawerProps
         ...prev,
         {
           sender: 'expert',
-          text: 'Thank you for reaching out! One of our regional destination specialists is reviewing your query. You can also connect directly with us on WhatsApp at +91 8047 112 112 for instantaneous photos and custom quotes.',
+          text: 'Thank you for reaching out! One of our regional destination specialists is reviewing your query. You can also connect directly with us on WhatsApp at +91 88949 98808 for instantaneous photos and custom quotes.',
           time: 'Just now',
         },
       ])
@@ -56,10 +57,8 @@ export function LiveChatDrawer({ isOpen, onClose, onToast }: LiveChatDrawerProps
         <div className="bg-[#072f2b] p-4 text-white flex items-center justify-between border-b border-[#0b4941]">
           <div className="flex items-center gap-3">
             <div className="relative">
-              <div className="w-10 h-10 rounded-full bg-[#ef4934] p-0.5">
-                <img src="/IMG_1611.PNG" alt="Travel Expert" className="w-full h-full object-cover rounded-full" />
-              </div>
-              <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-green-500 border-2 border-[#072f2b]" />
+              <CrazyToursLogo size={40} showWordmark={false} />
+              <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-green-500 border-2 border-[#072f2b]" />
             </div>
             <div>
               <h4 className="font-bold text-sm text-white">Ananya · Travel Specialist</h4>

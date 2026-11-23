@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { RouteName } from '../types/travel'
 import { Icon } from './Icon'
+import { CrazyToursLogo } from './CrazyToursLogo'
 
 interface FooterProps {
   navigate: (route: RouteName) => void
@@ -56,18 +57,8 @@ export function Footer({ navigate, onToast }: FooterProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-12 border-b border-white/10">
           {/* Col 1: Brand Info & Accreditation */}
           <div className="lg:col-span-2 space-y-4 pr-4">
-            <button onClick={() => navigate('home')} className="flex items-center gap-3 text-left group">
-              <div className="w-10 h-10 rounded-xl overflow-hidden border border-[#ef4934]/40 bg-[#ef4934] p-0.5">
-                <img src="/IMG_1611.PNG" alt="Crazy Tours Travels Icon" className="w-full h-full object-cover rounded-lg" />
-              </div>
-              <div className="flex flex-col leading-none">
-                <span className="font-extrabold text-[22px] tracking-tight text-white group-hover:text-[#ffd0c7] transition-colors">
-                  CRAZY
-                </span>
-                <span className="text-[10px] font-bold tracking-[0.22em] uppercase text-[#ef4934]">
-                  Tours Travels
-                </span>
-              </div>
+            <button onClick={() => navigate('home')} className="flex items-center text-left group">
+              <CrazyToursLogo size={42} showWordmark={true} light={true} />
             </button>
             <p className="text-sm text-[#dce9e6]/75 leading-relaxed">
               Travel made genuinely human. Curated departures, verified heritage properties, private chauffeur

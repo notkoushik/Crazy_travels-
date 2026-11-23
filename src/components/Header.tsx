@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Currency, RouteName } from '../types/travel'
 import { Icon } from './Icon'
+import { CrazyToursLogo } from './CrazyToursLogo'
 import { services } from '../data/travelData'
 
 interface HeaderProps {
@@ -89,98 +90,65 @@ export function Header({
       {/* Main Navigation Row */}
       <div className="border-b border-[#dfe5df]/80 bg-white sticky top-0 z-30 shadow-xs">
         <div className="shell nav-row flex items-center justify-between">
-          {/* Brand Logo with User Assets */}
+          {/* Brand Logo with Official Vector Emblem */}
           <button
             onClick={() => handleNav('home')}
-            className="flex items-center gap-3 group text-left focus:outline-none"
+            className="flex items-center group text-left focus:outline-none"
             aria-label="Crazy Tours Travels Home"
           >
-            <div className="w-10 h-10 rounded-xl overflow-hidden shadow-sm flex-none border border-emerald-950/15 bg-[#072f2b] p-0.5 group-hover:scale-105 transition-all">
-              <img
-                src="/IMG_1611.PNG"
-                alt="Crazy Tours Travels Icon"
-                className="w-full h-full object-cover rounded-lg"
-              />
-            </div>
-            <div className="flex flex-col leading-none">
-              <div className="flex items-center gap-1.5">
-                <span className="font-extrabold text-[22px] tracking-[-0.03em] text-[#072f2b] group-hover:text-[#0b4941] transition-colors">
-                  CRAZY
-                </span>
-                <span className="w-1.5 h-1.5 rounded-full bg-[#ef4934]"></span>
-              </div>
-              <span className="text-[10px] font-bold tracking-[0.24em] uppercase text-[#ef4934] mt-0.5">
-                Tours & Travels
-              </span>
-            </div>
+            <CrazyToursLogo size={40} showWordmark={true} />
           </button>
 
-          {/* Desktop Navigation Links */}
-          <nav className="desktop-nav hidden lg:flex items-center gap-6">
+          {/* Desktop Navigation Links — Refined Typography & Balanced Spacing */}
+          <nav className="desktop-nav hidden lg:flex items-center gap-7 xl:gap-9">
             <button
               onClick={() => handleNav('home')}
-              className={`nav-item-link ${currentRoute === 'home' ? 'active' : ''}`}
+              className={`nav-item-link font-inter font-medium text-[15px] tracking-tight transition-colors ${
+                currentRoute === 'home' ? 'active text-[#072f2b] font-semibold' : 'text-[#374e47] hover:text-[#072f2b]'
+              }`}
             >
               Home
             </button>
             <button
               onClick={() => handleNav('packages')}
-              className={`nav-item-link ${
-                currentRoute === 'packages' || currentRoute.startsWith('package/') ? 'active' : ''
+              className={`nav-item-link font-inter font-medium text-[15px] tracking-tight transition-colors ${
+                currentRoute === 'packages' || currentRoute.startsWith('package/') ? 'active text-[#072f2b] font-semibold' : 'text-[#374e47] hover:text-[#072f2b]'
               }`}
             >
               Holidays & Packages
             </button>
             <button
               onClick={() => handleNav('stays')}
-              className={`nav-item-link ${currentRoute === 'stays' ? 'active' : ''}`}
+              className={`nav-item-link font-inter font-medium text-[15px] tracking-tight transition-colors ${
+                currentRoute === 'stays' ? 'active text-[#072f2b] font-semibold' : 'text-[#374e47] hover:text-[#072f2b]'
+              }`}
             >
               Stays & Resorts
             </button>
             <button
               onClick={() => handleNav('road-trips')}
-              className={`nav-item-link ${currentRoute === 'road-trips' ? 'active' : ''}`}
+              className={`nav-item-link font-inter font-medium text-[15px] tracking-tight transition-colors ${
+                currentRoute === 'road-trips' ? 'active text-[#072f2b] font-semibold' : 'text-[#374e47] hover:text-[#072f2b]'
+              }`}
             >
               Road Trips
             </button>
             <button
               onClick={() => handleNav('stories')}
-              className={`nav-item-link ${currentRoute === 'stories' ? 'active' : ''}`}
+              className={`nav-item-link font-inter font-medium text-[15px] tracking-tight transition-colors ${
+                currentRoute === 'stories' ? 'active text-[#072f2b] font-semibold' : 'text-[#374e47] hover:text-[#072f2b]'
+              }`}
             >
               Travel Stories
             </button>
-            <button
-              onClick={() => handleNav('offers')}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all shadow-xs ${
-                currentRoute === 'offers'
-                  ? 'bg-[#ef4934] text-white shadow-sm shadow-[#ef4934]/30'
-                  : 'bg-rose-50 text-[#ef4934] border border-[#ef4934]/25 hover:bg-[#ef4934] hover:text-white hover:border-[#ef4934]'
-              }`}
-            >
-              <Icon name="tag" size={13} />
-              <span>Crazy Offers</span>
-              <span className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-full tracking-wider ${
-                currentRoute === 'offers' ? 'bg-white text-[#ef4934]' : 'bg-[#ef4934] text-white'
-              }`}>
-                Hot
-              </span>
-            </button>
           </nav>
 
-          {/* Action Buttons: Wishlist, Custom Plan CTA, Sign in, Mobile Hamburger */}
+          {/* Action Buttons: Wishlist, Sign in, Mobile Hamburger */}
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => handleNav('custom-trip')}
-              className="hidden sm:inline-flex items-center gap-2 h-10 px-4 rounded-full bg-gradient-to-r from-[#ef4934] to-[#f46a58] hover:from-[#df3924] hover:to-[#ef4934] text-white text-xs font-bold tracking-wide transition-all shadow-md shadow-[#ef4934]/20 hover:shadow-lg hover:shadow-[#ef4934]/30 active:scale-95"
-            >
-              <Icon name="sparkle" size={14} />
-              <span>Plan Custom Trip</span>
-            </button>
-
             {/* Saved Trips Heart Button */}
             <button
               onClick={onOpenSaved}
-              className="relative w-10 h-10 rounded-full border border-gray-200 hover:border-[#ef4934] text-[#173631] hover:text-[#ef4934] transition-all bg-white shadow-sm flex items-center justify-center active:scale-95"
+              className="relative w-10 h-10 rounded-full border border-gray-200/90 hover:border-[#ef4934] text-[#173631] hover:text-[#ef4934] transition-all bg-white shadow-xs flex items-center justify-center active:scale-95"
               aria-label={`${savedCount} saved trips`}
             >
               <Icon name="heart" size={18} />
@@ -194,7 +162,7 @@ export function Header({
             {/* User Profile / Login Button */}
             <button
               onClick={onOpenAuth}
-              className="h-10 px-4 rounded-full bg-[#072f2b] hover:bg-[#0b4941] text-white text-xs font-semibold transition-all shadow-sm flex items-center gap-2 active:scale-95"
+              className="h-10 px-5 rounded-full bg-[#072f2b] hover:bg-[#0b4941] text-white text-xs font-semibold tracking-wide transition-all shadow-sm flex items-center gap-2 active:scale-95 border border-emerald-900/30"
             >
               <Icon name="user" size={15} />
               <span className="hidden sm:inline font-medium">
@@ -257,21 +225,6 @@ export function Header({
               <Icon name="chevron" size={18} />
             </button>
             <button
-              onClick={() => handleNav('offers')}
-              className="w-full flex items-center justify-between text-base font-semibold text-[#ef4934]"
-            >
-              <span className="flex items-center gap-2">
-                <Icon name="tag" size={16} /> Crazy Offers & Deals
-              </span>
-              <Icon name="chevron" size={18} />
-            </button>
-            <button
-              onClick={() => handleNav('custom-trip')}
-              className="w-full py-3 mt-2 rounded-xl bg-[#ef4934] text-white font-bold text-center flex items-center justify-center gap-2 shadow-lg shadow-[#ef4934]/30"
-            >
-              <Icon name="sparkle" size={18} /> Design a Custom Itinerary
-            </button>
-            <button
               onClick={() => handleNav('admin')}
               className="w-full py-2.5 mt-2 rounded-xl bg-[#072f2b] text-white font-semibold text-center flex items-center justify-center gap-2 border border-[#0d3f38]"
             >
@@ -293,12 +246,12 @@ export function Header({
             </div>
             <div className="flex items-center justify-between pt-2">
               <a
-                href="https://wa.me/918047112112"
+                href="https://wa.me/918894998808?text=Hi%20Crazy%20Tours%20Travels,%20I%20would%20like%20to%20plan%20a%20trip"
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center gap-2 text-green-700 font-semibold"
               >
-                <Icon name="whatsapp" size={18} /> WhatsApp Concierge
+                <Icon name="whatsapp" size={18} /> WhatsApp: +91 88949 98808
               </a>
               <button onClick={onOpenCurrency} className="flex items-center gap-1 font-semibold text-gray-700">
                 <Icon name="globe" size={16} /> EN / {currentCurrency}

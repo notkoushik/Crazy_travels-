@@ -12,6 +12,7 @@ import { BookingModal } from './components/Modals/BookingModal'
 import { CurrencyModal } from './components/Modals/CurrencyModal'
 import { LiveChatDrawer } from './components/Modals/LiveChatDrawer'
 import { StoryViewerModal } from './components/Modals/StoryViewerModal'
+import { WhatsAppFloat } from './components/WhatsAppFloat'
 
 // Pages
 import { HomePage } from './pages/HomePage'
@@ -263,17 +264,8 @@ export default function App() {
       {/* Global Branded Footer */}
       <Footer navigate={navigate} onToast={showToast} />
 
-      {/* Floating Travel Expert Trigger */}
-      <button
-        onClick={() => setLiveChatOpen(true)}
-        className="floating-help group flex items-center gap-2"
-        aria-label="Chat with a travel expert"
-      >
-        <div className="w-5 h-5 rounded-full overflow-hidden bg-white/20 p-0.5">
-          <img src="/IMG_1611.PNG" alt="Expert" className="w-full h-full object-cover rounded-full" />
-        </div>
-        <span>Ask a Travel Expert</span>
-      </button>
+      {/* High-Quality WhatsApp Live Concierge Button */}
+      <WhatsAppFloat phoneNumber="918894998808" />
 
       {/* Global Toast Alert */}
       {toastMessage && (

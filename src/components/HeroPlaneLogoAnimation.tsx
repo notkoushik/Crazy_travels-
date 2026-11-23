@@ -82,6 +82,57 @@ export function HeroPlaneLogoAnimation({
   const [, setIsPlaying] = useState(false)
   const [, setIsSettled] = useState(false)
   const [timerText, setTimerText] = useState('1.8s')
+  const [showInquiry, setShowInquiry] = useState(false)
+  const [inquirySubmitted, setInquirySubmitted] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [formData, setFormData] = useState({
+    name: '',
+    phone: '',
+    destination: 'Kashmir',
+    month: 'Next 30 Days',
+    travelers: 'Couple (2 Adults)',
+  })
+
+  const handleInquirySubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!formData.name.trim() || !formData.phone.trim()) return
+    setSubmitting(true)
+    try {
+      const slugMap: Record<string, string> = {
+        Kashmir: 'srinagar',
+        Kerala: 'munnar',
+        Rajasthan: 'udaipur',
+        Andaman: 'andaman',
+        Sikkim: 'gangtok',
+        Hampi: 'hampi',
+      }
+      const destSlug = slugMap[formData.destination] || 'udaipur'
+      const inqId = `INQ-${Math.floor(1000 + Math.random() * 9000)}`
+      await fetch('/api/inquiries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: inqId,
+          fullName: formData.name.trim(),
+          email: `${formData.name.toLowerCase().replace(/[^a-z0-9]/g, '')}@lead.crazytours.in`,
+          phone: formData.phone.trim(),
+          preferredDestination: formData.destination,
+          travelMonth: formData.month,
+          travelersCount: formData.travelers,
+          budgetPerPerson: '₹50,000 - ₹1,00,000',
+          tripType: 'Custom Handcrafted Holiday',
+          notes: `Quick inquiry from Hero Details Card for ${formData.destination}`,
+          destinationSlug: destSlug,
+        }),
+      })
+      setInquirySubmitted(true)
+    } catch (err) {
+      console.error('Failed to submit inquiry:', err)
+      setInquirySubmitted(true)
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
   const containerRef = useRef<HTMLDivElement>(null)
   const trackPathRef = useRef<SVGPathElement>(null)
@@ -259,6 +310,170 @@ export function HeroPlaneLogoAnimation({
       if (animFrameId.current) cancelAnimationFrame(animFrameId.current)
     }
   }, [])
+
+  // ============================================================
+  // QUICK POPUP DETAILS VIEW (SAME CARD DIMENSIONS & STYLING)
+  // ============================================================
+  if (showInquiry && variant === 'card') {
+    return (
+      <div
+        className={`hero-plane-logo-container relative select-none font-inter w-[280px] sm:w-[320px] lg:w-[350px] min-h-[460px] rounded-3xl p-5 sm:p-6 shadow-2xl backdrop-blur-md border border-white/25 transition-all duration-300 flex flex-col justify-between text-white ${className}`}
+        style={{
+          background:
+            'radial-gradient(circle at 50% 25%, #f24e3a 0%, #dc3723 55%, #ad1c0b 100%)',
+          boxShadow:
+            '0 25px 60px -15px rgba(220, 55, 35, 0.55), 0 0 0 1px rgba(255,255,255,0.2) inset',
+        }}
+      >
+        {/* Top Header with Close Cross Mark */}
+        <div className="w-full flex items-center justify-between pb-2 border-b border-white/20">
+          <div className="flex items-center gap-1.5 text-white/95 text-[10px] font-bold uppercase tracking-widest font-inter-tight">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]"></span>
+            Trip Details & Inquiry
+          </div>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              setShowInquiry(false)
+              setInquirySubmitted(false)
+            }}
+            className="w-7 h-7 rounded-full bg-white/20 hover:bg-white/35 text-white flex items-center justify-center text-xs font-black transition-all hover:scale-110 active:scale-95 cursor-pointer shadow-xs"
+            aria-label="Close trip details popup"
+            title="Close popup"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Content Body */}
+        {inquirySubmitted ? (
+          <div className="flex-1 flex flex-col items-center justify-center text-center py-5 animate-in fade-in zoom-in-95 duration-300">
+            <div className="w-12 h-12 rounded-full bg-white/20 border-2 border-white flex items-center justify-center text-2xl font-black mb-3 text-white shadow-lg shadow-black/20">
+              ✓
+            </div>
+            <h4 className="text-lg font-extrabold text-white tracking-tight">
+              Inquiry Confirmed!
+            </h4>
+            <p className="text-xs text-white/90 mt-2 leading-relaxed px-2">
+              Thank you, <strong className="text-white underline">{formData.name}</strong>. Our travel concierge will WhatsApp you custom itineraries for <strong className="text-white">{formData.destination}</strong> within 15 minutes.
+            </p>
+            <div className="mt-4 pt-3 border-t border-white/20 w-full flex flex-col gap-2">
+              <a
+                href={`https://wa.me/918894998808?text=${encodeURIComponent(
+                  `Hi Crazy Tours Travels, I just submitted an inquiry for ${formData.destination} (${formData.travelers}, ${formData.month}). My name is ${formData.name}.`
+                )}`}
+                target="_blank"
+                rel="noreferrer"
+                className="w-full py-2 rounded-xl bg-[#25D366] hover:bg-[#1EBE5D] text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-md"
+              >
+                <span>Chat on WhatsApp Directly</span>
+              </a>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowInquiry(false)
+                  setInquirySubmitted(false)
+                }}
+                className="w-full py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-xs font-semibold transition-all"
+              >
+                Back to Brand Flight ↺
+              </button>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={handleInquirySubmit} className="flex-1 flex flex-col justify-between py-2 space-y-2">
+            <div>
+              <h4 className="text-[14px] font-extrabold tracking-tight text-white">
+                Where would you like to travel?
+              </h4>
+              <p className="text-[10px] text-white/80 leading-tight mt-0.5">
+                Bespoke luxury itineraries crafted with verified local concierges.
+              </p>
+            </div>
+
+            {/* Quick Destination Chips */}
+            <div className="flex flex-wrap gap-1.5">
+              {['Kashmir', 'Kerala', 'Rajasthan', 'Andaman', 'Sikkim', 'Hampi'].map((dest) => (
+                <button
+                  key={dest}
+                  type="button"
+                  onClick={() => setFormData({ ...formData, destination: dest })}
+                  className={`px-2 py-0.5 rounded-lg text-[10px] font-bold tracking-wide transition-all ${
+                    formData.destination === dest
+                      ? 'bg-white text-[#dc3723] shadow-sm font-extrabold scale-105'
+                      : 'bg-white/15 text-white/90 hover:bg-white/25'
+                  }`}
+                >
+                  {dest}
+                </button>
+              ))}
+            </div>
+
+            {/* Traveler Information Fields */}
+            <div className="space-y-1.5">
+              <input
+                type="text"
+                required
+                placeholder="Your Full Name *"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="w-full px-3 py-1.5 rounded-xl bg-black/25 border border-white/25 text-white placeholder-white/60 text-xs focus:outline-none focus:border-white focus:bg-black/35 transition-all"
+              />
+
+              <input
+                type="tel"
+                required
+                placeholder="WhatsApp / Phone (+91 ...) *"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                className="w-full px-3 py-1.5 rounded-xl bg-black/25 border border-white/25 text-white placeholder-white/60 text-xs focus:outline-none focus:border-white focus:bg-black/35 transition-all"
+              />
+
+              <div className="grid grid-cols-2 gap-1.5">
+                <select
+                  value={formData.month}
+                  onChange={(e) => setFormData({ ...formData, month: e.target.value })}
+                  className="w-full px-2 py-1.5 rounded-xl bg-black/35 border border-white/25 text-white text-[10.5px] focus:outline-none focus:border-white"
+                >
+                  <option value="Next 30 Days" className="bg-[#072f2b] text-white">Next 30 Days</option>
+                  <option value="Spring (Mar-May)" className="bg-[#072f2b] text-white">Spring (Mar-May)</option>
+                  <option value="Summer (Jun-Aug)" className="bg-[#072f2b] text-white">Summer (Jun-Aug)</option>
+                  <option value="Autumn / Festive" className="bg-[#072f2b] text-white">Autumn / Festive</option>
+                  <option value="Winter Holiday" className="bg-[#072f2b] text-white">Winter Holiday</option>
+                </select>
+
+                <select
+                  value={formData.travelers}
+                  onChange={(e) => setFormData({ ...formData, travelers: e.target.value })}
+                  className="w-full px-2 py-1.5 rounded-xl bg-black/35 border border-white/25 text-white text-[10.5px] focus:outline-none focus:border-white"
+                >
+                  <option value="Couple (2 Adults)" className="bg-[#072f2b] text-white">Couple (2 Adults)</option>
+                  <option value="Family (3-4 Members)" className="bg-[#072f2b] text-white">Family (3-4)</option>
+                  <option value="Friends Group (5+)" className="bg-[#072f2b] text-white">Group (5+)</option>
+                  <option value="Solo Explorer" className="bg-[#072f2b] text-white">Solo Traveler</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Submit Action */}
+            <div className="pt-1">
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full py-2.5 rounded-xl bg-white hover:bg-white/95 text-[#dc3723] font-extrabold text-xs tracking-wide shadow-lg transition-all hover:scale-[1.02] active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                {submitting ? 'Sending Request...' : 'Get Bespoke Itinerary & Quote ➜'}
+              </button>
+              <p className="text-[9.5px] text-white/70 text-center mt-1 font-medium">
+                🔒 Free quote · Instant WhatsApp delivery
+              </p>
+            </div>
+          </form>
+        )}
+      </div>
+    )
+  }
 
   return (
     <div
@@ -451,20 +666,35 @@ export function HeroPlaneLogoAnimation({
 
       {/* Interactive Footer & Replay Trigger */}
       {variant === 'card' && (
-        <div className="w-full flex items-center justify-between mt-4 pt-3 border-t border-white/20 text-white/80 text-[11px]">
-          <span className="text-[10px] italic text-white/75">
-            "The journey draws the brand"
-          </span>
+        <div className="w-full flex flex-col gap-2.5 mt-4 pt-3 border-t border-white/20 text-white/80 text-[11px]">
+          <div className="w-full flex items-center justify-between">
+            <span className="text-[10px] italic text-white/75">
+              "The journey draws the brand"
+            </span>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                runAnimation()
+              }}
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 hover:bg-white/30 text-white text-[11px] font-semibold backdrop-blur-xs transition-all hover:scale-105 active:scale-95 cursor-pointer"
+            >
+              <span>Replay Journey</span>
+              <span className="text-xs">↺</span>
+            </button>
+          </div>
+
+          {/* Quick Details / Express Interest Trigger */}
           <button
             type="button"
             onClick={(e) => {
               e.stopPropagation()
-              runAnimation()
+              setShowInquiry(true)
             }}
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 hover:bg-white/30 text-white text-[11px] font-semibold backdrop-blur-xs transition-all hover:scale-105 active:scale-95 cursor-pointer"
+            className="w-full py-2 px-3 rounded-xl bg-white text-[#dc3723] hover:bg-white/95 font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-black/15 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer"
           >
-            <span>Replay Journey</span>
-            <span className="text-xs">↺</span>
+            <span>Express Interest · Get Custom Itinerary</span>
+            <span className="text-sm font-black">➜</span>
           </button>
         </div>
       )}
