@@ -1,9 +1,17 @@
 import React, { useState } from 'react'
-import { CatalogPhoto } from '../components/CatalogPhoto'
+import { CatalogPhotoCarousel } from '../components/CatalogPhotoCarousel'
 import { Currency, PackageItem, RouteName } from '../types/travel'
 import { Icon } from '../components/Icon'
 import { GoogleVerifiedBadge } from '../components/GoogleVerifiedBadge'
 import { formatPrice } from '../data/travelData'
+import { getPackageGallery } from '../data/catalogPhotos'
+
+const packageTabs = [
+  ['itinerary', 'Day-by-day plan'],
+  ['overview', 'Overview & highlights'],
+  ['inclusions', 'Inclusions & exclusions'],
+  ['stays', 'Accommodation'],
+] as const
 
 interface PackageDetailPageProps {
   packageItem: PackageItem
@@ -23,7 +31,7 @@ export function PackageDetailPage({
   currency,
 }: PackageDetailPageProps) {
   const [activeDay, setActiveDay] = useState<number>(1)
-  const [activeTab, setActiveTab] = useState<'overview' | 'itinerary' | 'inclusions' | 'stays'>('itinerary')
+  const [activeTab, setActiveTab] = useState<(typeof packageTabs)[number][0]>('itinerary')
 
   return (
     <main className="bg-[#fbfaf7] pb-24 pt-6">
@@ -42,14 +50,15 @@ export function PackageDetailPage({
 
       {/* Hero Banner Section */}
       <section className="shell mb-10">
-        <div className="relative rounded-3xl overflow-hidden shadow-2xl h-[420px] sm:h-[480px]">
-          <CatalogPhoto
-            src={packageItem.image}
-            alt={packageItem.title}
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent" />
-          <div className="absolute top-6 left-6 flex gap-2">
+        <CatalogPhotoCarousel
+          key={packageItem.id}
+          title={packageItem.title}
+          cover={packageItem.image}
+          gallery={getPackageGallery(packageItem.id, packageItem.gallery)}
+          frameClassName="h-[420px] sm:h-[480px]"
+        >
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent" />
+          <div className="pointer-events-none absolute top-6 left-6 flex gap-2">
             <span className="px-3.5 py-1.5 rounded-full bg-white text-[#072f2b] text-xs font-bold shadow-md">
               {packageItem.duration}
             </span>
@@ -68,7 +77,7 @@ export function PackageDetailPage({
             <Icon name="heart" size={20} />
           </button>
 
-          <div className="absolute bottom-8 left-6 sm:left-10 right-6 sm:right-10 text-white flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div className="pointer-events-none absolute bottom-8 left-6 sm:left-10 right-6 sm:right-10 text-white flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div className="max-w-2xl">
               <span className="text-xs font-bold uppercase tracking-widest text-[#ffd0c7] block mb-2">
                 {packageItem.place} · {packageItem.state} · Handcrafted Journey
@@ -82,7 +91,7 @@ export function PackageDetailPage({
                     ★ {packageItem.rating} ({packageItem.reviewCount} reviews)
                   </span>
                 )}
-                <GoogleVerifiedBadge rating={packageItem.googleRating} reviewsCount={packageItem.googleReviewsCount} mapsUrl={packageItem.googleMapsUrl} size="sm" />
+                <GoogleVerifiedBadge className="pointer-events-auto" rating={packageItem.googleRating} reviewsCount={packageItem.googleReviewsCount} mapsUrl={packageItem.googleMapsUrl} size="sm" />
               </div>
             </div>
 
@@ -96,34 +105,26 @@ export function PackageDetailPage({
               {packageItem.originalPrice && <span className="text-xs text-white/70 line-through block">{packageItem.originalPrice}</span>}
             </div>
           </div>
-        </div>
+        </CatalogPhotoCarousel>
       </section>
 
       {/* Main Content & Sticky Booking Column Grid */}
       <div className="shell grid grid-cols-1 lg:grid-cols-3 gap-10">
         {/* Left 2 Cols: Tabs & Itinerary */}
-        <div className="lg:col-span-2 space-y-8">
+        <div className="min-w-0 lg:col-span-2 space-y-8">
           {/* Sub Navigation Tabs */}
-          <div className="flex border-b border-gray-200 bg-white rounded-2xl p-2 shadow-xs gap-2">
-            {[
-              { id: 'itinerary', label: 'Day-by-Day Plan' },
-              { id: 'overview', label: 'Overview & Highlights' },
-              { id: 'inclusions', label: 'Inclusions & Exclusions' },
-              { id: 'stays', label: 'Accommodation' },
-            ].map((tab) => (
+          <nav className="package-detail-tabs" aria-label="Package details">
+            {packageTabs.map(([id, label]) => (
               <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
-                className={`flex-1 py-3 text-xs sm:text-sm font-bold rounded-xl transition-all ${
-                  activeTab === tab.id
-                    ? 'bg-[#0b4941] text-white shadow-sm'
-                    : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
-                }`}
+                key={id}
+                type="button"
+                onClick={() => setActiveTab(id)}
+                aria-pressed={activeTab === id}
               >
-                {tab.label}
+                {label}
               </button>
             ))}
-          </div>
+          </nav>
 
           {/* TAB 1: ITINERARY */}
           {activeTab === 'itinerary' && (
@@ -230,11 +231,6 @@ export function PackageDetailPage({
                   ))}
                 </div>
               </div>
-              {!!packageItem.gallery?.length && (
-                <div className="grid gap-3 sm:grid-cols-2" aria-label="Tour photos">
-                  {packageItem.gallery.map((url, index) => <CatalogPhoto key={`${url}-${index}`} src={url} alt={`${packageItem.title} photo ${index + 1}`} loading="lazy" className="aspect-4/3 w-full rounded-xl object-cover" />)}
-                </div>
-              )}
             </div>
           )}
 
@@ -303,43 +299,43 @@ export function PackageDetailPage({
 
         {/* Right Sticky Booking Box */}
         <div className="space-y-6">
-          <div className="sticky top-[calc(var(--site-nav-height)+1.5rem)] bg-white p-6 rounded-3xl border border-gray-100 shadow-xl space-y-5">
+          <div className="package-booking-panel sticky top-[calc(var(--site-nav-height)+1.5rem)] rounded-3xl border border-[#e2e9e4] bg-white p-6 shadow-sm space-y-5">
             <div className="pb-4 border-b border-gray-100">
-              <span className="text-xs text-gray-400 uppercase font-bold block">Starting price per traveller</span>
-              <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-bold text-[#0b4941]">
+              <span className="block text-xs font-semibold text-[#51645d]">Starting price per traveller</span>
+              <div className="mt-1 flex flex-wrap items-baseline gap-x-2">
+                <span className="package-booking-price text-[#0b4941]">
                   {formatPrice(packageItem.priceNum, currency)}
                 </span>
-                <span className="text-xs text-gray-400 line-through">
-                  {packageItem.originalPrice}
-                </span>
+                {packageItem.originalPrice && (
+                  <del className="text-sm text-[#61716a]">{packageItem.originalPrice}</del>
+                )}
               </div>
             </div>
 
-            <div className="space-y-3 text-xs text-gray-700">
-              <div className="flex justify-between py-1 border-b border-gray-50">
-                <span className="text-gray-500">Trip Duration:</span>
-                <strong>{packageItem.duration}</strong>
+            <dl className="space-y-3 text-sm">
+              <div className="flex justify-between gap-3">
+                <dt className="text-[#51645d]">Trip duration</dt>
+                <dd className="text-right font-semibold">{packageItem.duration}</dd>
               </div>
-              <div className="flex justify-between py-1 border-b border-gray-50">
-                <span className="text-gray-500">Theme:</span>
-                <strong>{packageItem.theme}</strong>
+              <div className="flex justify-between gap-3">
+                <dt className="text-[#51645d]">Theme</dt>
+                <dd className="text-right font-semibold">{packageItem.theme}</dd>
               </div>
-            </div>
+            </dl>
 
             <button
               onClick={() => onBook(packageItem.title, packageItem.priceNum)}
-              className="w-full py-4 rounded-2xl bg-[#ef4934] hover:bg-[#df3a25] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-[#ef4934]/30 transition-all"
+              className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#c83c2c] px-3 text-sm font-semibold text-white hover:bg-[#ae3224]"
             >
-              <Icon name="calendar" size={17} />
-              <span>Book / Request Free Quote</span>
+              <Icon name="calendar" size={17} className="shrink-0" />
+              <span>Book or request a free quote</span>
             </button>
 
             <button
               onClick={() => navigate('custom-trip')}
-              className="w-full py-2.5 rounded-xl border border-[#0b4941] text-[#0b4941] text-xs font-bold hover:bg-[#0b4941]/5 transition-all text-center"
+              className="min-h-11 w-full rounded-xl border border-[#c4d6cc] px-3 text-center text-sm font-semibold text-[#0b4941] hover:bg-[#0b4941]/5"
             >
-              Customize This Itinerary
+              Customize this itinerary
             </button>
 
             <div className="pt-2 border-t border-gray-100 text-center space-y-2">
@@ -348,7 +344,7 @@ export function PackageDetailPage({
                 href="https://wa.me/918047112112"
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1.5 text-green-700 font-bold text-xs hover:underline"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0b4941] hover:underline"
               >
                 <Icon name="whatsapp" size={15} /> Chat with a travel specialist
               </a>

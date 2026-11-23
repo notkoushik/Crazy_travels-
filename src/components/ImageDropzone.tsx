@@ -15,6 +15,7 @@ interface ImageDropzoneProps {
 
 const maxUploadBytes = 4 * 1024 * 1024
 const acceptedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif']
+export const catalogPhotoAccept = acceptedTypes.join(',')
 
 async function loadPhoto(url: string) {
   const image = new Image()
@@ -35,14 +36,44 @@ export async function validateCoverPhoto(value: string, previous?: string) {
   const url = value.trim()
   if (!url) throw new Error('Add a cover photo before saving.')
   if (url === previous?.trim()) return url
+  return validatePhotoLink(url, 'The cover photo could not be opened. Choose a different photo or update its link.')
+}
+
+export async function validatePhotoLink(value: string, loadError = 'The photo could not be opened. Check its link and try again.') {
+  const url = value.trim()
   if (!/^(https?:\/\/|\/(?!\/))/i.test(url))
     throw new Error('Enter a photo URL or upload an image from your device.')
   try {
     await loadPhoto(url)
     return url
   } catch {
-    throw new Error('The cover photo could not be opened. Choose a different photo or update its link.')
+    throw new Error(loadError)
   }
+}
+
+export async function uploadCatalogPhoto(file: File) {
+  const photo = await prepareUpload(file)
+  const form = new FormData()
+  form.append('file', photo, photo === file ? file.name : 'catalog-photo.webp')
+  const response = await fetch('/api/upload', {
+    method: 'POST',
+    headers: getAdminAuthHeaders(),
+    body: form,
+  })
+  const result = await response.json().catch(() => null)
+  if (!response.ok) {
+    if (response.status === 401 || response.status === 403)
+      throw new Error('Sign in to the admin console again before uploading.')
+    throw new Error(result?.error || 'The upload did not finish. Try again.')
+  }
+  if (typeof result?.url !== 'string' || !result.url)
+    throw new Error('The server did not return a photo link.')
+  try {
+    await loadPhoto(result.url)
+  } catch {
+    throw new Error('The uploaded photo could not be opened. Try uploading it again.')
+  }
+  return result.url as string
 }
 
 async function prepareUpload(file: File) {
@@ -97,30 +128,10 @@ export function ImageDropzone({
     onUploadingChange?.(true)
     setError('')
     try {
-      const photo = await prepareUpload(file)
-      const form = new FormData()
-      form.append('file', photo, photo === file ? file.name : 'catalog-photo.webp')
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        headers: getAdminAuthHeaders(),
-        body: form,
-      })
-      const result = await response.json().catch(() => null)
-      if (!response.ok) {
-        if (response.status === 401 || response.status === 403)
-          throw new Error('Sign in to the admin console again before uploading.')
-        throw new Error(result?.error || 'The upload did not finish. Try again.')
-      }
-      if (typeof result?.url !== 'string' || !result.url)
-        throw new Error('The server did not return a photo link.')
-      try {
-        await loadPhoto(result.url)
-      } catch {
-        throw new Error('The uploaded photo could not be opened. Try uploading it again.')
-      }
-      setLoadedUrl(result.url)
+      const url = await uploadCatalogPhoto(file)
+      setLoadedUrl(url)
       setFailedUrl(undefined)
-      onChange(result.url)
+      onChange(url)
     } catch (failure) {
       setError(failure instanceof Error ? failure.message : 'The photo could not be uploaded.')
     } finally {
@@ -172,7 +183,7 @@ export function ImageDropzone({
         id={`${fieldId}-file`}
         ref={fileInput}
         type="file"
-        accept={acceptedTypes.join(',')}
+        accept={catalogPhotoAccept}
         className="hidden"
         onChange={(event) => {
           const file = event.currentTarget.files?.[0]

@@ -1,6 +1,8 @@
 import { useRef, useState } from 'react'
 import { ImageDropzone, validateCoverPhoto } from '../../../components/ImageDropzone'
+import { catalogPhotoUrls } from '../../../data/catalogPhotos'
 import type { DestinationItem } from '../../../types/travel'
+import { GalleryEditor } from './GalleryEditor'
 import {
   EditorSection,
   Field,
@@ -37,6 +39,8 @@ export function DestinationEditor({
   const slug = useRef(destination?.slug)
   const [image, setImage] = useState(destination?.image ?? '')
   const [uploading, setUploading] = useState(false)
+  const [gallery, setGallery] = useState(() => catalogPhotoUrls(image, destination?.gallery).slice(image.trim() ? 1 : 0))
+  const [galleryBusy, setGalleryBusy] = useState(false)
   const [permitRequired, setPermitRequired] = useState(destination?.permitRequired ?? false)
 
   const save = async (form: FormData) => {
@@ -70,7 +74,7 @@ export function DestinationEditor({
         ? textValue(form, 'description')
         : requiredText(form, 'description', 'Destination overview'),
       highlights: lineValues(form, 'highlights'),
-      gallery: lineValues(form, 'gallery'),
+      gallery,
       bestTimeToVisit: textValue(form, 'bestTimeToVisit'),
       idealFor: textValue(form, 'idealFor'),
       isTrending: form.has('isTrending'),
@@ -107,7 +111,7 @@ export function DestinationEditor({
       sections={sections}
       onBack={onBack}
       onSave={save}
-      uploading={uploading}
+      uploading={uploading || galleryBusy}
     >
       <EditorSection id="destination-details" title="Destination details">
         <div className="grid gap-4 sm:grid-cols-2">
@@ -294,12 +298,7 @@ export function DestinationEditor({
           onUploadingChange={setUploading}
           label="Cover photo *"
         />
-        <TextArea
-          label="Gallery image URLs"
-          name="gallery"
-          defaultValue={destination?.gallery.join('\n')}
-          hint="Enter one image URL per line."
-        />
+        <GalleryEditor cover={image} value={gallery} onChange={setGallery} onBusyChange={setGalleryBusy} />
       </EditorSection>
       <GoogleReviewSection
         googleRating={destination?.googleRating}

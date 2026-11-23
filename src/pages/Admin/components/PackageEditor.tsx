@@ -1,7 +1,9 @@
 import { useRef, useState } from 'react'
 import { Icon } from '../../../components/Icon'
 import { ImageDropzone, validateCoverPhoto } from '../../../components/ImageDropzone'
+import { catalogPhotoUrls, getPackageGallery } from '../../../data/catalogPhotos'
 import type { ItineraryDay, PackageItem } from '../../../types/travel'
+import { GalleryEditor } from './GalleryEditor'
 import {
   EditorSection,
   Field,
@@ -46,6 +48,8 @@ export function PackageEditor({
   const [id] = useState(() => pkg?.id ?? `pkg-${crypto.randomUUID()}`)
   const [image, setImage] = useState(pkg?.image ?? '')
   const [uploading, setUploading] = useState(false)
+  const [gallery, setGallery] = useState(() => catalogPhotoUrls(image, getPackageGallery(id, pkg?.gallery)).slice(image.trim() ? 1 : 0))
+  const [galleryBusy, setGalleryBusy] = useState(false)
   const [days, setDays] = useState(() =>
     pkg ? pkg.itinerary.map((day) => ({ key: crypto.randomUUID(), day })) : [newDay()]
   )
@@ -105,7 +109,7 @@ export function PackageEditor({
       rating: pkg?.rating ?? 0,
       reviewCount: pkg?.reviewCount ?? 0,
       image: await validateCoverPhoto(image, pkg?.image),
-      gallery: lineValues(form, 'gallery'),
+      gallery,
       overview: pkg ? textValue(form, 'overview') : requiredText(form, 'overview', 'Trip overview'),
       highlights: lineValues(form, 'highlights'),
       inclusions: lineValues(form, 'inclusions'),
@@ -124,7 +128,7 @@ export function PackageEditor({
       sections={sections}
       onBack={onBack}
       onSave={save}
-      uploading={uploading}
+      uploading={uploading || galleryBusy}
     >
       <EditorSection id="package-details" title="Tour details">
         <Field
@@ -313,12 +317,7 @@ export function PackageEditor({
           onUploadingChange={setUploading}
           label="Cover photo *"
         />
-        <TextArea
-          label="Gallery image URLs"
-          name="gallery"
-          defaultValue={pkg?.gallery?.join('\n')}
-          hint="Enter one image URL per line."
-        />
+        <GalleryEditor cover={image} value={gallery} onChange={setGallery} onBusyChange={setGalleryBusy} />
       </EditorSection>
       <GoogleReviewSection
         googleRating={pkg?.googleRating}

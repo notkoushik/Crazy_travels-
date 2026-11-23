@@ -1,7 +1,6 @@
 ﻿import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { HeroInquiryCard } from './HeroInquiryCard'
 import { WhatsAppFloat } from './WhatsAppFloat'
-import { Icon } from './Icon'
 
 export interface InquiryContext {
   page: string
@@ -74,7 +73,10 @@ export function TripInquiry({ context, paused }: { context: InquiryContext; paus
           requestAnimationFrame(() => panel.current?.querySelector('button')?.focus({ preventScroll: true }))
         }}
       >
-        <Icon name="flight" size={18} /> Trip inquiry
+        <svg className="shrink-0" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M12 2.5c1 0 1.8 1 1.8 2.3V9l6.7 4.1c.3.2.5.53.5.9v1.3a.5.5 0 0 1-.66.47l-6.54-2.23v4.17l2.22 1.61c.18.13.28.33.28.55v1.1a.45.45 0 0 1-.59.43L12 20.23 8.29 21.4a.45.45 0 0 1-.59-.43v-1.1c0-.22.1-.42.28-.55l2.22-1.61v-4.17l-6.54 2.23A.5.5 0 0 1 3 15.3V14c0-.37.2-.7.5-.9L10.2 9V4.8c0-1.3.8-2.3 1.8-2.3Z" />
+        </svg>
+        Trip inquiry
       </button>
       <aside
         id={id}

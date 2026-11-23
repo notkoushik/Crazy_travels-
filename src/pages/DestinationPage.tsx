@@ -1,5 +1,5 @@
 import React from 'react'
-import { CatalogPhoto } from '../components/CatalogPhoto'
+import { CatalogPhotoCarousel } from '../components/CatalogPhotoCarousel'
 import { Currency, DestinationItem, RouteName } from '../types/travel'
 import { Icon } from '../components/Icon'
 import { GoogleVerifiedBadge, isGoogleMapsLink } from '../components/GoogleVerifiedBadge'
@@ -59,12 +59,14 @@ export function DestinationPage({
       </div>
 
       {/* Hero Banner */}
-      <section className="destination-detail-hero shell-wide relative rounded-3xl overflow-hidden shadow-xl mb-6">
-        <CatalogPhoto
-          src={destination.image}
-          alt={`${destination.city}, ${destination.country}`}
-          className="w-full h-full object-cover"
-        />
+      <CatalogPhotoCarousel
+        key={destination.slug}
+        title={destination.city}
+        cover={destination.image}
+        gallery={destination.gallery}
+        className="shell-wide mb-6"
+        frameClassName="destination-detail-hero"
+      >
         <div className="destination-detail-shade" />
 
         {/* Top Right Save & Rating */}
@@ -97,7 +99,7 @@ export function DestinationPage({
           {(destination.season || destination.peakSeason) && <span>{destination.season || destination.peakSeason}</span>}
           <span>From {formatPrice(destination.priceNum, currency)}</span>
         </div>
-      </section>
+      </CatalogPhotoCarousel>
 
       {/* Sub Navigation Bar */}
       <nav className="destination-subnav mb-10 sticky top-0 z-30 shadow-xs bg-white/95 backdrop-blur-md border-b border-gray-100">
@@ -211,14 +213,6 @@ export function DestinationPage({
           <div className="flex flex-wrap items-center justify-between gap-4 rounded-3xl bg-slate-900 p-6 text-white md:p-8">
             <h2 className="font-serif text-2xl text-white">Reviews on Google Maps</h2>
             <GoogleVerifiedBadge rating={destination.googleRating} reviewsCount={destination.googleReviewsCount} mapsUrl={destination.googleMapsUrl} />
-          </div>
-        </section>
-      )}
-
-      {!!destination.gallery.length && (
-        <section className="shell mb-16" aria-label="Destination photos">
-          <div className="grid gap-4 sm:grid-cols-2">
-            {destination.gallery.map((url, index) => <CatalogPhoto key={`${url}-${index}`} src={url} alt={`${destination.city} photo ${index + 1}`} loading="lazy" className="aspect-4/3 w-full rounded-2xl object-cover" />)}
           </div>
         </section>
       )}

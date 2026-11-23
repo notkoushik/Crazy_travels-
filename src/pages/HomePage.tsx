@@ -182,15 +182,39 @@ export function HomePage({
   const [searchTravellers, setSearchTravellers] = useState('2 adults')
   const destinationTrack = useRef<HTMLDivElement>(null)
   const socialTrackRef = useRef<HTMLDivElement>(null)
+  const [reelNavigation, setReelNavigation] = useState({ previous: false, next: false })
 
-  const scrollSocial = (direction: 'left' | 'right') => {
-    if (socialTrackRef.current) {
-      socialTrackRef.current.scrollBy({
-        left: direction === 'left' ? -300 : 300,
-        behavior: 'smooth',
-      })
-    }
+  const scrollSocial = (direction: -1 | 1) => {
+    const track = socialTrackRef.current
+    const first = track?.children[0]
+    const second = track?.children[1]
+    if (!track || !first || !second) return
+    const step = second.getBoundingClientRect().left - first.getBoundingClientRect().left
+    track.scrollBy({
+      left: direction * step,
+      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
+    })
   }
+
+  useEffect(() => {
+    const track = socialTrackRef.current
+    if (!track) return
+    const update = () => {
+      const previous = track.scrollLeft > 1
+      const next = track.scrollLeft + track.clientWidth < track.scrollWidth - 1
+      setReelNavigation((current) =>
+        current.previous === previous && current.next === next ? current : { previous, next }
+      )
+    }
+    const observer = new ResizeObserver(update)
+    observer.observe(track)
+    track.addEventListener('scroll', update, { passive: true })
+    update()
+    return () => {
+      observer.disconnect()
+      track.removeEventListener('scroll', update)
+    }
+  }, [store.reels.length])
 
   useEffect(() => {
     if (slides.length < 2 || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
@@ -794,7 +818,7 @@ export function HomePage({
               Live notes and customer video reviews from travelers across Kashmir, Kerala, Rajasthan, Ladakh, and beyond.
               Watch them run simultaneously or click any reel to experience full sound and reviews.
             </p>
-            <div className="pt-2 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <div className="mt-4 flex flex-wrap items-center gap-3">
               <a
                 href="https://www.instagram.com/crazytourstravels/"
                 target="_blank"
@@ -804,28 +828,32 @@ export function HomePage({
                 <Icon name="instagram" size={15} />
                 <span>Follow on Instagram</span>
               </a>
-              <div className="flex items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => scrollSocial('left')}
-                  className="w-8 h-8 rounded-full border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-700 transition-colors shadow-xs"
-                  aria-label="Previous reel"
-                >
-                  <Icon name="chevron" size={15} className="rotate-180" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => scrollSocial('right')}
-                  className="w-8 h-8 rounded-full border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-700 transition-colors shadow-xs"
-                  aria-label="Next reel"
-                >
-                  <Icon name="chevron" size={15} />
-                </button>
-              </div>
+              {(reelNavigation.previous || reelNavigation.next) && (
+                <div className="social-reel-controls">
+                  <button
+                    type="button"
+                    onClick={() => scrollSocial(-1)}
+                    disabled={!reelNavigation.previous}
+                    aria-label="Previous reel"
+                    aria-controls="instagram-reel-track"
+                  >
+                    <Icon name="chevron" size={18} className="rotate-180" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => scrollSocial(1)}
+                    disabled={!reelNavigation.next}
+                    aria-label="Next reel"
+                    aria-controls="instagram-reel-track"
+                  >
+                    <Icon name="chevron" size={18} />
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
-          <div className="social-track" ref={socialTrackRef}>
+          <div id="instagram-reel-track" className="social-track" ref={socialTrackRef}>
             {store.reels.map(
               (reel, index) => (
                 <ReelVideoCard

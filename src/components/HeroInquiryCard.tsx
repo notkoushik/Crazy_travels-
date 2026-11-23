@@ -85,8 +85,8 @@ export function HeroInquiryCard({ context, onClose }: { context: InquiryContext;
   }
 
   return (
-    <div className="hero-inquiry-card rounded-3xl p-5 text-white sm:p-6">
-      <div className="mb-3 flex items-center justify-between gap-3">
+    <div className="hero-inquiry-card rounded-2xl p-4 text-white">
+      <div className="mb-2 flex items-center justify-between gap-3">
         <p className="text-[11px] font-bold uppercase tracking-wider text-white/90">Trip details & inquiry</p>
         <button
           type="button"
@@ -117,10 +117,10 @@ export function HeroInquiryCard({ context, onClose }: { context: InquiryContext;
           </button>
         </div>
       ) : (
-        <form onSubmit={submit} className="space-y-3">
+        <form onSubmit={submit} className="space-y-2.5">
           <div>
-            <h2 className="text-xl font-bold leading-tight">{context.heading}</h2>
-            <p className="mt-1 text-xs leading-relaxed text-white/90">{context.description}</p>
+            <h2 className="text-lg font-bold leading-tight">{context.heading}</h2>
+            <p className="mt-1 text-xs leading-normal text-white/90">{context.description}</p>
           </div>
           {!context.destination && (
             <div className="flex flex-wrap gap-1.5" aria-label="Popular destinations">
