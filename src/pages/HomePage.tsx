@@ -1,5 +1,5 @@
 import React, { type CSSProperties, FormEvent, type RefObject, useEffect, useRef, useState } from 'react'
-import { Currency, DestinationItem, PackageItem, RouteName } from '../types/travel'
+import { Currency, DestinationItem, InstagramReelItem, PackageItem, RouteName } from '../types/travel'
 import { Icon } from '../components/Icon'
 import { GoogleVerifiedBadge } from '../components/GoogleVerifiedBadge'
 import { TripInquiry } from '../components/TripInquiry'
@@ -16,6 +16,7 @@ import {
   reviews,
   services,
   socialStories,
+  instagramReels,
 } from '../data/travelData'
 import kashmirImage from '../assets/wayfare-kashmir.png'
 import socialHimachal from '../assets/wayfare-social-himachal.png'
@@ -27,10 +28,138 @@ interface HomePageProps {
   onBook: (title: string, price: number) => void
   currency: Currency
   onToast: (msg: string) => void
-  onOpenStory: (story: any) => void
+  onOpenStory: (story: any, index?: number) => void
   isHeroInquiryOpen: boolean
   onCloseHeroInquiry: () => void
   inquiryLauncherRef: RefObject<HTMLButtonElement | null>
+}
+
+function ReelVideoCard({
+  reel,
+  index,
+  onOpen,
+}: {
+  reel: InstagramReelItem
+  index: number
+  onOpen: (reel: InstagramReelItem, index: number) => void
+}) {
+  const videoRef = useRef<HTMLVideoElement | null>(null)
+  const cardRef = useRef<HTMLElement | null>(null)
+  const [isCardMuted, setIsCardMuted] = useState(true)
+
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            video.play().catch(() => {})
+          } else {
+            video.pause()
+          }
+        })
+      },
+      { threshold: 0.15 }
+    )
+
+    if (cardRef.current) {
+      observer.observe(cardRef.current)
+    }
+
+    return () => {
+      observer.disconnect()
+    }
+  }, [])
+
+  const toggleSound = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!videoRef.current) return
+    const nextMuted = !isCardMuted
+    videoRef.current.muted = nextMuted
+    setIsCardMuted(nextMuted)
+  }
+
+  return (
+    <article
+      ref={cardRef}
+      className="social-card relative cursor-pointer group rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 border border-white/10 select-none shrink-0"
+      onClick={() => onOpen(reel, index)}
+    >
+      <video
+        ref={videoRef}
+        src={reel.videoUrl}
+        poster={reel.posterUrl}
+        playsInline
+        autoPlay
+        muted={isCardMuted}
+        loop
+        preload="metadata"
+        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+      />
+
+      {/* Dark gradient overlay for readability */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/35 to-black/45 pointer-events-none" />
+
+      {/* Top Bar on Card */}
+      <div className="absolute top-3 inset-x-3 flex items-center justify-between z-10">
+        <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-amber-300 text-[10px] font-bold border border-white/15">
+          <Icon name="instagram" size={11} className="text-rose-400" />
+          <span>5.0</span>
+          <span className="text-white/70">★ Review</span>
+        </span>
+
+        <button
+          type="button"
+          onClick={toggleSound}
+          aria-label={isCardMuted ? 'Unmute preview' : 'Mute preview'}
+          className="w-7 h-7 rounded-full bg-black/60 hover:bg-black/90 backdrop-blur-md text-white flex items-center justify-center transition-transform hover:scale-110 border border-white/20"
+        >
+          <Icon name={isCardMuted ? 'volumeX' : 'volume'} size={13} />
+        </button>
+      </div>
+
+      {/* Center Play Button indicator on Hover */}
+      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/85 group-hover:bg-white text-[#072f2b] flex items-center justify-center shadow-xl backdrop-blur-sm transition-all duration-300 group-hover:scale-110 opacity-75 group-hover:opacity-100">
+        <Icon name="play" size={17} className="translate-x-0.5 fill-[#072f2b]" />
+      </div>
+
+      {/* Bottom Information */}
+      <div className="absolute bottom-3 inset-x-3 z-10 text-white space-y-1">
+        <div className="flex items-center justify-between">
+          <p className="text-[12px] font-bold tracking-tight text-white line-clamp-1 drop-shadow-sm">
+            {reel.customerName}
+          </p>
+          <span className="text-[9px] uppercase tracking-wider font-semibold text-amber-300/80 font-mono">
+            {reel.duration}
+          </span>
+        </div>
+        <p className="text-[10px] text-amber-200 line-clamp-1 font-medium">
+          📍 {reel.place}
+        </p>
+        <p className="text-[10px] text-white/85 line-clamp-2 leading-tight italic">
+          “{reel.reviewQuote}”
+        </p>
+        <div className="pt-1.5 flex items-center justify-between border-t border-white/15">
+          <span className="text-[10px] font-semibold text-emerald-400 flex items-center gap-1">
+            <Icon name="check" size={10} /> Verified Guest
+          </span>
+          <a
+            href={reel.instagramUrl || 'https://www.instagram.com/crazytourstravels/'}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="text-[10px] text-rose-300 hover:text-white flex items-center gap-1 font-semibold"
+            title="Open on Instagram"
+          >
+            <span>Instagram</span>
+            <Icon name="arrow" size={10} className="-rotate-45" />
+          </a>
+        </div>
+      </div>
+    </article>
+  )
 }
 
 export function HomePage({
@@ -49,6 +178,7 @@ export function HomePage({
   const slides = store.heroSlides.length > 0 ? store.heroSlides : heroSlides
   const displayPackages = store.packages.length > 0 ? store.packages : allPackages
   const displayStays = store.stays.length > 0 ? store.stays : hotelStays
+  const homePackages = [...displayPackages].sort((left, right) => Number(!!right.featured) - Number(!!left.featured)).slice(0, 3)
 
   const [selectedHeroIndex, setHeroIndex] = useState(0)
   const heroIndex = selectedHeroIndex % slides.length
@@ -59,6 +189,16 @@ export function HomePage({
   const [searchDate, setSearchDate] = useState('')
   const [searchTravellers, setSearchTravellers] = useState('2 adults')
   const destinationTrack = useRef<HTMLDivElement>(null)
+  const socialTrackRef = useRef<HTMLDivElement>(null)
+
+  const scrollSocial = (direction: 'left' | 'right') => {
+    if (socialTrackRef.current) {
+      socialTrackRef.current.scrollBy({
+        left: direction === 'left' ? -300 : 300,
+        behavior: 'smooth',
+      })
+    }
+  }
 
   useEffect(() => {
     if (slides.length < 2 || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
@@ -312,7 +452,7 @@ export function HomePage({
 
           <div className="destination-carousel">
             <div className="destination-track" ref={destinationTrack}>
-              {store.destinations.map((destination) => {
+              {store.destinations.filter((destination) => destination.isTrending !== false).map((destination) => {
                 const isSaved = saved.includes(destination.city)
                 return (
                   <article
@@ -366,8 +506,8 @@ export function HomePage({
                       {/* Google Verified Rating Badge */}
                       <div className="mb-2.5">
                         <GoogleVerifiedBadge
-                          rating={destination.googleRating || 4.9}
-                          reviewsCount={destination.googleReviewsCount || 1250}
+                          rating={destination.googleRating}
+                          reviewsCount={destination.googleReviewsCount}
                           mapsUrl={destination.googleMapsUrl}
                           size="sm"
                           className="bg-white/95 text-slate-800 shadow-sm"
@@ -490,7 +630,7 @@ export function HomePage({
             </button>
           </div>
           <div className="package-grid">
-            {displayPackages.slice(0, 3).map((trip) => (
+            {homePackages.map((trip) => (
               <article className="package-card" key={trip.id}>
                 <div className="package-image">
                   <img src={trip.image} alt={trip.place} />
@@ -500,8 +640,8 @@ export function HomePage({
                   <p>{trip.place}</p>
                   <h3>{trip.title}</h3>
                   <div className="package-meta">
-                    <span>Stay · Transfers · Local guide</span>
-                    <span>{trip.rating} ★ ({trip.reviewCount})</span>
+                    <span>{trip.theme}</span>
+                    {trip.reviewCount > 0 && trip.rating > 0 && <span>{trip.rating} ★ ({trip.reviewCount})</span>}
                   </div>
                   <div className="package-price">
                     <span>
@@ -665,35 +805,58 @@ export function HomePage({
         </div>
       </section>
 
-      {/* Social Moments Stories */}
-      <section className="social-section">
+      {/* Social Moments Stories & Instagram Reels Video Section */}
+      <section className="social-section" id="instagram-reels">
         <div className="shell social-layout">
           <div className="social-intro">
             <span className="kicker">Follow @crazytourstravels</span>
-            <h2>Small moments.<br />Big stories.</h2>
-            <p>Live notes from our travellers, local hosts and curious people on the road.</p>
-            <button onClick={() => navigate('stories')}>
-              Follow our journeys <Icon name="arrow" size={17} />
-            </button>
-          </div>
-          <div className="social-track">
-            {socialStories.map((story) => (
-              <article
-                className="social-card cursor-pointer group"
-                key={story.place}
-                onClick={() => onOpenStory(story)}
+            <h2>Small moments.<br />Real customer stories.</h2>
+            <p>
+              Live notes and customer video reviews from travelers across Kashmir, Kerala, Rajasthan, Ladakh, and beyond.
+              Watch them run simultaneously or click any reel to experience full sound and reviews.
+            </p>
+            <div className="pt-2 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+              <a
+                href="https://www.instagram.com/crazytourstravels/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-gradient-to-r from-[#f09433] via-[#dc2743] to-[#bc1888] text-white text-xs font-bold shadow-md hover:opacity-95 transition-all"
               >
-                <img src={story.image} alt={`Travel moment from ${story.place}`} />
-                <div />
+                <Icon name="instagram" size={15} />
+                <span>Follow on Instagram</span>
+              </a>
+              <div className="flex items-center gap-1.5">
                 <button
-                  aria-label={`Play story from ${story.place}`}
-                  className="group-hover:scale-110 transition-transform"
+                  type="button"
+                  onClick={() => scrollSocial('left')}
+                  className="w-8 h-8 rounded-full border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-700 transition-colors shadow-xs"
+                  aria-label="Previous reel"
                 >
-                  <Icon name="play" size={14} className="ml-0.5 text-[#072f2b]" />
+                  <Icon name="chevron" size={15} className="rotate-180" />
                 </button>
-                <p>{story.place}</p>
-              </article>
-            ))}
+                <button
+                  type="button"
+                  onClick={() => scrollSocial('right')}
+                  className="w-8 h-8 rounded-full border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-700 transition-colors shadow-xs"
+                  aria-label="Next reel"
+                >
+                  <Icon name="chevron" size={15} />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="social-track" ref={socialTrackRef}>
+            {(store.reels && store.reels.length > 0 ? store.reels : instagramReels).map(
+              (reel, index) => (
+                <ReelVideoCard
+                  key={reel.id || index}
+                  reel={reel}
+                  index={index}
+                  onOpen={(r, idx) => onOpenStory(r, idx)}
+                />
+              )
+            )}
           </div>
         </div>
       </section>

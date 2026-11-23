@@ -6,9 +6,11 @@ import {
   RoadTripItem,
   StoryItem,
   OfferItem,
+  InstagramReelItem,
   BookingSubmission,
   InquirySubmission,
 } from '../types/travel'
+import { instagramReels as fallbackReels } from '../data/travelData'
 
 const EVENT_NAME = 'crazy_tours_store_updated'
 const ADMIN_TOKEN_KEY = 'crazy_tours_admin_token'
@@ -41,6 +43,7 @@ export interface DynamicStoreState {
   stories: StoryItem[]
   offers: OfferItem[]
   heroSlides: HeroSlideItem[]
+  reels: InstagramReelItem[]
   bookings: BookingSubmission[]
   inquiries: InquirySubmission[]
   stats: DynamicStoreStats
@@ -57,6 +60,7 @@ const emptyInitialState: DynamicStoreState = {
   stories: [],
   offers: [],
   heroSlides: [],
+  reels: fallbackReels,
   bookings: [],
   inquiries: [],
   stats: {
@@ -83,15 +87,13 @@ function notifyListeners() {
 }
 
 // Helper: Secure Admin Headers
-function getAdminHeaders(): HeadersInit {
+export function getAdminAuthHeaders(): Record<string, string> {
   const token = typeof window !== 'undefined' ? sessionStorage.getItem(ADMIN_TOKEN_KEY) : null
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  }
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`
-  }
-  return headers
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
+function getAdminHeaders(): HeadersInit {
+  return { 'Content-Type': 'application/json', ...getAdminAuthHeaders() }
 }
 
 // ========================================================
@@ -118,6 +120,7 @@ export const dataStore = {
         storiesRes,
         offersRes,
         heroSlidesRes,
+        reelsRes,
       ] = await Promise.all([
         fetch('/api/destinations').then((r) => (r.ok ? r.json() : [])),
         fetch('/api/packages').then((r) => (r.ok ? r.json() : [])),
@@ -126,6 +129,7 @@ export const dataStore = {
         fetch('/api/stories').then((r) => (r.ok ? r.json() : [])),
         fetch('/api/offers').then((r) => (r.ok ? r.json() : [])),
         fetch('/api/hero-slides').then((r) => (r.ok ? r.json() : [])),
+        fetch('/api/reels').then((r) => (r.ok ? r.json() : fallbackReels)).catch(() => fallbackReels),
       ])
 
       currentStore = {
@@ -137,6 +141,7 @@ export const dataStore = {
         stories: Array.isArray(storiesRes) ? storiesRes : [],
         offers: Array.isArray(offersRes) ? offersRes : [],
         heroSlides: Array.isArray(heroSlidesRes) ? heroSlidesRes : [],
+        reels: Array.isArray(reelsRes) && reelsRes.length > 0 ? reelsRes : fallbackReels,
         isLoading: false,
         isDatabaseConnected: true,
         lastSyncedAt: new Date().toISOString(),
@@ -489,6 +494,44 @@ export const dataStore = {
       await dataStore.fetchInitialData()
     } catch (err) {
       console.error('Error in deleteOffer:', err)
+      throw err
+    }
+  },
+
+  updateReel: async (id: string, updates: Partial<InstagramReelItem>) => {
+    try {
+      const res = await fetch(`/api/reels/${encodeURIComponent(id)}`, {
+        method: 'PATCH',
+        headers: getAdminHeaders(),
+        body: JSON.stringify(updates),
+      })
+      if (!res.ok) throw new Error('Failed to update Instagram reel')
+      const data = await res.json()
+      if (data.reel) {
+        currentStore = {
+          ...currentStore,
+          reels: currentStore.reels.map((r) => (r.id === id ? data.reel : r)),
+        }
+        notifyListeners()
+      }
+      return data.reel
+    } catch (err) {
+      console.error('Error in updateReel:', err)
+      throw err
+    }
+  },
+
+  saveReel: async (reel: InstagramReelItem) => {
+    try {
+      const res = await fetch('/api/reels', {
+        method: 'POST',
+        headers: getAdminHeaders(),
+        body: JSON.stringify(reel),
+      })
+      if (!res.ok) throw new Error('Failed to save Instagram reel')
+      await dataStore.fetchInitialData()
+    } catch (err) {
+      console.error('Error in saveReel:', err)
       throw err
     }
   },

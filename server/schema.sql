@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS destinations (
   city VARCHAR(120) NOT NULL,
   country VARCHAR(120) NOT NULL,
   state VARCHAR(120) NOT NULL,
+  region VARCHAR(64),
   price VARCHAR(60) NOT NULL,
   price_num INTEGER NOT NULL,
   image TEXT NOT NULL,
@@ -19,6 +20,21 @@ CREATE TABLE IF NOT EXISTS destinations (
   ideal_for TEXT,
   is_trending BOOLEAN DEFAULT TRUE,
   display_order INTEGER DEFAULT 0,
+  google_maps_url TEXT,
+  google_rating NUMERIC(2,1),
+  google_reviews_count INTEGER,
+  nearest_airport VARCHAR(255),
+  nearest_railway VARCHAR(255),
+  recommended_stay_days VARCHAR(64),
+  peak_season VARCHAR(128),
+  avg_temp VARCHAR(64),
+  permit_required BOOLEAN DEFAULT FALSE,
+  permit_details TEXT,
+  clothing_advice TEXT,
+  cultural_notes TEXT,
+  must_try_food JSONB DEFAULT '[]'::jsonb,
+  key_attractions JSONB DEFAULT '[]'::jsonb,
+  network_coverage VARCHAR(128),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -34,8 +50,8 @@ CREATE TABLE IF NOT EXISTS packages (
   price_num INTEGER NOT NULL,
   original_price VARCHAR(60),
   discount VARCHAR(60),
-  rating NUMERIC(3,2) DEFAULT 4.9,
-  review_count INTEGER DEFAULT 12,
+  rating NUMERIC(3,2) DEFAULT 0,
+  review_count INTEGER DEFAULT 0,
   image TEXT NOT NULL,
   gallery JSONB DEFAULT '[]'::jsonb,
   overview TEXT,
@@ -45,6 +61,9 @@ CREATE TABLE IF NOT EXISTS packages (
   itinerary JSONB DEFAULT '[]'::jsonb,
   theme VARCHAR(60) DEFAULT 'Heritage',
   featured BOOLEAN DEFAULT TRUE,
+  google_maps_url TEXT,
+  google_rating NUMERIC(2,1),
+  google_reviews_count INTEGER,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -56,10 +75,13 @@ CREATE TABLE IF NOT EXISTS stays (
   name VARCHAR(255) NOT NULL,
   price VARCHAR(60) NOT NULL,
   price_num INTEGER NOT NULL,
-  rating NUMERIC(3,2) DEFAULT 4.8,
+  rating NUMERIC(3,2) DEFAULT 0,
   image TEXT NOT NULL,
   amenities JSONB DEFAULT '[]'::jsonb,
   description TEXT,
+  google_maps_url TEXT,
+  google_rating NUMERIC(2,1),
+  google_reviews_count INTEGER,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -160,8 +182,24 @@ CREATE TABLE IF NOT EXISTS faqs (
   category VARCHAR(120) DEFAULT 'General'
 );
 
+CREATE TABLE IF NOT EXISTS instagram_reels (
+  id VARCHAR(60) PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  place VARCHAR(120) NOT NULL,
+  customer_name VARCHAR(120) NOT NULL,
+  rating NUMERIC(2,1) DEFAULT 5.0,
+  review_quote TEXT NOT NULL,
+  video_url TEXT NOT NULL,
+  poster_url TEXT NOT NULL,
+  instagram_url TEXT,
+  duration VARCHAR(30) DEFAULT '0:45',
+  display_order INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- Indexes for lightning fast lookups
 CREATE INDEX IF NOT EXISTS idx_destinations_trending ON destinations(is_trending, display_order);
 CREATE INDEX IF NOT EXISTS idx_packages_theme ON packages(theme, featured);
 CREATE INDEX IF NOT EXISTS idx_bookings_status ON bookings(status, submitted_at DESC);
 CREATE INDEX IF NOT EXISTS idx_inquiries_status ON inquiries(status, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_reels_order ON instagram_reels(display_order ASC);

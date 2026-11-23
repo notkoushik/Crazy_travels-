@@ -1,6 +1,7 @@
 import React from 'react'
 import { StayItem } from '../../../types/travel'
 import { Icon } from '../../../components/Icon'
+import { stayTypes } from '../../../data/travelData'
 
 interface StaysTabProps {
   stays: StayItem[]
@@ -29,10 +30,10 @@ export function StaysTab({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-200">
         <div>
           <h1 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight font-inter-tight">
-            Stays & Heritage Haveli
+            Stays & Hotels
           </h1>
           <p className="text-xs md:text-sm text-slate-500 mt-1">
-            Curated palace stays, heritage havelis, luxury houseboats, and plantations synced with PostgreSQL 18.
+            Manage hotels, resorts, heritage havelis, and other stays.
           </p>
         </div>
 
@@ -40,13 +41,13 @@ export function StaysTab({
           onClick={onAddNewStay}
           className="px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition-all shadow-xs flex items-center gap-1.5 self-start sm:self-auto"
         >
-          <Icon name="plus" size={14} /> Add New Stay
+          <Icon name="plus" size={14} /> Add New Hotel
         </button>
       </div>
 
       {/* Filter Chips */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
-        {['All', 'Heritage Stays', 'Palace Stays', 'Beach Retreats', 'Houseboat Stays', 'Plantation Retreats'].map((cat) => (
+        {['All', ...stayTypes].map((cat) => (
           <button
             key={cat}
             onClick={() => setStayFilter(cat)}
@@ -79,12 +80,12 @@ export function StaysTab({
                   {stay.type}
                 </span>
               </div>
-              <div className="absolute top-3 right-3">
+              {stay.rating > 0 && <div className="absolute top-3 right-3" title="Internal score">
                 <span className="px-2 py-1 rounded-md text-[10px] font-semibold bg-slate-900/85 backdrop-blur-md text-amber-300 shadow-xs flex items-center gap-1 font-mono">
                   <Icon name="star" size={11} className="fill-amber-400 text-amber-400" />
                   {stay.rating}
                 </span>
-              </div>
+              </div>}
             </div>
 
             <div className="p-4 flex-1 flex flex-col justify-between space-y-3">

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import {
   BookingSubmission,
   DestinationItem,
@@ -23,39 +23,53 @@ import { StaysTab } from './tabs/StaysTab'
 import { BookingsTab } from './tabs/BookingsTab'
 import { InquiriesTab } from './tabs/InquiriesTab'
 import { OffersTab } from './tabs/OffersTab'
+import { ReelsTab } from './tabs/ReelsTab'
 import { SettingsTab } from './tabs/SettingsTab'
 
-// Modals
-import { DestinationModal } from './modals/DestinationModal'
-import { PackageModal } from './modals/PackageModal'
-import { StayModal } from './modals/StayModal'
+import { DestinationEditor } from './components/DestinationEditor'
+import { PackageEditor } from './components/PackageEditor'
+import { StayEditor } from './components/StayEditor'
 import { OfferModal } from './modals/OfferModal'
 
 // Drawers
 import { BookingDrawer } from './drawers/BookingDrawer'
 import { InquiryDrawer } from './drawers/InquiryDrawer'
 
+const adminTabs = {
+  dashboard: 'Dashboard',
+  destinations: 'Destinations',
+  packages: 'Tour packages',
+  stays: 'Stays & hotels',
+  bookings: 'Bookings',
+  inquiries: 'Inquiries',
+  offers: 'Offers',
+  reels: 'Instagram Reels',
+  settings: 'Database sync',
+} satisfies Record<AdminTab, string>
+
 function AdminDashboardContent({
+  route,
   navigate,
   onToast,
   onLogout,
 }: {
+  route: AdminPageProps['route']
   navigate: AdminPageProps['navigate']
   onToast: AdminPageProps['onToast']
   onLogout: () => void
 }) {
   const store = useDynamicStore()
-  const [activeTab, setActiveTab] = useState<AdminTab>('dashboard')
+  const [, tab, mode, recordId] = route.split('/')
+  const activeTab = (Object.keys(adminTabs) as AdminTab[]).find((item) => item === tab) ?? 'dashboard'
+  const editorOpen = (mode === 'new' || mode === 'edit') && ['packages', 'stays', 'destinations'].includes(activeTab)
+  const setActiveTab = (next: AdminTab) => navigate(next === 'dashboard' ? 'admin' : `admin/${next}`)
+  const closeEditor = () => setActiveTab(activeTab)
+  const workArea = useRef<HTMLElement>(null)
 
-  // Modals state for editing
-  const [editingDestination, setEditingDestination] = useState<DestinationItem | null>(null)
-  const [isNewDestination, setIsNewDestination] = useState(false)
+  useLayoutEffect(() => {
+    workArea.current?.scrollTo({ top: 0, behavior: 'instant' })
+  }, [route])
 
-  const [editingPackage, setEditingPackage] = useState<PackageItem | null>(null)
-  const [isNewPackage, setIsNewPackage] = useState(false)
-
-  const [editingStay, setEditingStay] = useState<StayItem | null>(null)
-  const [isNewStay, setIsNewStay] = useState(false)
   const [stayFilter, setStayFilter] = useState('All')
 
   const [editingOffer, setEditingOffer] = useState<OfferItem | null>(null)
@@ -77,13 +91,9 @@ function AdminDashboardContent({
 
   // Handlers - Destinations
   const handleSaveDestination = async (dest: DestinationItem) => {
-    try {
-      await store.saveDestination(dest)
-      onToast(`Destination "${dest.city}" saved to PostgreSQL!`)
-      setEditingDestination(null)
-    } catch (err: any) {
-      onToast(`Failed to save destination: ${err.message}`)
-    }
+    await store.saveDestination(dest)
+    onToast(`Destination “${dest.city}” saved.`)
+    if (window.location.hash.replace(/^#\/?/, '') === route) closeEditor()
   }
 
   const handleDeleteDestination = async (dest: DestinationItem) => {
@@ -97,37 +107,11 @@ function AdminDashboardContent({
     }
   }
 
-  const handleOpenNewDestination = () => {
-    setEditingDestination({
-      slug: `destination-${Date.now()}`,
-      city: '',
-      country: 'Rajasthan',
-      state: 'Rajasthan',
-      price: '₹29,900',
-      priceNum: 29900,
-      image:
-        'https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=1200&q=88',
-      season: 'October to March',
-      duration: '5 days',
-      tagline: 'Palaces, lakes and living royal history',
-      description: 'A deep journey through historic quarters and serene waterways.',
-      highlights: ['Private heritage walk', 'Sunset boat safari'],
-      gallery: [],
-      bestTimeToVisit: 'September to March',
-      idealFor: 'Couples & Culture Seekers',
-    })
-    setIsNewDestination(true)
-  }
-
   // Handlers - Packages
   const handleSavePackage = async (pkg: PackageItem) => {
-    try {
-      await store.savePackage(pkg)
-      onToast(`Package "${pkg.title}" saved to PostgreSQL!`)
-      setEditingPackage(null)
-    } catch (err: any) {
-      onToast(`Failed to save package: ${err.message}`)
-    }
+    await store.savePackage(pkg)
+    onToast(`Package “${pkg.title}” saved.`)
+    if (window.location.hash.replace(/^#\/?/, '') === route) closeEditor()
   }
 
   const handleDeletePackage = async (pkg: PackageItem) => {
@@ -141,48 +125,11 @@ function AdminDashboardContent({
     }
   }
 
-  const handleOpenNewPackage = () => {
-    setEditingPackage({
-      id: `pkg-${Date.now()}`,
-      title: '',
-      place: '',
-      state: '',
-      duration: '6 Days / 5 Nights',
-      daysCount: 6,
-      price: '₹38,000',
-      priceNum: 38000,
-      originalPrice: '₹45,000',
-      discount: '15% OFF',
-      rating: 4.9,
-      reviewCount: 15,
-      image:
-        'https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=1200&q=88',
-      overview: 'Experience the royal heritage and majestic forts of Rajasthan.',
-      highlights: ['Heritage walk', 'Desert sunset', 'Palace dinner'],
-      inclusions: ['4-Star Stays', 'Breakfast & Dinner', 'Private Cab', 'Sightseeing Guide'],
-      exclusions: ['Flight / Train tickets', 'Personal expenses', 'Entry fees at monuments'],
-      itinerary: [
-        {
-          day: 1,
-          title: 'Arrival & Royal Welcome',
-          description: 'Arrival at airport/station, transfer to heritage hotel, evening lake walk.',
-        },
-      ],
-      theme: 'Heritage',
-      featured: true,
-    })
-    setIsNewPackage(true)
-  }
-
   // Handlers - Stays
   const handleSaveStay = async (stay: StayItem) => {
-    try {
-      await store.saveStay(stay)
-      onToast(`Stay "${stay.name}" saved!`)
-      setEditingStay(null)
-    } catch (err: any) {
-      onToast(`Failed to save stay: ${err.message}`)
-    }
+    await store.saveStay(stay)
+    onToast(`Property “${stay.name}” saved.`)
+    if (window.location.hash.replace(/^#\/?/, '') === route) closeEditor()
   }
 
   const handleDeleteStay = async (stay: StayItem) => {
@@ -194,24 +141,6 @@ function AdminDashboardContent({
         onToast(`Failed to delete stay: ${err.message}`)
       }
     }
-  }
-
-  const handleOpenNewStay = () => {
-    setEditingStay({
-      id: `stay-${Date.now()}`,
-      city: 'Udaipur',
-      state: 'Rajasthan',
-      type: 'Heritage Stays',
-      name: '',
-      price: '₹14,500',
-      priceNum: 14500,
-      rating: 4.9,
-      image:
-        'https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=1200&q=88',
-      amenities: ['Pool', 'Spa', 'Heritage Dining', 'Wi-Fi', 'Lake View'],
-      description: 'Restored royal residence offering authentic hospitality and palatial suites.',
-    })
-    setIsNewStay(true)
   }
 
   // Handlers - Offers
@@ -295,8 +224,33 @@ function AdminDashboardContent({
     }
   }
 
+  const renderInventoryEditor = () => {
+    const isNew = mode === 'new'
+    const matchesId = (id: string) => encodeURIComponent(id) === recordId
+
+    if (activeTab === 'destinations') {
+      const destination = store.destinations.find(({ slug }) => matchesId(slug))
+      if (isNew || destination) return <DestinationEditor key={route} destination={destination} onBack={closeEditor} onSave={handleSaveDestination} />
+    }
+    if (activeTab === 'packages') {
+      const pkg = store.packages.find(({ id }) => matchesId(id))
+      if (isNew || pkg) return <PackageEditor key={route} pkg={pkg} onBack={closeEditor} onSave={handleSavePackage} />
+    }
+    if (activeTab === 'stays') {
+      const stay = store.stays.find(({ id }) => matchesId(id))
+      if (isNew || stay) return <StayEditor key={route} stay={stay} onBack={closeEditor} onSave={handleSaveStay} />
+    }
+
+    return (
+      <div className="mx-auto max-w-5xl rounded-xl border border-slate-200 bg-white p-6">
+        <h1 className="text-lg font-semibold">{store.isLoading ? 'Loading listing…' : 'Listing unavailable'}</h1>
+        <button type="button" onClick={closeEditor} className="mt-3 text-sm font-semibold text-emerald-900 hover:underline">Back to list</button>
+      </div>
+    )
+  }
+
   return (
-    <div className="admin-panel-root min-h-screen bg-slate-50 text-slate-900 flex flex-col font-inter antialiased selection:bg-slate-900 selection:text-white">
+    <div className="admin-panel-root flex h-dvh flex-col overflow-hidden bg-slate-50 text-slate-900 font-inter antialiased selection:bg-slate-900 selection:text-white">
       {/* Top Admin Header */}
       <AdminHeader
         navigate={navigate}
@@ -304,66 +258,71 @@ function AdminDashboardContent({
         onLogout={onLogout}
       />
 
+      <div className="shrink-0 border-b border-slate-200 bg-white px-4 py-2 md:hidden">
+        <select aria-label="Admin section" value={activeTab} onChange={(event) => setActiveTab(event.target.value as AdminTab)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800">
+          {Object.entries(adminTabs).map(([id, label]) => <option key={id} value={id}>{label}</option>)}
+        </select>
+      </div>
+
       {/* Main Admin Workspace */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex min-h-0 flex-1 overflow-hidden">
         {/* Left Modular Sidebar */}
         <AdminSidebar
           activeTab={activeTab}
           setActiveTab={setActiveTab}
+          destinationsCount={store.destinations.length}
+          packagesCount={store.packages.length}
+          staysCount={store.stays.length}
           bookingsCount={store.bookings.length}
-          inquiriesCount={newInquiriesCount}
+          newInquiriesCount={newInquiriesCount}
+          offersCount={store.offers.length}
         />
 
         {/* Dynamic Center Work Area */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <main ref={workArea} className="min-w-0 flex-1 overflow-y-auto scroll-pb-24 p-4 sm:p-6 lg:p-8">
+          {editorOpen && renderInventoryEditor()}
+
           {activeTab === 'dashboard' && (
             <DashboardTab
-              stats={store.stats}
               totalRevenue={totalRevenue}
               confirmedBookingsCount={confirmedBookingsCount}
               newInquiriesCount={newInquiriesCount}
+              destinationsCount={store.destinations.length}
               bookings={store.bookings}
               inquiries={store.inquiries}
-              onNavigateTab={(tab) => setActiveTab(tab)}
-              onSelectBooking={setSelectedBooking}
-              onSelectInquiry={setSelectedInquiry}
+              setActiveTab={setActiveTab}
+              setSelectedBooking={setSelectedBooking}
+              setSelectedInquiry={setSelectedInquiry}
+              onAddNewDestination={() => navigate('admin/destinations/new')}
+              onAddNewPackage={() => navigate('admin/packages/new')}
             />
           )}
 
-          {activeTab === 'destinations' && (
+          {activeTab === 'destinations' && !editorOpen && (
             <DestinationsTab
               destinations={store.destinations}
-              onAddNew={handleOpenNewDestination}
-              onEdit={(dest) => {
-                setEditingDestination(dest)
-                setIsNewDestination(false)
-              }}
-              onDelete={handleDeleteDestination}
+              onAddNewDestination={() => navigate('admin/destinations/new')}
+              onEditDestination={(dest) => navigate(`admin/destinations/edit/${encodeURIComponent(dest.slug)}`)}
+              onDeleteDestination={handleDeleteDestination}
             />
           )}
 
-          {activeTab === 'packages' && (
+          {activeTab === 'packages' && !editorOpen && (
             <PackagesTab
               packages={store.packages}
-              onAddNewPackage={handleOpenNewPackage}
-              onEditPackage={(pkg) => {
-                setEditingPackage(pkg)
-                setIsNewPackage(false)
-              }}
+              onAddNewPackage={() => navigate('admin/packages/new')}
+              onEditPackage={(pkg) => navigate(`admin/packages/edit/${encodeURIComponent(pkg.id)}`)}
               onDeletePackage={handleDeletePackage}
             />
           )}
 
-          {activeTab === 'stays' && (
+          {activeTab === 'stays' && !editorOpen && (
             <StaysTab
               stays={store.stays}
               stayFilter={stayFilter}
               setStayFilter={setStayFilter}
-              onAddNewStay={handleOpenNewStay}
-              onEditStay={(stay) => {
-                setEditingStay(stay)
-                setIsNewStay(false)
-              }}
+              onAddNewStay={() => navigate('admin/stays/new')}
+              onEditStay={(stay) => navigate(`admin/stays/edit/${encodeURIComponent(stay.id)}`)}
               onDeleteStay={handleDeleteStay}
             />
           )}
@@ -398,6 +357,14 @@ function AdminDashboardContent({
             />
           )}
 
+          {activeTab === 'reels' && (
+            <ReelsTab
+              reels={store.reels}
+              onUpdateReel={store.updateReel}
+              onToast={onToast}
+            />
+          )}
+
           {activeTab === 'settings' && (
             <SettingsTab
               isDatabaseConnected={store.isDatabaseConnected}
@@ -414,36 +381,6 @@ function AdminDashboardContent({
       </div>
 
       {/* Modals */}
-      {editingDestination && (
-        <DestinationModal
-          destination={editingDestination}
-          isNew={isNewDestination}
-          onClose={() => setEditingDestination(null)}
-          onSave={handleSaveDestination}
-          onChange={setEditingDestination}
-        />
-      )}
-
-      {editingPackage && (
-        <PackageModal
-          pkg={editingPackage}
-          isNew={isNewPackage}
-          onClose={() => setEditingPackage(null)}
-          onSave={handleSavePackage}
-          onChange={setEditingPackage}
-        />
-      )}
-
-      {editingStay && (
-        <StayModal
-          stay={editingStay}
-          isNew={isNewStay}
-          onClose={() => setEditingStay(null)}
-          onSave={handleSaveStay}
-          onChange={setEditingStay}
-        />
-      )}
-
       {editingOffer && (
         <OfferModal
           offer={editingOffer}
@@ -459,7 +396,7 @@ function AdminDashboardContent({
         <BookingDrawer
           booking={selectedBooking}
           onClose={() => setSelectedBooking(null)}
-          onIssueVoucher={handleIssueVoucher}
+          onIssueVoucher={() => handleIssueVoucher(selectedBooking)}
         />
       )}
 
@@ -474,7 +411,7 @@ function AdminDashboardContent({
   )
 }
 
-export function AdminPage({ navigate, onToast }: AdminPageProps) {
+export function AdminPage({ route, navigate, onToast }: AdminPageProps) {
   const store = useDynamicStore()
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => store.isAdminAuthenticated())
 
@@ -503,6 +440,7 @@ export function AdminPage({ navigate, onToast }: AdminPageProps) {
 
   return (
     <AdminDashboardContent
+      route={route}
       navigate={navigate}
       onToast={onToast}
       onLogout={() => {

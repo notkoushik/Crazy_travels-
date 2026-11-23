@@ -8,13 +8,29 @@ interface GoogleVerifiedBadgeProps {
   size?: 'sm' | 'md' | 'lg'
 }
 
+export function isGoogleMapsLink(value?: string) {
+  if (!value) return false
+  try {
+    const url = new URL(value)
+    if (url.protocol !== 'https:' || url.username || url.password) return false
+    const google = /^(?:www\.)?google\.(?:com|[a-z]{2}|(?:co|com)\.[a-z]{2})$/.test(url.hostname)
+    return url.hostname === 'maps.app.goo.gl' || url.hostname === 'maps.google.com' ||
+      (url.hostname === 'goo.gl' && url.pathname.startsWith('/maps')) ||
+      (google && /^\/maps(?:\/|$)/.test(url.pathname))
+  } catch {
+    return false
+  }
+}
+
 export function GoogleVerifiedBadge({
-  rating = 4.9,
-  reviewsCount = 1250,
+  rating,
+  reviewsCount,
   mapsUrl,
   className = '',
   size = 'md',
 }: GoogleVerifiedBadgeProps) {
+  if (rating == null || !Number.isFinite(rating) || rating < 1 || rating > 5 || !reviewsCount || reviewsCount < 1 || !isGoogleMapsLink(mapsUrl)) return null
+
   const sizeClasses = {
     sm: 'px-2 py-1 text-[10px] gap-1.5',
     md: 'px-3 py-1.5 text-xs gap-2',
@@ -35,12 +51,12 @@ export function GoogleVerifiedBadge({
 
   return (
     <a
-      href={mapsUrl || 'https://maps.google.com'}
+      href={mapsUrl}
       target="_blank"
       rel="noopener noreferrer"
       onClick={(e) => e.stopPropagation()}
       className={`inline-flex items-center rounded-full bg-white/95 backdrop-blur-md border border-slate-200/90 shadow-2xs hover:shadow-xs hover:border-slate-300 transition-all font-inter group ${sizeClasses[size]} ${className}`}
-      title="Verify authentic traveler reviews on Google Maps (100% Free)"
+      title="See reviews on Google Maps"
     >
       {/* Official Google Brand Icon */}
       <svg className={`${iconSizes[size]} flex-none`} viewBox="0 0 24 24">
@@ -66,8 +82,8 @@ export function GoogleVerifiedBadge({
         <span className="font-bold text-slate-900 font-mono tracking-tight font-inter-tight">
           {rating.toFixed(1)}
         </span>
-        <span className={`text-amber-400 font-bold ${starSizes[size]} tracking-tighter`}>
-          ★★★★★
+        <span aria-hidden="true" className={`text-amber-500 font-bold ${starSizes[size]}`}>
+          ★
         </span>
         <span className="text-slate-500 font-medium">
           ({reviewsCount.toLocaleString('en-IN')})

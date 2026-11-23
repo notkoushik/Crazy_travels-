@@ -16,9 +16,11 @@ export type AdminTab =
   | 'bookings'
   | 'inquiries'
   | 'offers'
+  | 'reels'
   | 'settings'
 
 export interface AdminPageProps {
   navigate: (route: RouteName) => void
   onToast: (msg: string) => void
+  route: RouteName
 }

@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Currency, RouteName, StayItem } from '../types/travel'
 import { Icon } from '../components/Icon'
 import { GoogleVerifiedBadge } from '../components/GoogleVerifiedBadge'
-import { formatPrice } from '../data/travelData'
+import { formatPrice, stayTypes } from '../data/travelData'
 import { useDynamicStore } from '../services/dataStore'
 
 interface StaysPageProps {
@@ -16,7 +16,7 @@ export function StaysPage({ navigate, onBook, currency }: StaysPageProps) {
   const [selectedType, setSelectedType] = useState('All')
   const [searchCity, setSearchCity] = useState('')
 
-  const types = ['All', 'Heritage Stays', 'Beach Retreats', 'Houseboat Stays', 'Plantation Retreats', 'Palace Stays']
+  const types = ['All', ...stayTypes]
 
   const filtered = store.stays.filter((stay) => {
     const matchesType = selectedType === 'All' || stay.type === selectedType
@@ -102,8 +102,8 @@ export function StaysPage({ navigate, onBook, currency }: StaysPageProps) {
                   </div>
                   <div className="absolute top-4 right-4">
                     <GoogleVerifiedBadge
-                      rating={stay.googleRating || stay.rating || 4.9}
-                      reviewsCount={stay.googleReviewsCount || 450}
+                      rating={stay.googleRating}
+                      reviewsCount={stay.googleReviewsCount}
                       mapsUrl={stay.googleMapsUrl}
                       size="sm"
                     />
@@ -119,7 +119,7 @@ export function StaysPage({ navigate, onBook, currency }: StaysPageProps) {
                 </div>
 
                 <div className="p-6 space-y-4">
-                  <p className="text-xs text-gray-600 leading-relaxed">{stay.description}</p>
+                  <p className="whitespace-pre-line text-xs leading-relaxed text-gray-600">{stay.description}</p>
                   <div className="flex flex-wrap gap-1.5 pt-2 border-t border-gray-100">
                     {stay.amenities.map((am) => (
                       <span

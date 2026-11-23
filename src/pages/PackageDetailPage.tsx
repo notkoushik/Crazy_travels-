@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Currency, PackageItem, RouteName } from '../types/travel'
 import { Icon } from '../components/Icon'
+import { GoogleVerifiedBadge } from '../components/GoogleVerifiedBadge'
 import { formatPrice } from '../data/travelData'
 
 interface PackageDetailPageProps {
@@ -51,9 +52,9 @@ export function PackageDetailPage({
             <span className="px-3.5 py-1.5 rounded-full bg-white text-[#072f2b] text-xs font-bold shadow-md">
               {packageItem.duration}
             </span>
-            <span className="px-3 py-1.5 rounded-full bg-[#ef4934] text-white text-xs font-bold shadow-md">
+            {packageItem.discount && <span className="px-3 py-1.5 rounded-full bg-[#ef4934] text-white text-xs font-bold shadow-md">
               {packageItem.discount}
-            </span>
+            </span>}
           </div>
 
           <button
@@ -75,26 +76,23 @@ export function PackageDetailPage({
                 {packageItem.title}
               </h1>
               <div className="flex flex-wrap items-center gap-4 mt-4 text-xs text-[#dce9e6]">
-                <span className="flex items-center gap-1 font-semibold text-white">
-                  ★ {packageItem.rating} ({packageItem.reviewCount} verified reviews)
-                </span>
-                <span>•</span>
-                <span>Verified Private AC Transfers</span>
-                <span>•</span>
-                <span>Breakfast & Dinner Included</span>
+                {packageItem.rating > 0 && packageItem.reviewCount > 0 && (
+                  <span className="flex items-center gap-1 font-semibold text-white">
+                    ★ {packageItem.rating} ({packageItem.reviewCount} reviews)
+                  </span>
+                )}
+                <GoogleVerifiedBadge rating={packageItem.googleRating} reviewsCount={packageItem.googleReviewsCount} mapsUrl={packageItem.googleMapsUrl} size="sm" />
               </div>
             </div>
 
             <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/20 flex-none text-right">
               <span className="text-[11px] text-[#ffd0c7] block uppercase font-bold">
-                Special Package Rate
+                Starting price per traveller
               </span>
               <div className="text-2xl sm:text-3xl font-bold text-white">
                 {formatPrice(packageItem.priceNum, currency)}
               </div>
-              <span className="text-xs text-white/70 line-through block">
-                {packageItem.originalPrice} per adult
-              </span>
+              {packageItem.originalPrice && <span className="text-xs text-white/70 line-through block">{packageItem.originalPrice}</span>}
             </div>
           </div>
         </div>
@@ -110,7 +108,7 @@ export function PackageDetailPage({
               { id: 'itinerary', label: 'Day-by-Day Plan' },
               { id: 'overview', label: 'Overview & Highlights' },
               { id: 'inclusions', label: 'Inclusions & Exclusions' },
-              { id: 'stays', label: 'Verified Stays' },
+              { id: 'stays', label: 'Accommodation' },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -166,9 +164,9 @@ export function PackageDetailPage({
                               <h4 className="font-bold text-sm sm:text-base text-gray-900">
                                 {day.title}
                               </h4>
-                              {day.meals && (
+                              {(day.meals || day.hotel) && (
                                 <span className="text-[11px] font-semibold text-[#ef4934]">
-                                  {day.meals} · Stay: {day.hotel}
+                                  {[day.meals, day.hotel].filter(Boolean).join(' · ')}
                                 </span>
                               )}
                             </div>
@@ -185,17 +183,20 @@ export function PackageDetailPage({
                         {isOpen && (
                           <div className="px-5 pb-5 pt-1 text-xs sm:text-sm text-gray-700 leading-relaxed border-t border-gray-100/60 mt-1 space-y-3">
                             <p>{day.description}</p>
-                            <div className="flex flex-wrap gap-2 pt-2">
-                              <span className="px-2.5 py-1 rounded-md bg-white border border-gray-200 text-gray-600 text-[11px] font-medium">
-                                🏨 {day.hotel}
-                              </span>
-                              <span className="px-2.5 py-1 rounded-md bg-white border border-gray-200 text-gray-600 text-[11px] font-medium">
-                                🍽️ {day.meals}
-                              </span>
-                              <span className="px-2.5 py-1 rounded-md bg-white border border-gray-200 text-gray-600 text-[11px] font-medium">
-                                🚗 Private Chauffeur Transfers Included
-                              </span>
-                            </div>
+                            <dl className="grid gap-2 sm:grid-cols-2">
+                              {([
+                                ['Start or pickup', day.startLocation],
+                                ['End or drop-off', day.endLocation],
+                                ['Accommodation', day.hotel],
+                                ['Included meals', day.meals],
+                              ] as const).filter(([, value]) => value).map(([label, value]) => (
+                                <div key={label} className="rounded-lg border border-gray-200 bg-white px-3 py-2">
+                                  <dt className="text-xs font-semibold text-gray-800">{label}</dt>
+                                  <dd>{value}</dd>
+                                </div>
+                              ))}
+                            </dl>
+                            {!!day.activities?.length && <ul className="list-disc space-y-1 pl-5">{day.activities.map((activity, index) => <li key={index}>{activity}</li>)}</ul>}
                           </div>
                         )}
                       </div>
@@ -214,7 +215,7 @@ export function PackageDetailPage({
                 <h3 className="text-2xl font-serif font-bold text-gray-900 mt-1 mb-4">
                   The Story of This Journey
                 </h3>
-                <p className="text-sm text-gray-700 leading-relaxed">{packageItem.overview}</p>
+                <p className="whitespace-pre-line text-sm leading-relaxed text-gray-700">{packageItem.overview}</p>
               </div>
 
               <div className="pt-4 border-t border-gray-100">
@@ -228,6 +229,11 @@ export function PackageDetailPage({
                   ))}
                 </div>
               </div>
+              {!!packageItem.gallery?.length && (
+                <div className="grid gap-3 sm:grid-cols-2" aria-label="Tour photos">
+                  {packageItem.gallery.map((url, index) => <img key={`${url}-${index}`} src={url} alt={`${packageItem.title} photo ${index + 1}`} loading="lazy" className="aspect-4/3 w-full rounded-xl object-cover" />)}
+                </div>
+              )}
             </div>
           )}
 
@@ -276,21 +282,16 @@ export function PackageDetailPage({
                 <h3 className="text-2xl font-serif font-bold text-gray-900 mt-1 mb-2">
                   Where You Will Stay
                 </h3>
-                <p className="text-xs text-gray-500 mb-6">
-                  We favour verified heritage properties and boutique resorts with rich character and high hygiene standards.
-                </p>
+                {!packageItem.itinerary.some((day) => day.hotel) && (
+                  <p className="mt-3 text-sm text-gray-600">Ask the tour team about accommodation before booking.</p>
+                )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {packageItem.itinerary
-                    .filter((day, i, self) => self.findIndex((d) => d.hotel === day.hotel) === i)
+                    .filter((day, i, self) => day.hotel && self.findIndex((d) => d.hotel === day.hotel) === i)
                     .map((item, i) => (
                       <div key={i} className="p-4 rounded-2xl border border-gray-100 bg-[#fbfaf7] space-y-2">
-                        <span className="text-[10px] uppercase font-bold text-[#ef4934] tracking-wider block">
-                          Verified Property
-                        </span>
                         <h4 className="font-bold text-sm text-gray-900">{item.hotel}</h4>
-                        <p className="text-xs text-gray-500">
-                          Breakfast & Dinner buffet included. Upgrades available to Presidential & Heritage Suites.
-                        </p>
+                        <p className="text-xs text-gray-500">{packageItem.itinerary.filter((day) => day.hotel === item.hotel).map((day) => `Day ${day.day}`).join(' · ')}</p>
                       </div>
                     ))}
                 </div>
@@ -303,7 +304,7 @@ export function PackageDetailPage({
         <div className="space-y-6">
           <div className="sticky top-[calc(var(--site-nav-height)+1.5rem)] bg-white p-6 rounded-3xl border border-gray-100 shadow-xl space-y-5">
             <div className="pb-4 border-b border-gray-100">
-              <span className="text-xs text-gray-400 uppercase font-bold block">Starting From</span>
+              <span className="text-xs text-gray-400 uppercase font-bold block">Starting price per traveller</span>
               <div className="flex items-baseline gap-2">
                 <span className="text-3xl font-bold text-[#0b4941]">
                   {formatPrice(packageItem.priceNum, currency)}
@@ -312,9 +313,6 @@ export function PackageDetailPage({
                   {packageItem.originalPrice}
                 </span>
               </div>
-              <span className="text-xs text-green-700 font-semibold block mt-1">
-                ✓ Special 2026 Online Rate Guaranteed
-              </span>
             </div>
 
             <div className="space-y-3 text-xs text-gray-700">
@@ -325,14 +323,6 @@ export function PackageDetailPage({
               <div className="flex justify-between py-1 border-b border-gray-50">
                 <span className="text-gray-500">Theme:</span>
                 <strong>{packageItem.theme}</strong>
-              </div>
-              <div className="flex justify-between py-1 border-b border-gray-50">
-                <span className="text-gray-500">Transport:</span>
-                <strong>Private Chauffeur Sedan/SUV</strong>
-              </div>
-              <div className="flex justify-between py-1 border-b border-gray-50">
-                <span className="text-gray-500">Customizable:</span>
-                <strong className="text-green-700">100% Yes</strong>
               </div>
             </div>
 
@@ -359,7 +349,7 @@ export function PackageDetailPage({
                 rel="noreferrer"
                 className="inline-flex items-center gap-1.5 text-green-700 font-bold text-xs hover:underline"
               >
-                <Icon name="whatsapp" size={15} /> Chat with Kashmir Specialist
+                <Icon name="whatsapp" size={15} /> Chat with a travel specialist
               </a>
             </div>
           </div>

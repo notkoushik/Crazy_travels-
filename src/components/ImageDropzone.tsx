@@ -1,9 +1,11 @@
 import React, { useState, useRef } from 'react'
 import { Icon } from './Icon'
+import { getAdminAuthHeaders } from '../services/dataStore'
 
 interface ImageDropzoneProps {
   value: string
   onChange: (url: string) => void
+  onUploadingChange?: (uploading: boolean) => void
   label?: string
   placeholder?: string
   aspectRatio?: string
@@ -13,6 +15,7 @@ interface ImageDropzoneProps {
 export function ImageDropzone({
   value,
   onChange,
+  onUploadingChange,
   label = 'Cover Photo Image',
   placeholder = 'https://images.unsplash.com/...',
   aspectRatio = 'aspect-16/10',
@@ -25,7 +28,7 @@ export function ImageDropzone({
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleUploadFile = async (file: File) => {
-    if (!file) return
+    if (!file || isUploading) return
     if (!file.type.startsWith('image/')) {
       setUploadError('Please select a valid image file (JPEG, PNG, WebP).')
       return
@@ -33,6 +36,7 @@ export function ImageDropzone({
 
     try {
       setIsUploading(true)
+      onUploadingChange?.(true)
       setUploadError(null)
 
       const formData = new FormData()
@@ -40,6 +44,7 @@ export function ImageDropzone({
 
       const res = await fetch('/api/upload', {
         method: 'POST',
+        headers: getAdminAuthHeaders(),
         body: formData,
       })
 
@@ -58,6 +63,7 @@ export function ImageDropzone({
       setUploadError(err.message || 'Failed to upload photo from device')
     } finally {
       setIsUploading(false)
+      onUploadingChange?.(false)
     }
   }
 
@@ -81,7 +87,7 @@ export function ImageDropzone({
 
   return (
     <div className="space-y-2 font-inter">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <label className="block text-slate-700 font-semibold text-xs font-inter-tight">
           {label}
         </label>

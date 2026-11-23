@@ -61,6 +61,7 @@ export default function App() {
   const [liveChatOpen, setLiveChatOpen] = useState(false)
   const [storyViewerOpen, setStoryViewerOpen] = useState(false)
   const [activeStory, setActiveStory] = useState<any>(null)
+  const [activeReelIndex, setActiveReelIndex] = useState(0)
   const [bookingModalOpen, setBookingModalOpen] = useState(false)
   const [bookingItem, setBookingItem] = useState<{ title: string; price: number }>({
     title: 'Custom Travel Inquiry',
@@ -141,17 +142,16 @@ export default function App() {
     setBookingModalOpen(true)
   }
 
-  const handleOpenStory = (story: any) => {
+  const handleOpenStory = (story: any, index?: number) => {
     setActiveStory(story)
+    if (typeof index === 'number') {
+      setActiveReelIndex(index)
+    }
     setStoryViewerOpen(true)
   }
 
   // Render current page based on route
   const renderCurrentPage = () => {
-    if (route === 'admin') {
-      return <AdminPage navigate={navigate} onToast={showToast} />
-    }
-
     if (route === 'packages') {
       return (
         <PackagesPage
@@ -266,10 +266,10 @@ export default function App() {
   }
 
   // Full-screen dedicated Operations Admin Layout
-  if (route === 'admin') {
+  if (route === 'admin' || route.startsWith('admin/')) {
     return (
       <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
-        <AdminPage navigate={navigate} onToast={showToast} />
+        <AdminPage route={route} navigate={navigate} onToast={showToast} />
         {toastMessage && (
           <div className="global-toast animate-bounce-in flex items-center gap-3">
             <span>{toastMessage}</span>
@@ -384,6 +384,9 @@ export default function App() {
         isOpen={storyViewerOpen}
         onClose={() => setStoryViewerOpen(false)}
         story={activeStory}
+        reels={store.reels}
+        currentIndex={activeReelIndex}
+        onChangeIndex={setActiveReelIndex}
       />
 
       <TripInquiry

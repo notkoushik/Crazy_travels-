@@ -35,6 +35,10 @@ export type IconName =
   | 'plus'
   | 'minus'
   | 'whatsapp'
+  | 'instagram'
+  | 'volume'
+  | 'volumeX'
+  | 'video'
   | 'award'
   | 'map'
   | 'barChart'
@@ -56,6 +60,8 @@ export interface ItineraryDay {
   meals?: string
   hotel?: string
   activities?: string[]
+  startLocation?: string
+  endLocation?: string
 }
 
 export interface PackageItem {
@@ -182,6 +188,20 @@ export interface OfferItem {
   image: string
 }
 
+export interface InstagramReelItem {
+  id: string
+  title: string
+  place: string
+  customerName: string
+  rating: number
+  reviewQuote: string
+  videoUrl: string
+  posterUrl: string
+  instagramUrl?: string
+  duration: string
+  displayOrder: number
+}
+
 export interface ReviewItem {
   id: string
   quote: string
@@ -228,6 +248,7 @@ export type RouteName =
   | 'terms'
   | 'privacy'
   | 'admin'
+  | `admin/${string}`
   | `package/${string}`
   | `destination/${string}`
 

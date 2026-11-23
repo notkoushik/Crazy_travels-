@@ -24,7 +24,7 @@ export function AdminSidebar({
   offersCount,
 }: AdminSidebarProps) {
   return (
-    <aside className="w-64 border-r border-slate-200/80 bg-white p-4 flex flex-col justify-between shrink-0 hidden md:flex min-h-[calc(100vh-4rem)]">
+    <aside className="hidden w-64 shrink-0 flex-col justify-between gap-6 overflow-y-auto border-r border-slate-200/80 bg-white p-4 md:flex">
       <div className="space-y-6">
         <div>
           <div className="px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 font-inter-tight">
@@ -124,7 +124,7 @@ export function AdminSidebar({
                   size={15}
                   className={activeTab === 'stays' ? 'text-white' : 'text-slate-400'}
                 />
-                <span>Stays & Haveli</span>
+                <span>Stays & Hotels</span>
               </div>
               <span
                 className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${
@@ -134,6 +134,33 @@ export function AdminSidebar({
                 }`}
               >
                 {staysCount}
+              </span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('reels')}
+              className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                activeTab === 'reels'
+                  ? 'bg-slate-900 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <Icon
+                  name="instagram"
+                  size={15}
+                  className={activeTab === 'reels' ? 'text-white' : 'text-slate-400'}
+                />
+                <span>Instagram Video Reels</span>
+              </div>
+              <span
+                className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${
+                  activeTab === 'reels'
+                    ? 'bg-slate-800 text-slate-200'
+                    : 'bg-slate-100 text-slate-600'
+                }`}
+              >
+                10
               </span>
             </button>
           </nav>

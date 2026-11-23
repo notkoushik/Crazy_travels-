@@ -393,7 +393,7 @@ app.get('/api/destinations', async (req, res) => {
       city: r.city,
       country: r.country,
       state: r.state,
-      region: r.region || 'North India',
+      region: r.region || '',
       price: r.price,
       priceNum: r.price_num,
       image: r.image,
@@ -408,22 +408,22 @@ app.get('/api/destinations', async (req, res) => {
       isTrending: r.is_trending,
       displayOrder: r.display_order,
       // Google Ratings & Verified Social Proof (100% Free)
-      googleRating: parseFloat(r.google_rating) || 4.9,
-      googleReviewsCount: parseInt(r.google_reviews_count) || 1250,
-      googleMapsUrl: r.google_maps_url || `https://maps.google.com/?q=${encodeURIComponent(r.city + ' ' + r.state)}`,
+      googleRating: r.google_rating == null ? undefined : Number(r.google_rating),
+      googleReviewsCount: r.google_reviews_count ?? undefined,
+      googleMapsUrl: r.google_maps_url ?? undefined,
       // Tourism Dimensions & Logistics
       nearestAirport: r.nearest_airport || '',
       nearestRailway: r.nearest_railway || '',
-      recommendedStayDays: r.recommended_stay_days || '4 Nights / 5 Days',
-      peakSeason: r.peak_season || r.season || 'October to March',
-      avgTemp: r.avg_temp || '15°C - 28°C',
+      recommendedStayDays: r.recommended_stay_days || '',
+      peakSeason: r.peak_season || r.season || '',
+      avgTemp: r.avg_temp || '',
       permitRequired: r.permit_required || false,
       permitDetails: r.permit_details || '',
-      clothingAdvice: r.clothing_advice || 'Comfortable attire and modest clothing for heritage shrines.',
+      clothingAdvice: r.clothing_advice || '',
       culturalNotes: r.cultural_notes || '',
       mustTryFood: typeof r.must_try_food === 'string' ? JSON.parse(r.must_try_food) : r.must_try_food || [],
       keyAttractions: typeof r.key_attractions === 'string' ? JSON.parse(r.key_attractions) : r.key_attractions || [],
-      networkCoverage: r.network_coverage || 'Jio, Airtel 5G Available',
+      networkCoverage: r.network_coverage || '',
     }))
     res.json(formatted)
   } catch (err) {
@@ -492,16 +492,16 @@ app.post('/api/destinations', requireAdminAuth, async (req, res) => {
         key_attractions = EXCLUDED.key_attractions,
         network_coverage = EXCLUDED.network_coverage`,
       [
-        slug, d.city, d.country || 'India', d.state || d.country || 'Rajasthan', d.region || 'North India',
-        d.price || `₹${d.priceNum?.toLocaleString('en-IN')}`, d.priceNum || 25000, d.image, d.season || 'October to March',
-        d.duration || '5 days', d.tagline || '', d.description || '',
-        highlights, gallery, d.bestTimeToVisit || 'October to March', d.idealFor || 'Couples & Culture Seekers',
+        slug, d.city, d.country, d.state, d.region || '',
+        d.price || `₹${d.priceNum?.toLocaleString('en-IN')}`, d.priceNum, d.image, d.season || '',
+        d.duration || '', d.tagline || '', d.description || '',
+        highlights, gallery, d.bestTimeToVisit || '', d.idealFor || '',
         d.isTrending ?? true, d.displayOrder || 0,
-        d.googleRating || 4.9, d.googleReviewsCount || 1250, d.googleMapsUrl || `https://maps.google.com/?q=${encodeURIComponent(d.city)}`,
-        d.nearestAirport || '', d.nearestRailway || '', d.recommendedStayDays || '4 Nights / 5 Days',
-        d.peakSeason || d.season || 'October to March', d.avgTemp || '15°C - 28°C',
+        d.googleRating ?? null, d.googleReviewsCount ?? null, d.googleMapsUrl || null,
+        d.nearestAirport || '', d.nearestRailway || '', d.recommendedStayDays || '',
+        d.peakSeason || d.season || '', d.avgTemp || '',
         d.permitRequired ?? false, d.permitDetails || '', d.clothingAdvice || '', d.culturalNotes || '',
-        mustTryFood, keyAttractions, d.networkCoverage || 'Jio, Airtel 5G Available'
+        mustTryFood, keyAttractions, d.networkCoverage || ''
       ]
     )
     res.json({ success: true, slug })
@@ -539,8 +539,8 @@ app.get('/api/packages', async (req, res) => {
       priceNum: r.price_num,
       originalPrice: r.original_price,
       discount: r.discount,
-      rating: parseFloat(r.rating) || 4.9,
-      reviewCount: r.review_count,
+      rating: Number(r.rating ?? 0),
+      reviewCount: r.review_count ?? 0,
       image: r.image,
       gallery: typeof r.gallery === 'string' ? JSON.parse(r.gallery) : r.gallery || [],
       overview: r.overview,
@@ -550,9 +550,9 @@ app.get('/api/packages', async (req, res) => {
       itinerary: typeof r.itinerary === 'string' ? JSON.parse(r.itinerary) : r.itinerary || [],
       theme: r.theme,
       featured: r.featured,
-      googleRating: parseFloat(r.google_rating) || 4.9,
-      googleReviewsCount: parseInt(r.google_reviews_count) || 1200,
-      googleMapsUrl: r.google_maps_url || `https://maps.google.com/?q=${encodeURIComponent(r.title)}`,
+      googleRating: r.google_rating == null ? undefined : Number(r.google_rating),
+      googleReviewsCount: r.google_reviews_count ?? undefined,
+      googleMapsUrl: r.google_maps_url ?? undefined,
     }))
     res.json(formatted)
   } catch (err) {
@@ -573,9 +573,9 @@ app.post('/api/packages', requireAdminAuth, async (req, res) => {
       `INSERT INTO packages (
         id, title, place, state, duration, days_count, price, price_num, original_price, discount,
         rating, review_count, image, overview, highlights, inclusions, exclusions, itinerary,
-        theme, featured, google_rating, google_reviews_count, google_maps_url
+        theme, featured, google_rating, google_reviews_count, google_maps_url, gallery
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
       ON CONFLICT (id) DO UPDATE SET
         title = EXCLUDED.title,
         place = EXCLUDED.place,
@@ -586,6 +586,8 @@ app.post('/api/packages', requireAdminAuth, async (req, res) => {
         price_num = EXCLUDED.price_num,
         original_price = EXCLUDED.original_price,
         discount = EXCLUDED.discount,
+        rating = EXCLUDED.rating,
+        review_count = EXCLUDED.review_count,
         image = EXCLUDED.image,
         overview = EXCLUDED.overview,
         highlights = EXCLUDED.highlights,
@@ -596,14 +598,16 @@ app.post('/api/packages', requireAdminAuth, async (req, res) => {
         featured = EXCLUDED.featured,
         google_rating = EXCLUDED.google_rating,
         google_reviews_count = EXCLUDED.google_reviews_count,
-        google_maps_url = EXCLUDED.google_maps_url`,
+        google_maps_url = EXCLUDED.google_maps_url,
+        gallery = EXCLUDED.gallery`,
       [
-        id, p.title, p.place, p.state, p.duration, p.daysCount || 5,
+        id, p.title, p.place, p.state, p.duration, p.daysCount,
         p.price || `₹${p.priceNum?.toLocaleString('en-IN')}`, p.priceNum,
-        p.originalPrice, p.discount, p.rating || 4.9, p.reviewCount || 10,
+        p.originalPrice, p.discount, p.rating ?? 0, p.reviewCount ?? 0,
         p.image, p.overview, highlights, inclusions, exclusions, itinerary,
-        p.theme || 'Heritage', p.featured ?? true,
-        p.googleRating || 4.9, p.googleReviewsCount || 1200, p.googleMapsUrl || `https://maps.google.com/?q=${encodeURIComponent(p.place)}`
+        p.theme, p.featured ?? false,
+        p.googleRating ?? null, p.googleReviewsCount ?? null, p.googleMapsUrl || null,
+        JSON.stringify(p.gallery || [])
       ]
     )
     res.json({ success: true, id })
@@ -814,13 +818,13 @@ app.get('/api/stays', async (req, res) => {
       name: r.name,
       price: r.price,
       priceNum: r.price_num,
-      rating: parseFloat(r.rating) || 4.9,
+      rating: Number(r.rating ?? 0),
       image: r.image,
       amenities: typeof r.amenities === 'string' ? JSON.parse(r.amenities) : r.amenities || [],
       description: r.description,
-      googleRating: parseFloat(r.google_rating) || 4.9,
-      googleReviewsCount: parseInt(r.google_reviews_count) || 850,
-      googleMapsUrl: r.google_maps_url || `https://maps.google.com/?q=${encodeURIComponent(r.name + ' ' + r.city)}`,
+      googleRating: r.google_rating == null ? undefined : Number(r.google_rating),
+      googleReviewsCount: r.google_reviews_count ?? undefined,
+      googleMapsUrl: r.google_maps_url ?? undefined,
     }))
     res.json(formatted)
   } catch (err) {
@@ -854,10 +858,10 @@ app.post('/api/stays', requireAdminAuth, async (req, res) => {
         google_reviews_count = EXCLUDED.google_reviews_count,
         google_maps_url = EXCLUDED.google_maps_url`,
       [
-        id, s.city, s.state || s.city, s.type || 'Heritage Stays', s.name,
-        s.price || `₹${s.priceNum?.toLocaleString('en-IN')}`, s.priceNum || 10000,
-        s.rating || 4.9, s.image, amenities, s.description || '',
-        s.googleRating || 4.9, s.googleReviewsCount || 850, s.googleMapsUrl || `https://maps.google.com/?q=${encodeURIComponent(s.name)}`
+        id, s.city, s.state, s.type, s.name,
+        s.price || `₹${s.priceNum?.toLocaleString('en-IN')}`, s.priceNum,
+        s.rating ?? 0, s.image, amenities, s.description || '',
+        s.googleRating ?? null, s.googleReviewsCount ?? null, s.googleMapsUrl || null
       ]
     )
     res.json({ success: true, id })
@@ -975,6 +979,262 @@ app.delete('/api/offers/:id', requireAdminAuth, async (req, res) => {
     const { id } = req.params
     await pool.query('DELETE FROM offers WHERE id = $1', [id])
     res.json({ success: true, deleted: id })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ========================================================
+// 8.5 INSTAGRAM REELS & CUSTOMER VIDEO REVIEWS
+// ========================================================
+const fallbackReels = [
+  {
+    id: 'reel-1',
+    title: 'Floating in Kashmir Shikara Waters',
+    place: 'Dal Lake & Gulmarg, Kashmir',
+    customerName: 'Anika & Rohan Sengupta',
+    rating: 5.0,
+    reviewQuote: 'Waking up to misty waters in a heritage cedar houseboat was pure magic. Crazy Tours planned every single detail to perfection.',
+    videoUrl: '/Instagram_videos/compressed/reel_01.mp4',
+    posterUrl: '/Instagram_videos/thumbnails/reel_01_poster.jpg',
+    instagramUrl: 'https://www.instagram.com/crazytourstravels/',
+    duration: '0:56',
+    displayOrder: 1,
+  },
+  {
+    id: 'reel-2',
+    title: 'Tea Garden Mornings & Mist',
+    place: 'Munnar & Kochi, Kerala',
+    customerName: 'Meera & Rajesh Shah',
+    rating: 5.0,
+    reviewQuote: 'Unbelievable serenity walking through private plantation trails. The vehicle and private chauffeur made the mountain roads effortless.',
+    videoUrl: '/Instagram_videos/compressed/reel_02.mp4',
+    posterUrl: '/Instagram_videos/thumbnails/reel_02_poster.jpg',
+    instagramUrl: 'https://www.instagram.com/crazytourstravels/',
+    duration: '1:10',
+    displayOrder: 2,
+  },
+  {
+    id: 'reel-3',
+    title: 'Living Royal History in Desert Forts',
+    place: 'Jaisalmer Citadel, Rajasthan',
+    customerName: 'The Kapoor Family',
+    rating: 5.0,
+    reviewQuote: 'Our children were mesmerized by the golden havelis and camel desert camp. Best holiday we have ever booked!',
+    videoUrl: '/Instagram_videos/compressed/reel_03.mp4',
+    posterUrl: '/Instagram_videos/thumbnails/reel_03_poster.jpg',
+    instagramUrl: 'https://www.instagram.com/crazytourstravels/',
+    duration: '1:18',
+    displayOrder: 3,
+  },
+  {
+    id: 'reel-4',
+    title: 'High Mountain Passes & Monasteries',
+    place: 'Nubra Valley & Pangong, Ladakh',
+    customerName: 'Vikram & Friends',
+    rating: 5.0,
+    reviewQuote: 'Crazy Tours secured our inner line permits and high-altitude stays seamlessly. Pure adrenaline and breathtaking vistas.',
+    videoUrl: '/Instagram_videos/compressed/reel_04.mp4',
+    posterUrl: '/Instagram_videos/thumbnails/reel_04_poster.jpg',
+    instagramUrl: 'https://www.instagram.com/crazytourstravels/',
+    duration: '0:46',
+    displayOrder: 4,
+  },
+  {
+    id: 'reel-5',
+    title: 'Sacred Valley Walks & Pine Forests',
+    place: 'Manali & Solang Valley, Himachal',
+    customerName: 'Pooja & Siddharth',
+    rating: 5.0,
+    reviewQuote: 'Quiet pine forest hideaway away from tourist crowds. Thank you Crazy Tours for handpicking the boutique riverside stay!',
+    videoUrl: '/Instagram_videos/compressed/reel_05.mp4',
+    posterUrl: '/Instagram_videos/thumbnails/reel_05_poster.jpg',
+    instagramUrl: 'https://www.instagram.com/crazytourstravels/',
+    duration: '0:44',
+    displayOrder: 5,
+  },
+  {
+    id: 'reel-6',
+    title: 'Ganga Aarti by Twilight',
+    place: 'Varanasi Ghats, Uttar Pradesh',
+    customerName: 'Arun & Sunita Verma',
+    rating: 5.0,
+    reviewQuote: 'Private sunrise boat ride and privileged access to the evening prayers. Truly a spiritually transformative journey.',
+    videoUrl: '/Instagram_videos/compressed/reel_06.mp4',
+    posterUrl: '/Instagram_videos/thumbnails/reel_06_poster.jpg',
+    instagramUrl: 'https://www.instagram.com/crazytourstravels/',
+    duration: '1:17',
+    displayOrder: 6,
+  },
+  {
+    id: 'reel-7',
+    title: 'Golden Sunset & Secret Coves',
+    place: 'South Goa Coastal Retreat',
+    customerName: 'Kavya & Arjun',
+    rating: 5.0,
+    reviewQuote: 'Clean private beaches, heritage Portuguese villa, and authentic coastal dining. We did not want to leave!',
+    videoUrl: '/Instagram_videos/compressed/reel_07.mp4',
+    posterUrl: '/Instagram_videos/thumbnails/reel_07_poster.jpg',
+    instagramUrl: 'https://www.instagram.com/crazytourstravels/',
+    duration: '0:47',
+    displayOrder: 7,
+  },
+  {
+    id: 'reel-8',
+    title: 'Houseboat Living on Palm Backwaters',
+    place: 'Alleppey & Kumarakom, Kerala',
+    customerName: 'Divya & Nikhil',
+    rating: 5.0,
+    reviewQuote: 'Traditional spice meals cooked fresh on the boat as we drifted past paddy fields. 10/10 hospitality!',
+    videoUrl: '/Instagram_videos/compressed/reel_08.mp4',
+    posterUrl: '/Instagram_videos/thumbnails/reel_08_poster.jpg',
+    instagramUrl: 'https://www.instagram.com/crazytourstravels/',
+    duration: '1:14',
+    displayOrder: 8,
+  },
+  {
+    id: 'reel-9',
+    title: 'Ancient Stone Temples & Sunlit Boulders',
+    place: 'Hampi Ruins, Karnataka',
+    customerName: 'Tanvi S.',
+    rating: 5.0,
+    reviewQuote: 'Cycling through UNESCO ruins with an exceptional storyteller guide arranged by Crazy Tours.',
+    videoUrl: '/Instagram_videos/compressed/reel_09.mp4',
+    posterUrl: '/Instagram_videos/thumbnails/reel_09_poster.jpg',
+    instagramUrl: 'https://www.instagram.com/crazytourstravels/',
+    duration: '0:52',
+    displayOrder: 9,
+  },
+  {
+    id: 'reel-10',
+    title: 'Snow Peaks & Houseboats on Dal Lake',
+    place: 'Gulmarg & Srinagar, Kashmir',
+    customerName: 'Sameer & Preeti',
+    rating: 5.0,
+    reviewQuote: 'The gondola ride up to Phase 2 and cozy cedar houseboat made this our favorite anniversary trip ever.',
+    videoUrl: '/Instagram_videos/compressed/reel_10.mp4',
+    posterUrl: '/Instagram_videos/thumbnails/reel_10_poster.jpg',
+    instagramUrl: 'https://www.instagram.com/crazytourstravels/',
+    duration: '1:05',
+    displayOrder: 10,
+  },
+]
+
+app.get('/api/reels', async (req, res) => {
+  try {
+    const { rows } = await pool.query('SELECT * FROM instagram_reels ORDER BY display_order ASC, id ASC')
+    if (!rows || rows.length === 0) {
+      return res.json(fallbackReels)
+    }
+    const formatted = rows.map((r) => ({
+      id: r.id,
+      title: r.title,
+      place: r.place,
+      customerName: r.customer_name,
+      rating: Number(r.rating) || 5.0,
+      reviewQuote: r.review_quote,
+      videoUrl: r.video_url,
+      posterUrl: r.poster_url,
+      instagramUrl: r.instagram_url || '',
+      duration: r.duration || '0:45',
+      displayOrder: Number(r.display_order) || 0,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    console.warn('Using fallback reels due to query exception:', err.message)
+    res.json(fallbackReels)
+  }
+})
+
+app.patch('/api/reels/:id', requireAdminAuth, async (req, res) => {
+  try {
+    const { id } = req.params
+    const { instagramUrl, reviewQuote, customerName, rating, title, place, displayOrder } = req.body
+
+    const existing = await pool.query('SELECT * FROM instagram_reels WHERE id = $1', [id])
+    if (existing.rows.length === 0) {
+      return res.status(404).json({ error: 'Reel not found' })
+    }
+
+    const current = existing.rows[0]
+    const updated = await pool.query(
+      `UPDATE instagram_reels
+       SET instagram_url = $1,
+           review_quote = $2,
+           customer_name = $3,
+           rating = $4,
+           title = $5,
+           place = $6,
+           display_order = $7
+       WHERE id = $8
+       RETURNING *`,
+      [
+        instagramUrl !== undefined ? instagramUrl : current.instagram_url,
+        reviewQuote !== undefined ? reviewQuote : current.review_quote,
+        customerName !== undefined ? customerName : current.customer_name,
+        rating !== undefined ? rating : current.rating,
+        title !== undefined ? title : current.title,
+        place !== undefined ? place : current.place,
+        displayOrder !== undefined ? displayOrder : current.display_order,
+        id,
+      ]
+    )
+
+    const r = updated.rows[0]
+    res.json({
+      success: true,
+      reel: {
+        id: r.id,
+        title: r.title,
+        place: r.place,
+        customerName: r.customer_name,
+        rating: Number(r.rating) || 5.0,
+        reviewQuote: r.review_quote,
+        videoUrl: r.video_url,
+        posterUrl: r.poster_url,
+        instagramUrl: r.instagram_url || '',
+        duration: r.duration || '0:45',
+        displayOrder: Number(r.display_order) || 0,
+      },
+    })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+app.post('/api/reels', requireAdminAuth, async (req, res) => {
+  try {
+    const r = req.body
+    const id = r.id || `reel-${Date.now()}`
+    await pool.query(
+      `INSERT INTO instagram_reels (id, title, place, customer_name, rating, review_quote, video_url, poster_url, instagram_url, duration, display_order)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+       ON CONFLICT (id) DO UPDATE SET
+         title = EXCLUDED.title,
+         place = EXCLUDED.place,
+         customer_name = EXCLUDED.customer_name,
+         rating = EXCLUDED.rating,
+         review_quote = EXCLUDED.review_quote,
+         video_url = EXCLUDED.video_url,
+         poster_url = EXCLUDED.poster_url,
+         instagram_url = COALESCE(EXCLUDED.instagram_url, instagram_reels.instagram_url),
+         duration = EXCLUDED.duration,
+         display_order = EXCLUDED.display_order`,
+      [
+        id,
+        r.title,
+        r.place,
+        r.customerName,
+        r.rating || 5.0,
+        r.reviewQuote,
+        r.videoUrl,
+        r.posterUrl,
+        r.instagramUrl || '',
+        r.duration || '0:45',
+        r.displayOrder || 0,
+      ]
+    )
+    res.json({ success: true, id })
   } catch (err) {
     res.status(500).json({ error: err.message })
   }

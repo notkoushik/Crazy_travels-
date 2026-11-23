@@ -10,7 +10,7 @@ interface AdminHeaderProps {
 
 export function AdminHeader({ navigate, isDatabaseConnected, onLogout }: AdminHeaderProps) {
   return (
-    <header className="h-16 border-b border-slate-200/80 bg-white/95 backdrop-blur-md px-6 flex items-center justify-between sticky top-0 z-40">
+    <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center justify-between gap-3 border-b border-slate-200/80 bg-white/95 px-4 backdrop-blur-md sm:px-6">
       <div className="flex items-center gap-4">
         <button
           onClick={() => navigate('home')}
@@ -25,11 +25,11 @@ export function AdminHeader({ navigate, isDatabaseConnected, onLogout }: AdminHe
               <span className="font-extrabold text-base text-slate-900 tracking-tight font-inter-tight">
                 Crazy Tours
               </span>
-              <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold tracking-wide uppercase bg-slate-100 text-slate-700 border border-slate-200/80">
+              <span className="hidden rounded-md border border-slate-200/80 bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-700 lg:inline">
                 Operations Console
               </span>
             </div>
-            <span className="text-[11px] text-slate-500 font-normal">
+            <span className="hidden text-[11px] font-normal text-slate-500 sm:inline">
               Enterprise Travel Management
             </span>
           </div>
@@ -49,9 +49,10 @@ export function AdminHeader({ navigate, isDatabaseConnected, onLogout }: AdminHe
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex shrink-0 items-center gap-2 sm:gap-3">
         <button
           onClick={() => navigate('home')}
+          aria-label="View public website"
           className="px-3 py-1.5 rounded-lg border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-xs font-medium text-slate-700 transition-colors flex items-center gap-1.5 shadow-2xs"
         >
           <Icon name="eye" size={14} className="text-slate-500" />
@@ -67,6 +68,7 @@ export function AdminHeader({ navigate, isDatabaseConnected, onLogout }: AdminHe
         {onLogout && (
           <button
             onClick={onLogout}
+            aria-label="Lock and sign out"
             className="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 text-xs font-semibold transition-colors flex items-center gap-1.5"
             title="Lock Operations Console and wipe customer records from memory"
           >
