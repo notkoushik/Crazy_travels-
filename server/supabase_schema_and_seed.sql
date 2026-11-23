@@ -1,10 +1,10 @@
 -- ============================================================================
 -- CRAZY TOURS & TRAVELS — FULLY RELATIONAL PRODUCTION SUPABASE SCHEMA & SEED
--- Database Engine: PostgreSQL 15 / 16 (Supabase Compatible)
--- Features: Full Foreign Key constraints, Cascades, Indexes, and Relational Integrity
+-- Database Engine: PostgreSQL 15 / 16 / 17 (Supabase Compatible)
+-- Features: Relational Foreign Keys, Cascades, Indexes, and Validated Seed Data
 -- ============================================================================
 
--- 0. CLEAN RESET (Drops old incomplete tables if they already exist from previous runs)
+-- 0. CLEAN RESET
 DROP TABLE IF EXISTS media_assets CASCADE;
 DROP TABLE IF EXISTS reviews CASCADE;
 DROP TABLE IF EXISTS faqs CASCADE;
@@ -18,15 +18,11 @@ DROP TABLE IF EXISTS stays CASCADE;
 DROP TABLE IF EXISTS packages CASCADE;
 DROP TABLE IF EXISTS destinations CASCADE;
 
--- 1. ENABLE USEFUL EXTENSIONS
+-- 1. EXTENSIONS
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
--- ============================================================================
--- 2. TABLE DEFINITIONS WITH RELATIONAL FOREIGN KEYS
--- ============================================================================
-
--- PARENT TABLE: Destinations
+-- 2. TABLE DEFINITIONS
 CREATE TABLE destinations (
   slug VARCHAR(120) PRIMARY KEY,
   city VARCHAR(120) NOT NULL,
@@ -66,7 +62,6 @@ CREATE TABLE destinations (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- CHILD TABLE: Tour Packages (Relates to Destinations via destination_slug)
 CREATE TABLE packages (
   id VARCHAR(120) PRIMARY KEY,
   destination_slug VARCHAR(120) REFERENCES destinations(slug) ON UPDATE CASCADE ON DELETE SET NULL,
@@ -97,7 +92,6 @@ CREATE TABLE packages (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- CHILD TABLE: Stays & Havelis (Relates to Destinations via destination_slug)
 CREATE TABLE stays (
   id VARCHAR(120) PRIMARY KEY,
   destination_slug VARCHAR(120) REFERENCES destinations(slug) ON UPDATE CASCADE ON DELETE SET NULL,
@@ -117,7 +111,6 @@ CREATE TABLE stays (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- CHILD TABLE: Bookings & Vouchers (Relates to Packages via package_id, RESTRICT delete prevents data loss)
 CREATE TABLE bookings (
   booking_id VARCHAR(60) PRIMARY KEY,
   package_id VARCHAR(120) REFERENCES packages(id) ON UPDATE CASCADE ON DELETE RESTRICT,
@@ -136,7 +129,6 @@ CREATE TABLE bookings (
   submitted_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- CHILD TABLE: Customer CRM Inquiries (Relates to Destinations via destination_slug)
 CREATE TABLE inquiries (
   id VARCHAR(60) PRIMARY KEY,
   destination_slug VARCHAR(120) REFERENCES destinations(slug) ON UPDATE CASCADE ON DELETE SET NULL,
@@ -154,7 +146,6 @@ CREATE TABLE inquiries (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- CHILD TABLE: Media Assets (Relates to Destinations via destination_slug)
 CREATE TABLE media_assets (
   id VARCHAR(64) PRIMARY KEY,
   destination_slug VARCHAR(120) REFERENCES destinations(slug) ON UPDATE CASCADE ON DELETE SET NULL,
@@ -167,7 +158,6 @@ CREATE TABLE media_assets (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- CHILD TABLE: Reviews (Relates to Packages via package_id)
 CREATE TABLE reviews (
   id VARCHAR(120) PRIMARY KEY,
   package_id VARCHAR(120) REFERENCES packages(id) ON UPDATE CASCADE ON DELETE SET NULL,
@@ -178,7 +168,6 @@ CREATE TABLE reviews (
   avatar TEXT
 );
 
--- INDEPENDENT CONTENT & MARKETING TABLES
 CREATE TABLE road_trips (
   id VARCHAR(120) PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
@@ -234,10 +223,7 @@ CREATE TABLE faqs (
   category VARCHAR(120) DEFAULT 'General'
 );
 
--- ============================================================================
--- 3. INDEXES FOR HIGH-PERFORMANCE QUERYING & FOREIGN KEYS
--- ============================================================================
-
+-- 3. INDEXES
 CREATE INDEX idx_packages_destination ON packages(destination_slug);
 CREATE INDEX idx_stays_destination ON stays(destination_slug);
 CREATE INDEX idx_bookings_package ON bookings(package_id);
@@ -250,10 +236,7 @@ CREATE INDEX idx_packages_theme ON packages(theme, featured);
 CREATE INDEX idx_bookings_status ON bookings(status, submitted_at DESC);
 CREATE INDEX idx_inquiries_status ON inquiries(status, created_at DESC);
 
--- ============================================================================
--- 4. SEED DATA (SAFE RE-RUNNABLE INSERT STATEMENTS WITH FOREIGN KEYS)
--- ============================================================================
-
+-- 4. SEED DATA
 -- Data for destinations (6 rows)
 INSERT INTO destinations (slug, city, country, state, price, price_num, image, season, duration, tagline, description, highlights, gallery, best_time_to_visit, ideal_for, is_trending, display_order, created_at, region, latitude, longitude, google_maps_url, google_rating, google_reviews_count, nearest_airport, nearest_railway, recommended_stay_days, peak_season, avg_temp, permit_required, permit_details, clothing_advice, cultural_notes, must_try_food, key_attractions, network_coverage)
 VALUES ('udaipur', 'Udaipur', 'Rajasthan', 'Rajasthan', '₹32,500', 32500, 'https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=1200&q=88', 'October to March', '5 days', 'Lake light and living royal history', 'Slow mornings by the water, intimate heritage stays, and the quiet romance of Rajasthan’s white city.', '["Private old-city artisan walk","Sunset boat cruise on Lake Pichola","Haveli lunch & vintage car museum"]'::jsonb, '["https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=800&q=85","https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&w=800&q=85","https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&w=800&q=85"]'::jsonb, 'September to March (cool breezes and clear skies)', 'Couples, Architecture Lovers & Photography Enthusiasts', TRUE, 1, '2026-11-22T15:56:59.963Z', 'North India', NULL, NULL, 'https://maps.google.com/?q=Udaipur+Rajasthan', '4.9', 1250, 'Maharana Pratap Airport (UDR, 22 km)', 'Udaipur City Railway Station (UDZ, 3 km)', '4 Nights / 5 Days', NULL, NULL, FALSE, 'No special permit required for Indian & international tourists.', 'Breathable cottons for daytime, light jacket for desert evenings; modest shoulders for palaces/temples.', NULL, '["Dal Baati Churma","Gatte ki Sabzi","Laal Maas","Pyaaz Kachori","Ghevar"]'::jsonb, '[{"name":"City Palace Complex","type":"Heritage"},{"name":"Sunset Lake Pichola Cruise","type":"Scenic"},{"name":"Jag Mandir Island","type":"Luxury"},{"name":"Saheliyon-ki-Bari","type":"Culture"}]'::jsonb, 'Jio, Airtel 5G Available')
@@ -278,14 +261,14 @@ ON CONFLICT (slug) DO NOTHING;
 INSERT INTO packages (id, slug, title, place, state, duration, days_count, price, price_num, original_price, discount, rating, review_count, image, gallery, overview, highlights, inclusions, exclusions, itinerary, theme, featured, created_at, google_maps_url, google_rating, google_reviews_count, destination_slug)
 VALUES ('kerala-backwaters', 'kerala-backwaters', 'Tea Trails, Mist & Backwater Serenity', 'Kerala', 'Kerala', '7 Days / 6 Nights', 7, '₹42,900', 42900, '₹51,000', '15% OFF', '4.95', 34, 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?auto=format&fit=crop&w=1200&q=88', '[]'::jsonb, 'From misty high-altitude tea plantations in Munnar to peaceful canals on a private luxury houseboat.', '["Private plantation bungalow stay in Munnar","Overnight cruise on Alleppey backwaters","Ayurvedic wellness rejuvenation treatment"]'::jsonb, '["6 Nights Accommodation","Daily Gourmet Breakfast & Chef house meals","Private Air-Conditioned SUV throughout","Houseboat full-board stay"]'::jsonb, '["Airfare to Kochi","Alcoholic beverages","Personal expenses"]'::jsonb, '[{"day":1,"title":"Arrival in Kochi","description":"Fort Kochi heritage walk and Kathakali performance."},{"day":2,"title":"Ascent to Munnar Hills","description":"Drive through rubber and cardamom plantations."},{"day":3,"title":"Tea Estate Trail & National Park","description":"Tea factory museum and Nilgiri Tahr safari."},{"day":4,"title":"Thekkady Periyar Wildlife Sanctuary","description":"Spice garden walk and evening lake boat safari."},{"day":5,"title":"Boarding the Alleppey Houseboat","description":"Private kettuvalam houseboat with chef prepared Karimeen."},{"day":6,"title":"Marari Beach Relaxation","description":"Boutique coconut grove beachfront hideaway."},{"day":7,"title":"Departure from Kochi","description":"Souvenir shopping and airport transfer."}]'::jsonb, 'Family', TRUE, '2026-11-22T15:56:59.975Z', NULL, '4.9', 1200, 'munnar')
 ON CONFLICT (id) DO NOTHING;
-INSERT INTO packages (id, slug, title, place, state, duration, days_count, price, price_num, original_price, discount, rating, review_count, image, gallery, overview, highlights, inclusions, exclusions, itinerary, theme, featured, created_at, google_maps_url, google_rating, google_reviews_count)
-VALUES ('andaman-paradise', 'andaman-paradise', 'Azure Waters & Coral Reefs', 'Andaman Islands', 'Andaman & Nicobar', '6 Days / 5 Nights', 6, '₹42,000', 42000, '₹49,000', '14% OFF', '4.88', 19, 'https://images.unsplash.com/photo-1589394815804-964ed0be2eb5?auto=format&fit=crop&w=1200&q=88', '[]'::jsonb, 'Pristine white sand beaches, bioluminescent night kayaking, and world-class scuba diving.', '["Radhanagar Beach rated Asia’s best","Elephant Beach guided snorkelling session","Luxury beachfront eco-villa in Havelock"]'::jsonb, '["5 Nights Beach Villa Accommodation","Daily Buffet Breakfast","High-Speed Catamaran Ferry Tickets","Airport & Jetty Pickups"]'::jsonb, '["Flights to Port Blair","Scuba diving certification courses","Water sports insurance"]'::jsonb, '[{"day":1,"title":"Arrival in Port Blair & Cellular Jail","description":"Historical light and sound show."},{"day":2,"title":"High-Speed Ferry to Havelock Island","description":"Check-in to luxury beachfront villa."},{"day":3,"title":"Radhanagar Sunset & Elephant Beach","description":"Snorkelling over live coral gardens."},{"day":4,"title":"Neil Island Tranquility","description":"Natural bridge rock formations and Bharatpur beach."},{"day":5,"title":"Return to Port Blair & Chidiya Tapu","description":"Sunset bird-watching point."},{"day":6,"title":"Departure","description":"Morning breakfast and flight back home."}]'::jsonb, 'Adventure', TRUE, '2026-11-22T15:56:59.977Z', NULL, '4.9', 1200)
+INSERT INTO packages (id, slug, title, place, state, duration, days_count, price, price_num, original_price, discount, rating, review_count, image, gallery, overview, highlights, inclusions, exclusions, itinerary, theme, featured, created_at, google_maps_url, google_rating, google_reviews_count, destination_slug)
+VALUES ('andaman-paradise', 'andaman-paradise', 'Azure Waters & Coral Reefs', 'Andaman Islands', 'Andaman & Nicobar', '6 Days / 5 Nights', 6, '₹42,000', 42000, '₹49,000', '14% OFF', '4.88', 19, 'https://images.unsplash.com/photo-1589394815804-964ed0be2eb5?auto=format&fit=crop&w=1200&q=88', '[]'::jsonb, 'Pristine white sand beaches, bioluminescent night kayaking, and world-class scuba diving.', '["Radhanagar Beach rated Asia’s best","Elephant Beach guided snorkelling session","Luxury beachfront eco-villa in Havelock"]'::jsonb, '["5 Nights Beach Villa Accommodation","Daily Buffet Breakfast","High-Speed Catamaran Ferry Tickets","Airport & Jetty Pickups"]'::jsonb, '["Flights to Port Blair","Scuba diving certification courses","Water sports insurance"]'::jsonb, '[{"day":1,"title":"Arrival in Port Blair & Cellular Jail","description":"Historical light and sound show."},{"day":2,"title":"High-Speed Ferry to Havelock Island","description":"Check-in to luxury beachfront villa."},{"day":3,"title":"Radhanagar Sunset & Elephant Beach","description":"Snorkelling over live coral gardens."},{"day":4,"title":"Neil Island Tranquility","description":"Natural bridge rock formations and Bharatpur beach."},{"day":5,"title":"Return to Port Blair & Chidiya Tapu","description":"Sunset bird-watching point."},{"day":6,"title":"Departure","description":"Morning breakfast and flight back home."}]'::jsonb, 'Adventure', TRUE, '2026-11-22T15:56:59.977Z', NULL, '4.9', 1200, 'andaman')
 ON CONFLICT (id) DO NOTHING;
 INSERT INTO packages (id, slug, title, place, state, duration, days_count, price, price_num, original_price, discount, rating, review_count, image, gallery, overview, highlights, inclusions, exclusions, itinerary, theme, featured, created_at, google_maps_url, google_rating, google_reviews_count, destination_slug)
 VALUES ('kashmir-tulips', 'kashmir-tulips', 'Tulips, Houseboats & High Meadows', 'Kashmir', 'Jammu & Kashmir', '6 Days / 5 Nights', 6, '₹36,800', 36800, '₹44,000', '16% OFF', '4.90', 28, 'https://images.unsplash.com/photo-1598091383021-15ddea10925d?auto=format&fit=crop&w=1200&q=88', '[]'::jsonb, 'Experience the magic of spring as millions of tulips bloom against the snow-capped Zabarwan range.', '["Private cedar houseboat stay on Nigeen Lake","VIP morning entry to Asia’s largest Tulip Garden","Day trip to Gulmarg with Phase-1 Gondola tickets"]'::jsonb, '["5 Nights Premium Accommodation","Daily Breakfast & 4-Course Dinner","All Sightseeing via Private Innova Crysta","1-Hour Sunset Shikara Ride"]'::jsonb, '["Airfare to/from Srinagar","Phase-2 Gondola / Pony rides","Personal tips"]'::jsonb, '[{"day":1,"title":"Arrival in Srinagar & Nigeen Lake Houseboat","description":"Warm Kashmiri welcome with spiced Kehwa."},{"day":2,"title":"Tulip Garden & Mughal Terraces","description":"Wander amidst 1.5 million tulips at the Indira Gandhi Memorial Garden."},{"day":3,"title":"Alpine Splendour of Gulmarg","description":"Scenic drive to Gulmarg with panoramic views of Mount Apharwat."},{"day":4,"title":"Pahalgam Valley of Shepherds","description":"Drive along the saffron fields of Pampore to the pristine Lidder river."},{"day":5,"title":"Old City Artisans & Saffron Trail","description":"Private heritage walk visiting walnut carvers and Pashmina weavers."},{"day":6,"title":"Farewell Kashmir","description":"Morning lakeside breakfast and private transfer to Srinagar airport."}]'::jsonb, 'Honeymoon', TRUE, '2026-11-22T15:56:59.972Z', NULL, '4.9', 1200, 'srinagar')
 ON CONFLICT (id) DO NOTHING;
 INSERT INTO packages (id, slug, title, place, state, duration, days_count, price, price_num, original_price, discount, rating, review_count, image, gallery, overview, highlights, inclusions, exclusions, itinerary, theme, featured, created_at, google_maps_url, google_rating, google_reviews_count, destination_slug)
-VALUES ('rajasthan-royals', 'rajasthan-royals', 'Palaces, Dunes & Desert Stars', 'Rajasthan', 'Rajasthan', '8 Days / 7 Nights', 8, '₹48,500', 48500, '₹58,000', '16% OFF', '4.90', 42, 'https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&w=1200&q=88', '[]'::jsonb, 'Live like royalty through the grand forts of Jaipur, blue alleyways of Jodhpur, and golden lakes of Udaipur.', '["Curated boutique haveli stays","Private sunset desert camel safari in Sam dunes","Lake Pichola royal cruise in Udaipur"]'::jsonb, '["7 Nights Heritage Stay","Breakfast & Royal Welcome Dinners","All Transfers via Luxury SUV","All Monument Entry Tickets"]'::jsonb, '["Domestic flights","Camera fees at monuments","Tips"]'::jsonb, '[{"day":1,"title":"Royal Welcome in Jaipur","description":"Check in to a restored 18th-century heritage haveli."},{"day":2,"title":"Amer Fort & City Palace","description":"Elephant-view drive, Sheesh Mahal and Hawa Mahal."},{"day":3,"title":"Blue City of Jodhpur","description":"Mehrangarh Fort and sunset view from stepwell terrace."},{"day":4,"title":"Thar Desert Glamping in Jaisalmer","description":"Luxury tents under the desert starlight."},{"day":5,"title":"Golden City Exploration","description":"Living fort architecture and intricate Jain temples."},{"day":6,"title":"Drive to Lake City Udaipur","description":"Visit Ranakpur marble temples en route."},{"day":7,"title":"Lake Pichola & Jagmandir Island","description":"Private boat excursion and sunset dinner."},{"day":8,"title":"Farewell Rajasthan","description":"Morning stroll around Saheliyon-ki-Bari and departure."}]'::jsonb, 'Heritage', TRUE, '2026-11-22T15:56:59.976Z', NULL, '4.9', 1200, 'jaipur')
+VALUES ('rajasthan-royals', 'rajasthan-royals', 'Palaces, Dunes & Desert Stars', 'Rajasthan', 'Rajasthan', '8 Days / 7 Nights', 8, '₹48,500', 48500, '₹58,000', '16% OFF', '4.90', 42, 'https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&w=1200&q=88', '[]'::jsonb, 'Live like royalty through the grand forts of Jaipur, blue alleyways of Jodhpur, and golden lakes of Udaipur.', '["Curated boutique haveli stays","Private sunset desert camel safari in Sam dunes","Lake Pichola royal cruise in Udaipur"]'::jsonb, '["7 Nights Heritage Stay","Breakfast & Royal Welcome Dinners","All Transfers via Luxury SUV","All Monument Entry Tickets"]'::jsonb, '["Domestic flights","Camera fees at monuments","Tips"]'::jsonb, '[{"day":1,"title":"Royal Welcome in Jaipur","description":"Check in to a restored 18th-century heritage haveli."},{"day":2,"title":"Amer Fort & City Palace","description":"Elephant-view drive, Sheesh Mahal and Hawa Mahal."},{"day":3,"title":"Blue City of Jodhpur","description":"Mehrangarh Fort and sunset view from stepwell terrace."},{"day":4,"title":"Thar Desert Glamping in Jaisalmer","description":"Luxury tents under the desert starlight."},{"day":5,"title":"Golden City Exploration","description":"Living fort architecture and intricate Jain temples."},{"day":6,"title":"Drive to Lake City Udaipur","description":"Visit Ranakpur marble temples en route."},{"day":7,"title":"Lake Pichola & Jagmandir Island","description":"Private boat excursion and sunset dinner."},{"day":8,"title":"Farewell Rajasthan","description":"Morning stroll around Saheliyon-ki-Bari and departure."}]'::jsonb, 'Heritage', TRUE, '2026-11-22T15:56:59.976Z', NULL, '4.9', 1200, 'udaipur')
 ON CONFLICT (id) DO NOTHING;
 INSERT INTO packages (id, slug, title, place, state, duration, days_count, price, price_num, original_price, discount, rating, review_count, image, gallery, overview, highlights, inclusions, exclusions, itinerary, theme, featured, created_at, google_maps_url, google_rating, google_reviews_count, destination_slug)
 VALUES ('sikkim-himalaya', 'sikkim-himalaya', 'Himalayan Monasteries & Glacial Lakes', 'Sikkim & Darjeeling', 'Sikkim', '6 Days / 5 Nights', 6, '₹31,500', 31500, '₹37,000', '15% OFF', '4.85', 22, 'https://images.unsplash.com/photo-1622308644420-b20142dc993c?auto=format&fit=crop&w=1200&q=88', '[]'::jsonb, 'Panoramic views of Mount Kanchenjunga, ancient Buddhist monasteries, and high-altitude glacial lakes.', '["Sunrise over Kanchenjunga from Tiger Hill","Excursion to turquoise Tsomgo Lake at 12,310 ft","Private monastery blessing session in Rumtek"]'::jsonb, '["5 Nights Deluxe Stay","Daily Breakfast & Dinner","Private 4x4 SUV with Mountain Driver","All Permits & Entry Passes"]'::jsonb, '["Toy train joyride tickets","Personal laundry & phone calls","Tips"]'::jsonb, '[{"day":1,"title":"Arrival in Bagdogra & Drive to Gangtok","description":"Scenic drive along Teesta river."},{"day":2,"title":"Tsomgo Lake & Baba Mandir","description":"High mountain pass near Indo-China border."},{"day":3,"title":"Rumtek Monastery & Flower Show","description":"Tibetan spiritual traditions and Himalayan fauna."},{"day":4,"title":"Scenic Drive to Darjeeling","description":"Through fragrant pine and tea estates."},{"day":5,"title":"Tiger Hill Sunrise & Tea Gardens","description":"Golden dawn illumination on Kanchenjunga."},{"day":6,"title":"Farewell Hills","description":"Transfer to Bagdogra airport for return journey."}]'::jsonb, 'Scenic', TRUE, '2026-11-22T15:56:59.978Z', NULL, '4.9', 1200, 'gangtok')
@@ -302,10 +285,10 @@ INSERT INTO stays (id, city, state, type, name, price, price_num, rating, image,
 VALUES ('kashmir-cedar-houseboat', 'Srinagar', 'Jammu & Kashmir', 'Luxury Cedar Houseboat', 'Sukoon Luxury Houseboat, Nigeen Lake', '₹22,000', 22000, '4.92', 'https://images.unsplash.com/photo-1598091383021-15ddea10925d?auto=format&fit=crop&w=1200&q=88', '["Sun Deck with Zabarwan Views","Traditional Wazwan Cuisine","Private Shikara","Wood Fire Heating"]'::jsonb, 'Handcrafted fragrant cedar-wood houseboat offering serenity on the quiet waters of Nigeen Lake.', '2026-11-22T15:56:59.994Z', NULL, '4.9', 850, 'srinagar')
 ON CONFLICT (id) DO NOTHING;
 INSERT INTO stays (id, city, state, type, name, price, price_num, rating, image, amenities, description, created_at, google_maps_url, google_rating, google_reviews_count, destination_slug)
-VALUES ('stay-jaipur', 'Jaipur', 'Rajasthan', 'Heritage Stays', 'Alsisar Haveli & Royal Courtyards', '₹9,800', 9800, '4.90', 'https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&w=1200&q=88', '["Heritage Architecture","Swimming Pool","Courtyard Dining","Spa & Wellness","Free Wi-Fi"]'::jsonb, 'A restored 18th-century Rajput mansion with frescoed ceilings, peaceful interior courtyards, and warm aristocratic hospitality.', '2026-11-22T16:03:01.241Z', NULL, '4.9', 850, 'jaipur')
+VALUES ('stay-jaipur', 'Jaipur', 'Rajasthan', 'Heritage Stays', 'Alsisar Haveli & Royal Courtyards', '₹9,800', 9800, '4.90', 'https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&w=1200&q=88', '["Heritage Architecture","Swimming Pool","Courtyard Dining","Spa & Wellness","Free Wi-Fi"]'::jsonb, 'A restored 18th-century Rajput mansion with frescoed ceilings, peaceful interior courtyards, and warm aristocratic hospitality.', '2026-11-22T16:03:01.241Z', NULL, '4.9', 850, NULL)
 ON CONFLICT (id) DO NOTHING;
-INSERT INTO stays (id, city, state, type, name, price, price_num, rating, image, amenities, description, created_at, google_maps_url, google_rating, google_reviews_count)
-VALUES ('stay-goa', 'Goa', 'Goa', 'Beach Retreats', 'Ahilya by the Sea, Dolphin Bay', '₹14,500', 14500, '4.90', 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&w=1200&q=88', '["Direct Sea View","Infinity Pools","Private Beach Access","Chef’s Table","Lush Tropical Gardens"]'::jsonb, 'An intimate boutique escape perched right on the bay where dolphins play at dawn, blending Portuguese coastal charm with slow luxury.', '2026-11-22T16:03:01.243Z', NULL, '4.9', 850)
+INSERT INTO stays (id, city, state, type, name, price, price_num, rating, image, amenities, description, created_at, google_maps_url, google_rating, google_reviews_count, destination_slug)
+VALUES ('stay-goa', 'Goa', 'Goa', 'Beach Retreats', 'Ahilya by the Sea, Dolphin Bay', '₹14,500', 14500, '4.90', 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&w=1200&q=88', '["Direct Sea View","Infinity Pools","Private Beach Access","Chef’s Table","Lush Tropical Gardens"]'::jsonb, 'An intimate boutique escape perched right on the bay where dolphins play at dawn, blending Portuguese coastal charm with slow luxury.', '2026-11-22T16:03:01.243Z', NULL, '4.9', 850, NULL)
 ON CONFLICT (id) DO NOTHING;
 INSERT INTO stays (id, city, state, type, name, price, price_num, rating, image, amenities, description, created_at, google_maps_url, google_rating, google_reviews_count, destination_slug)
 VALUES ('stay-srinagar', 'Srinagar', 'Jammu & Kashmir', 'Houseboat Stays', 'Mascot Cedar Luxury Houseboat', '₹8,200', 8200, '4.80', 'https://images.unsplash.com/photo-1598091383021-15ddea10925d?auto=format&fit=crop&w=1200&q=88', '["Hand-carved Cedar Wood","Private Veranda","Dedicated Cook & Butler","Shikara Pickup","Fireplace"]'::jsonb, 'Floating heritage moored on quiet Nigeen Lake, offering warm Kashmiri hospitality, home-cooked Wazwan meals, and tranquil mornings.', '2026-11-22T16:03:01.243Z', NULL, '4.9', 850, 'srinagar')
@@ -318,17 +301,17 @@ VALUES ('stay-udaipur', 'Udaipur', 'Rajasthan', 'Palace Stays', 'Fateh Garh Heri
 ON CONFLICT (id) DO NOTHING;
 
 -- Data for bookings (4 rows)
-INSERT INTO bookings (booking_id, package_name, travel_date, adults, children, hotel_type, customer_name, customer_email, customer_phone, special_requests, total_price, status, payment_status, submitted_at)
-VALUES ('CT-849201', 'Tulips, Houseboats & High Meadows', '2026-04-12', 2, 0, 'Luxury 5-Star', 'Aditya & Priya Sharma', 'aditya.sharma@example.com', '+91 98201 44521', 'Nigeen Lake Cedar houseboat balcony facing sunrise, anniversary champagne setup.', 88320, 'Confirmed', 'Fully Paid', '2026-11-22T15:56:59.980Z')
-ON CONFLICT (booking_id) DO NOTHING;
-INSERT INTO bookings (booking_id, package_name, travel_date, adults, children, hotel_type, customer_name, customer_email, customer_phone, special_requests, total_price, status, payment_status, submitted_at)
-VALUES ('CT-773194', 'Palaces, Dunes & Desert Stars', '2026-03-05', 4, 2, 'Deluxe', 'Vikramaditya Rathore', 'rathore.v@example.com', '+91 94140 88290', 'Private vintage car transfer from Udaipur airport, inter-connecting haveli suites.', 156000, 'Voucher Issued', 'Fully Paid', '2026-11-22T15:56:59.984Z')
+INSERT INTO bookings (booking_id, package_name, travel_date, adults, children, hotel_type, customer_name, customer_email, customer_phone, special_requests, total_price, status, payment_status, submitted_at, package_id)
+VALUES ('CT-849201', 'Tulips, Houseboats & High Meadows', '2026-04-12', 2, 0, 'Luxury 5-Star', 'Aditya & Priya Sharma', 'aditya.sharma@example.com', '+91 98201 44521', 'Nigeen Lake Cedar houseboat balcony facing sunrise, anniversary champagne setup.', 88320, 'Confirmed', 'Fully Paid', '2026-11-22T15:56:59.980Z', 'kashmir-tulips')
 ON CONFLICT (booking_id) DO NOTHING;
 INSERT INTO bookings (booking_id, package_name, travel_date, adults, children, hotel_type, customer_name, customer_email, customer_phone, special_requests, total_price, status, payment_status, submitted_at, package_id)
-VALUES ('CT-621809', 'Tea Trails, Mist & Backwater Serenity', '2026-05-18', 2, 1, 'Standard', 'Deepak & Sneha Kulkarni', 'deepak.kulkarni@example.com', '+91 98902 11983', 'Ground floor cottage, organic vegan Kerala meal requests on day 3.', 66470, 'Pending', 'Deposit Paid', '2026-11-22T15:56:59.984Z', 'pkg-munnar-plantations')
+VALUES ('CT-773194', 'Palaces, Dunes & Desert Stars', '2026-03-05', 4, 2, 'Deluxe', 'Vikramaditya Rathore', 'rathore.v@example.com', '+91 94140 88290', 'Private vintage car transfer from Udaipur airport, inter-connecting haveli suites.', 156000, 'Voucher Issued', 'Fully Paid', '2026-11-22T15:56:59.984Z', 'rajasthan-royals')
 ON CONFLICT (booking_id) DO NOTHING;
-INSERT INTO bookings (booking_id, package_name, travel_date, adults, children, hotel_type, customer_name, customer_email, customer_phone, special_requests, total_price, status, payment_status, submitted_at)
-VALUES ('CT-550182', 'Azure Waters & Coral Reefs', '2026-02-14', 2, 0, 'Luxury 5-Star', 'Rohan Mehra & Tanya Sen', 'tanya.sen@example.com', '+91 97110 33901', 'Candlelight dinner on Radhanagar beach, scuba diving briefing in Havelock.', 100800, 'Confirmed', 'Fully Paid', '2026-11-22T15:56:59.985Z')
+INSERT INTO bookings (booking_id, package_name, travel_date, adults, children, hotel_type, customer_name, customer_email, customer_phone, special_requests, total_price, status, payment_status, submitted_at, package_id)
+VALUES ('CT-621809', 'Tea Trails, Mist & Backwater Serenity', '2026-05-18', 2, 1, 'Standard', 'Deepak & Sneha Kulkarni', 'deepak.kulkarni@example.com', '+91 98902 11983', 'Ground floor cottage, organic vegan Kerala meal requests on day 3.', 66470, 'Pending', 'Deposit Paid', '2026-11-22T15:56:59.984Z', 'kerala-backwaters')
+ON CONFLICT (booking_id) DO NOTHING;
+INSERT INTO bookings (booking_id, package_name, travel_date, adults, children, hotel_type, customer_name, customer_email, customer_phone, special_requests, total_price, status, payment_status, submitted_at, package_id)
+VALUES ('CT-550182', 'Azure Waters & Coral Reefs', '2026-02-14', 2, 0, 'Luxury 5-Star', 'Rohan Mehra & Tanya Sen', 'tanya.sen@example.com', '+91 97110 33901', 'Candlelight dinner on Radhanagar beach, scuba diving briefing in Havelock.', 100800, 'Confirmed', 'Fully Paid', '2026-11-22T15:56:59.985Z', 'rajasthan-royals')
 ON CONFLICT (booking_id) DO NOTHING;
 
 -- Data for inquiries (3 rows)
@@ -338,19 +321,19 @@ ON CONFLICT (id) DO NOTHING;
 INSERT INTO inquiries (id, full_name, email, phone, preferred_destination, travel_month, travelers_count, budget_per_person, trip_type, notes, status, assigned_agent, created_at, destination_slug)
 VALUES ('INQ-8841', 'Ananya & Kabir Roy', 'ananya.roy@deloitte.com', '+91 99302 77102', 'Udaipur & Jodhpur Luxury Havelis', 'October 2026', 'Couple (Honeymoon)', '₹1,00,000+', 'Honeymoon', 'Require private palace terrace dinners and heritage photographer for 1 half-day.', 'Quoted', 'Rahul Deshmukh (Heritage Lead)', '2026-11-22T15:56:59.989Z', 'udaipur')
 ON CONFLICT (id) DO NOTHING;
-INSERT INTO inquiries (id, full_name, email, phone, preferred_destination, travel_month, travelers_count, budget_per_person, trip_type, notes, status, assigned_agent, created_at)
-VALUES ('INQ-7630', 'Aarav Singhania', 'aarav.singhania@corp.in', '+91 98100 44928', 'Andaman Scuba & Private Yacht', 'December 2026', 'Group of 6', '₹75,000 - ₹1,00,000', 'Adventure Group', 'All travelers are certified PADI divers. Looking for deep reef excursions.', 'Contacted', 'Sameer Sen (Coastal Specialist)', '2026-11-22T15:56:59.989Z')
+INSERT INTO inquiries (id, full_name, email, phone, preferred_destination, travel_month, travelers_count, budget_per_person, trip_type, notes, status, assigned_agent, created_at, destination_slug)
+VALUES ('INQ-7630', 'Aarav Singhania', 'aarav.singhania@corp.in', '+91 98100 44928', 'Andaman Scuba & Private Yacht', 'December 2026', 'Group of 6', '₹75,000 - ₹1,00,000', 'Adventure Group', 'All travelers are certified PADI divers. Looking for deep reef excursions.', 'Contacted', 'Sameer Sen (Coastal Specialist)', '2026-11-22T15:56:59.989Z', 'andaman')
 ON CONFLICT (id) DO NOTHING;
 
 -- Data for reviews (3 rows)
 INSERT INTO reviews (id, quote, name, trip, rating, avatar, package_id)
-VALUES ('rev-1', 'Our Kashmir journey with Crazy Tours Travels felt completely personal. The quiet houseboat on Nigeen Lake and family orchard lunch were moments we would never have found ourselves.', 'Anika & Rohan Sengupta', 'Kashmir Spring Tour, April 2025', 5, 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80', 'pkg-kashmir-spring')
+VALUES ('rev-1', 'Our Kashmir journey with Crazy Tours Travels felt completely personal. The quiet houseboat on Nigeen Lake and family orchard lunch were moments we would never have found ourselves.', 'Anika & Rohan Sengupta', 'Kashmir Spring Tour, April 2025', 5, 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80', 'kashmir-tulips')
 ON CONFLICT (id) DO NOTHING;
 INSERT INTO reviews (id, quote, name, trip, rating, avatar, package_id)
-VALUES ('rev-2', 'Everything was calm, considered, and impeccably organized—from the first planning call with their travel designer to our drive through Kerala’s tea country. 24/7 on-trip support was outstanding.', 'Meera & Rajesh Shah', 'Kerala Backwaters & Tea Trails, June 2025', 5, 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80', 'pkg-munnar-plantations')
+VALUES ('rev-2', 'Everything was calm, considered, and impeccably organized—from the first planning call with their travel designer to our drive through Kerala’s tea country. 24/7 on-trip support was outstanding.', 'Meera & Rajesh Shah', 'Kerala Backwaters & Tea Trails, June 2025', 5, 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80', 'kerala-backwaters')
 ON CONFLICT (id) DO NOTHING;
 INSERT INTO reviews (id, quote, name, trip, rating, avatar, package_id)
-VALUES ('rev-3', 'The Rajasthan road trip balanced royal haveli stays with true local discoveries. Even our teenagers said it was the best vacation our family has ever taken. Crazy Tours Travels is now our go-to!', 'The Iyer Family', 'Royal Rajasthan Circuit, January 2026', 5, 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80', 'pkg-udaipur-heritage')
+VALUES ('rev-3', 'The Rajasthan road trip balanced royal haveli stays with true local discoveries. Even our teenagers said it was the best vacation our family has ever taken. Crazy Tours Travels is now our go-to!', 'The Iyer Family', 'Royal Rajasthan Circuit, January 2026', 5, 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80', 'rajasthan-royals')
 ON CONFLICT (id) DO NOTHING;
 
 -- Data for road_trips (3 rows)

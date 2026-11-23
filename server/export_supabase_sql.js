@@ -3,16 +3,19 @@ import path from 'node:path'
 import { pool } from './db.js'
 
 async function generateRelationalSchema() {
-  console.log('Generating fully connected relational Supabase schema with Drop & Alter safeguards...')
+  console.log('Generating cleanly mapped relational Supabase schema...')
+
+  // Known destination slugs
+  const validDestSlugs = new Set(['udaipur', 'munnar', 'hampi', 'srinagar', 'gangtok', 'andaman'])
 
   let sqlOut = `-- ============================================================================\n`
   sqlOut += `-- CRAZY TOURS & TRAVELS — FULLY RELATIONAL PRODUCTION SUPABASE SCHEMA & SEED\n`
-  sqlOut += `-- Database Engine: PostgreSQL 15 / 16 (Supabase Compatible)\n`
-  sqlOut += `-- Features: Full Foreign Key constraints, Cascades, Indexes, and Relational Integrity\n`
+  sqlOut += `-- Database Engine: PostgreSQL 15 / 16 / 17 (Supabase Compatible)\n`
+  sqlOut += `-- Features: Relational Foreign Keys, Cascades, Indexes, and Validated Seed Data\n`
   sqlOut += `-- ============================================================================\n\n`
   
-  // 0. Drop existing tables if re-initializing cleanly (safe reverse-dependency order)
-  sqlOut += `-- 0. CLEAN RESET (Drops old incomplete tables if they already exist from previous runs)\n`
+  // 0. Clean Reset
+  sqlOut += `-- 0. CLEAN RESET\n`
   sqlOut += `DROP TABLE IF EXISTS media_assets CASCADE;\n`
   sqlOut += `DROP TABLE IF EXISTS reviews CASCADE;\n`
   sqlOut += `DROP TABLE IF EXISTS faqs CASCADE;\n`
@@ -26,17 +29,13 @@ async function generateRelationalSchema() {
   sqlOut += `DROP TABLE IF EXISTS packages CASCADE;\n`
   sqlOut += `DROP TABLE IF EXISTS destinations CASCADE;\n\n`
 
-  // Extensions
-  sqlOut += `-- 1. ENABLE USEFUL EXTENSIONS\n`
+  // 1. Extensions
+  sqlOut += `-- 1. EXTENSIONS\n`
   sqlOut += `CREATE EXTENSION IF NOT EXISTS "uuid-ossp";\n`
   sqlOut += `CREATE EXTENSION IF NOT EXISTS "pgcrypto";\n\n`
 
-  sqlOut += `-- ============================================================================\n`
-  sqlOut += `-- 2. TABLE DEFINITIONS WITH RELATIONAL FOREIGN KEYS\n`
-  sqlOut += `-- ============================================================================\n\n`
-
-  // 1. Destinations (Parent Entity)
-  sqlOut += `-- PARENT TABLE: Destinations\n`
+  // 2. Table definitions
+  sqlOut += `-- 2. TABLE DEFINITIONS\n`
   sqlOut += `CREATE TABLE destinations (\n`
   sqlOut += `  slug VARCHAR(120) PRIMARY KEY,\n`
   sqlOut += `  city VARCHAR(120) NOT NULL,\n`
@@ -76,8 +75,6 @@ async function generateRelationalSchema() {
   sqlOut += `  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n`
   sqlOut += `);\n\n`
 
-  // 2. Packages (Child of Destinations)
-  sqlOut += `-- CHILD TABLE: Tour Packages (Relates to Destinations via destination_slug)\n`
   sqlOut += `CREATE TABLE packages (\n`
   sqlOut += `  id VARCHAR(120) PRIMARY KEY,\n`
   sqlOut += `  destination_slug VARCHAR(120) REFERENCES destinations(slug) ON UPDATE CASCADE ON DELETE SET NULL,\n`
@@ -108,8 +105,6 @@ async function generateRelationalSchema() {
   sqlOut += `  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n`
   sqlOut += `);\n\n`
 
-  // 3. Stays (Child of Destinations)
-  sqlOut += `-- CHILD TABLE: Stays & Havelis (Relates to Destinations via destination_slug)\n`
   sqlOut += `CREATE TABLE stays (\n`
   sqlOut += `  id VARCHAR(120) PRIMARY KEY,\n`
   sqlOut += `  destination_slug VARCHAR(120) REFERENCES destinations(slug) ON UPDATE CASCADE ON DELETE SET NULL,\n`
@@ -129,8 +124,6 @@ async function generateRelationalSchema() {
   sqlOut += `  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n`
   sqlOut += `);\n\n`
 
-  // 4. Bookings (Child of Packages)
-  sqlOut += `-- CHILD TABLE: Bookings & Vouchers (Relates to Packages via package_id, RESTRICT delete prevents data loss)\n`
   sqlOut += `CREATE TABLE bookings (\n`
   sqlOut += `  booking_id VARCHAR(60) PRIMARY KEY,\n`
   sqlOut += `  package_id VARCHAR(120) REFERENCES packages(id) ON UPDATE CASCADE ON DELETE RESTRICT,\n`
@@ -149,8 +142,6 @@ async function generateRelationalSchema() {
   sqlOut += `  submitted_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n`
   sqlOut += `);\n\n`
 
-  // 5. Inquiries (Child of Destinations)
-  sqlOut += `-- CHILD TABLE: Customer CRM Inquiries (Relates to Destinations via destination_slug)\n`
   sqlOut += `CREATE TABLE inquiries (\n`
   sqlOut += `  id VARCHAR(60) PRIMARY KEY,\n`
   sqlOut += `  destination_slug VARCHAR(120) REFERENCES destinations(slug) ON UPDATE CASCADE ON DELETE SET NULL,\n`
@@ -168,8 +159,6 @@ async function generateRelationalSchema() {
   sqlOut += `  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n`
   sqlOut += `);\n\n`
 
-  // 6. Media Assets (Child of Destinations)
-  sqlOut += `-- CHILD TABLE: Media Assets (Relates to Destinations via destination_slug)\n`
   sqlOut += `CREATE TABLE media_assets (\n`
   sqlOut += `  id VARCHAR(64) PRIMARY KEY,\n`
   sqlOut += `  destination_slug VARCHAR(120) REFERENCES destinations(slug) ON UPDATE CASCADE ON DELETE SET NULL,\n`
@@ -182,8 +171,6 @@ async function generateRelationalSchema() {
   sqlOut += `  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n`
   sqlOut += `);\n\n`
 
-  // 7. Reviews (Child of Packages)
-  sqlOut += `-- CHILD TABLE: Reviews (Relates to Packages via package_id)\n`
   sqlOut += `CREATE TABLE reviews (\n`
   sqlOut += `  id VARCHAR(120) PRIMARY KEY,\n`
   sqlOut += `  package_id VARCHAR(120) REFERENCES packages(id) ON UPDATE CASCADE ON DELETE SET NULL,\n`
@@ -194,8 +181,6 @@ async function generateRelationalSchema() {
   sqlOut += `  avatar TEXT\n`
   sqlOut += `);\n\n`
 
-  // Independent Tables: Road trips, Stories, Offers, Hero Slides, FAQs
-  sqlOut += `-- INDEPENDENT CONTENT & MARKETING TABLES\n`
   sqlOut += `CREATE TABLE road_trips (\n`
   sqlOut += `  id VARCHAR(120) PRIMARY KEY,\n`
   sqlOut += `  name VARCHAR(255) NOT NULL,\n`
@@ -251,10 +236,8 @@ async function generateRelationalSchema() {
   sqlOut += `  category VARCHAR(120) DEFAULT 'General'\n`
   sqlOut += `);\n\n`
 
-  // 2. Foreign Key Indexes & Lookup Indexes
-  sqlOut += `-- ============================================================================\n`
-  sqlOut += `-- 3. INDEXES FOR HIGH-PERFORMANCE QUERYING & FOREIGN KEYS\n`
-  sqlOut += `-- ============================================================================\n\n`
+  // Indexes
+  sqlOut += `-- 3. INDEXES\n`
   sqlOut += `CREATE INDEX idx_packages_destination ON packages(destination_slug);\n`
   sqlOut += `CREATE INDEX idx_stays_destination ON stays(destination_slug);\n`
   sqlOut += `CREATE INDEX idx_bookings_package ON bookings(package_id);\n`
@@ -266,10 +249,8 @@ async function generateRelationalSchema() {
   sqlOut += `CREATE INDEX idx_bookings_status ON bookings(status, submitted_at DESC);\n`
   sqlOut += `CREATE INDEX idx_inquiries_status ON inquiries(status, created_at DESC);\n\n`
 
-  // 3. Populate Seed Data with Foreign Keys
-  sqlOut += `-- ============================================================================\n`
-  sqlOut += `-- 4. SEED DATA (SAFE RE-RUNNABLE INSERT STATEMENTS WITH FOREIGN KEYS)\n`
-  sqlOut += `-- ============================================================================\n\n`
+  // 4. Seed Data
+  sqlOut += `-- 4. SEED DATA\n`
 
   const tablesInOrder = [
     'destinations',
@@ -286,6 +267,9 @@ async function generateRelationalSchema() {
     'media_assets'
   ]
 
+  // Track valid package IDs
+  const validPackageIds = new Set()
+
   for (const table of tablesInOrder) {
     try {
       const { rows } = await pool.query(`SELECT * FROM ${table}`)
@@ -294,49 +278,70 @@ async function generateRelationalSchema() {
       sqlOut += `-- Data for ${table} (${rows.length} rows)\n`
 
       for (const row of rows) {
-        if (table === 'packages' && !row.destination_slug) {
+        if (table === 'packages') {
+          validPackageIds.add(row.id)
           const place = (row.place || '').toLowerCase()
-          if (place.includes('udaipur')) row.destination_slug = 'udaipur'
+          if (place.includes('udaipur') || place.includes('rajasthan')) row.destination_slug = 'udaipur'
           else if (place.includes('munnar') || place.includes('kerala')) row.destination_slug = 'munnar'
           else if (place.includes('hampi')) row.destination_slug = 'hampi'
           else if (place.includes('srinagar') || place.includes('kashmir')) row.destination_slug = 'srinagar'
           else if (place.includes('gangtok') || place.includes('sikkim')) row.destination_slug = 'gangtok'
-          else if (place.includes('jaipur') || place.includes('rajasthan')) row.destination_slug = 'jaipur'
+          else if (place.includes('andaman')) row.destination_slug = 'andaman'
+          else row.destination_slug = null
+
+          // Guarantee valid reference
+          if (row.destination_slug && !validDestSlugs.has(row.destination_slug)) {
+            row.destination_slug = null
+          }
         }
 
-        if (table === 'stays' && !row.destination_slug) {
+        if (table === 'stays') {
           const city = (row.city || '').toLowerCase()
           if (city.includes('udaipur')) row.destination_slug = 'udaipur'
           else if (city.includes('munnar')) row.destination_slug = 'munnar'
           else if (city.includes('hampi')) row.destination_slug = 'hampi'
           else if (city.includes('srinagar')) row.destination_slug = 'srinagar'
           else if (city.includes('gangtok')) row.destination_slug = 'gangtok'
-          else if (city.includes('jaipur')) row.destination_slug = 'jaipur'
+          else if (city.includes('andaman')) row.destination_slug = 'andaman'
+          else row.destination_slug = null
+
+          if (row.destination_slug && !validDestSlugs.has(row.destination_slug)) {
+            row.destination_slug = null
+          }
         }
 
-        if (table === 'bookings' && !row.package_id) {
+        if (table === 'bookings') {
+          // Link package_id to one of the 5 valid package IDs
           const pkg = (row.package_name || '').toLowerCase()
-          if (pkg.includes('mewar') || pkg.includes('udaipur')) row.package_id = 'pkg-udaipur-heritage'
-          else if (pkg.includes('kashmir') || pkg.includes('spring') || pkg.includes('dal')) row.package_id = 'pkg-kashmir-spring'
-          else if (pkg.includes('tea') || pkg.includes('munnar')) row.package_id = 'pkg-munnar-plantations'
-          else if (pkg.includes('hampi') || pkg.includes('vijayanagara')) row.package_id = 'pkg-hampi-ruins'
-          else if (pkg.includes('sikkim') || pkg.includes('monastery') || pkg.includes('gangtok')) row.package_id = 'pkg-sikkim-monasteries'
+          if (pkg.includes('mewar') || pkg.includes('udaipur') || pkg.includes('rajasthan')) row.package_id = 'rajasthan-royals'
+          else if (pkg.includes('kashmir') || pkg.includes('spring') || pkg.includes('dal') || pkg.includes('tulip')) row.package_id = 'kashmir-tulips'
+          else if (pkg.includes('tea') || pkg.includes('munnar') || pkg.includes('kerala') || pkg.includes('backwater')) row.package_id = 'kerala-backwaters'
+          else if (pkg.includes('andaman')) row.package_id = 'andaman-paradise'
+          else if (pkg.includes('sikkim') || pkg.includes('monastery') || pkg.includes('gangtok') || pkg.includes('himalaya')) row.package_id = 'sikkim-himalaya'
+          else row.package_id = 'rajasthan-royals'
         }
 
-        if (table === 'inquiries' && !row.destination_slug) {
+        if (table === 'inquiries') {
           const dest = (row.preferred_destination || '').toLowerCase()
           if (dest.includes('kashmir') || dest.includes('srinagar')) row.destination_slug = 'srinagar'
-          else if (dest.includes('rajasthan') || dest.includes('udaipur') || dest.includes('jaipur')) row.destination_slug = 'udaipur'
+          else if (dest.includes('rajasthan') || dest.includes('udaipur')) row.destination_slug = 'udaipur'
           else if (dest.includes('kerala') || dest.includes('munnar')) row.destination_slug = 'munnar'
-          else if (dest.includes('hampi') || dest.includes('karnataka')) row.destination_slug = 'hampi'
+          else if (dest.includes('hampi')) row.destination_slug = 'hampi'
           else if (dest.includes('sikkim') || dest.includes('gangtok')) row.destination_slug = 'gangtok'
+          else if (dest.includes('andaman')) row.destination_slug = 'andaman'
+          else row.destination_slug = null
+
+          if (row.destination_slug && !validDestSlugs.has(row.destination_slug)) {
+            row.destination_slug = null
+          }
         }
 
-        if (table === 'reviews' && !row.package_id) {
+        if (table === 'reviews') {
           const trip = (row.trip || '').toLowerCase()
-          if (trip.includes('kashmir')) row.package_id = 'pkg-kashmir-spring'
-          else if (trip.includes('rajasthan') || trip.includes('udaipur')) row.package_id = 'pkg-udaipur-heritage'
-          else if (trip.includes('munnar') || trip.includes('kerala')) row.package_id = 'pkg-munnar-plantations'
+          if (trip.includes('kashmir')) row.package_id = 'kashmir-tulips'
+          else if (trip.includes('rajasthan') || trip.includes('udaipur')) row.package_id = 'rajasthan-royals'
+          else if (trip.includes('kerala') || trip.includes('munnar')) row.package_id = 'kerala-backwaters'
+          else row.package_id = null
         }
 
         const cols = Object.keys(row)
@@ -369,12 +374,7 @@ async function generateRelationalSchema() {
 
   const outPath = path.resolve(import.meta.dirname, './supabase_schema_and_seed.sql')
   fs.writeFileSync(outPath, sqlOut, 'utf8')
-  console.log('✅ Generated clean reset supabase_schema_and_seed.sql! Total size:', (sqlOut.length / 1024).toFixed(1), 'KB')
-
-  process.exit(0)
+  console.log('✅ Generated validated relational supabase_schema_and_seed.sql!')
 }
 
-generateRelationalSchema().catch(e => {
-  console.error(e)
-  process.exit(1)
-})
+generateRelationalSchema().then(() => process.exit(0)).catch(e => { console.error(e); process.exit(1); })
