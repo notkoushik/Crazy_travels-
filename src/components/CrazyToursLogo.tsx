@@ -80,25 +80,35 @@ export function CrazyToursLogo({
         )}
       </div>
 
-      {/* Wordmark Typography */}
+      {/* Wordmark Typography — Professional Haute Typography */}
       {showWordmark && (
-        <div className="flex flex-col leading-none">
+        <div className="flex flex-col justify-center leading-none select-none">
           <div className="flex items-center gap-1.5">
             <span
-              className={`font-black tracking-[-0.03em] ${
+              className={`font-extrabold ${
                 light ? 'text-white' : 'text-[#072f2b]'
               }`}
-              style={{ fontSize: size * 0.55 }}
+              style={{
+                fontSize: size * 0.54,
+                fontFamily: "'Plus Jakarta Sans', 'Inter Tight', sans-serif",
+                letterSpacing: '-0.04em',
+                lineHeight: 1,
+              }}
             >
               CRAZY
             </span>
-            <span className="w-1.5 h-1.5 rounded-full bg-[#ef4934]"></span>
+            <span className="w-1.5 h-1.5 rounded-full bg-[#ef4934] shadow-[0_0_6px_rgba(239,73,52,0.5)]"></span>
           </div>
           <span
-            className="font-bold tracking-[0.24em] uppercase text-[#ef4934] mt-0.5"
-            style={{ fontSize: Math.max(9, size * 0.25) }}
+            className="font-bold uppercase text-[#ef4934] mt-1"
+            style={{
+              fontSize: Math.max(8.5, size * 0.22),
+              fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif",
+              letterSpacing: '0.26em',
+              lineHeight: 1,
+            }}
           >
-            Tours & Travels
+            TOURS & TRAVELS
           </span>
         </div>
       )}

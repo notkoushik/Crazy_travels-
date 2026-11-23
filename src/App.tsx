@@ -13,6 +13,7 @@ import { CurrencyModal } from './components/Modals/CurrencyModal'
 import { LiveChatDrawer } from './components/Modals/LiveChatDrawer'
 import { StoryViewerModal } from './components/Modals/StoryViewerModal'
 import { WhatsAppFloat } from './components/WhatsAppFloat'
+import { HeroInquiryCard } from './components/HeroInquiryCard'
 
 // Pages
 import { HomePage } from './pages/HomePage'
@@ -47,8 +48,18 @@ export default function App() {
   const [user, setUser] = useState<{ name: string; email: string } | null>(null)
   const [toastMessage, setToastMessage] = useState<string>('')
 
-  // Modals state
-  const [authModalOpen, setAuthModalOpen] = useState(false)
+  // Express Interest / Hero Inquiry State
+  const [isHeroInquiryOpen, setIsHeroInquiryOpen] = useState(true)
+  const [inquiryModalOpen, setInquiryModalOpen] = useState(false)
+
+  const handleOpenExpressInterest = () => {
+    if (route === 'home') {
+      setIsHeroInquiryOpen(true)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    } else {
+      setInquiryModalOpen(true)
+    }
+  }
   const [savedDrawerOpen, setSavedDrawerOpen] = useState(false)
   const [currencyModalOpen, setCurrencyModalOpen] = useState(false)
   const [liveChatOpen, setLiveChatOpen] = useState(false)
@@ -108,6 +119,8 @@ export default function App() {
           currency={currency}
           onToast={showToast}
           onOpenStory={handleOpenStory}
+          isHeroInquiryOpen={isHeroInquiryOpen}
+          onCloseHeroInquiry={() => setIsHeroInquiryOpen(false)}
         />
       )
     }
@@ -219,6 +232,8 @@ export default function App() {
         currency={currency}
         onToast={showToast}
         onOpenStory={handleOpenStory}
+        isHeroInquiryOpen={isHeroInquiryOpen}
+        onCloseHeroInquiry={() => setIsHeroInquiryOpen(false)}
       />
     )
   }
@@ -256,6 +271,8 @@ export default function App() {
         onOpenCurrency={() => setCurrencyModalOpen(true)}
         currentCurrency={currency}
         user={user}
+        showFlightCircle={!isHeroInquiryOpen || route !== 'home'}
+        onOpenExpressInterest={handleOpenExpressInterest}
       />
 
       {/* Main Routed Page Content */}
@@ -340,6 +357,18 @@ export default function App() {
         onClose={() => setStoryViewerOpen(false)}
         story={activeStory}
       />
+
+      {/* Global Express Interest Inquiry Modal (when triggered via flight icon from any page/scroll) */}
+      {inquiryModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="relative max-w-sm w-full flex justify-center">
+            <HeroInquiryCard
+              onClose={() => setInquiryModalOpen(false)}
+              initialDestination="Kashmir"
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

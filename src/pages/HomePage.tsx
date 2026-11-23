@@ -28,6 +28,8 @@ interface HomePageProps {
   currency: Currency
   onToast: (msg: string) => void
   onOpenStory: (story: any) => void
+  isHeroInquiryOpen?: boolean
+  onCloseHeroInquiry?: () => void
 }
 
 export function HomePage({
@@ -38,6 +40,8 @@ export function HomePage({
   currency,
   onToast,
   onOpenStory,
+  isHeroInquiryOpen = true,
+  onCloseHeroInquiry,
 }: HomePageProps) {
   const store = useDynamicStore()
   const slides = store.heroSlides.length > 0 ? store.heroSlides : heroSlides
@@ -122,19 +126,6 @@ export function HomePage({
                     View All Holidays
                   </button>
                 </div>
-
-                {/* Mobile/Tablet Trigger for Clean Trip Details Popup */}
-                <div className="lg:hidden mt-6">
-                  <button
-                    type="button"
-                    onClick={() => setShowMotionModal(true)}
-                    className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-full bg-gradient-to-r from-[#ef4934] to-[#dc3723] text-white text-xs font-bold shadow-lg shadow-black/25 border border-white/25 active:scale-95 transition-all"
-                  >
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]" />
-                    <span>Plan Custom Trip · Express Interest</span>
-                    <span className="text-xs">➜</span>
-                  </button>
-                </div>
               </div>
               <div className="hero-note">
                 <span>Featured Journey</span>
@@ -169,12 +160,17 @@ export function HomePage({
         </div>
 
         {/* Desktop Signature Clean Trip Details & Inquiry Stage (Direct Pop-Up, No Childish Flight Animation) */}
-        <div className="hero-flight-stage hidden lg:flex flex-col items-center justify-center absolute right-[5%] xl:right-[7%] top-[45%] -translate-y-1/2 z-20 pointer-events-auto keka-hero-card-float">
-          <HeroInquiryCard initialDestination={slides[heroIndex]?.location || 'Kashmir'} />
-        </div>
+        {isHeroInquiryOpen && (
+          <div className="hero-flight-stage hidden lg:flex flex-col items-center justify-center absolute right-[5%] xl:right-[7%] top-[45%] -translate-y-1/2 z-20 pointer-events-auto keka-hero-card-float">
+            <HeroInquiryCard
+              initialDestination={slides[heroIndex]?.location || 'Kashmir'}
+              onClose={onCloseHeroInquiry}
+            />
+          </div>
+        )}
       </section>
 
-      {/* Mobile/Tablet Clean Modal for Trip Details & Inquiry */}
+      {/* Clean Modal for Trip Details & Inquiry */}
       {showMotionModal && (
         <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="relative max-w-sm w-full flex justify-center">

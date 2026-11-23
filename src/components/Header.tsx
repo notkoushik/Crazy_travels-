@@ -13,6 +13,8 @@ interface HeaderProps {
   onOpenCurrency: () => void
   currentCurrency: Currency
   user: { name: string; email: string } | null
+  showFlightCircle?: boolean
+  onOpenExpressInterest?: () => void
 }
 
 export function Header({
@@ -24,6 +26,8 @@ export function Header({
   onOpenCurrency,
   currentCurrency,
   user,
+  showFlightCircle = false,
+  onOpenExpressInterest,
 }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
@@ -116,6 +120,33 @@ export function Header({
                 {user ? user.name.split(' ')[0] : 'Sign In'}
               </span>
             </button>
+
+            {/* Flight Circle Icon Button (converts from Express Interest card when closed) */}
+            {showFlightCircle && (
+              <button
+                type="button"
+                onClick={onOpenExpressInterest}
+                className="group relative w-10 h-10 rounded-full bg-gradient-to-tr from-[#ef4934] to-[#d83520] hover:from-[#f2523d] hover:to-[#e23b25] text-white shadow-md hover:shadow-xl hover:shadow-[#ef4934]/40 flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 border border-white/30 cursor-pointer animate-in fade-in zoom-in-75"
+                title="Plan Custom Trip · Express Interest (Verified Concierge)"
+                aria-label="Open Trip Inquiry / Express Interest"
+              >
+                {/* Live Emerald Pulse Dot */}
+                <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 border border-white shadow-xs"></span>
+                </span>
+
+                {/* Sleek Aerodynamic Flight SVG Vector */}
+                <svg
+                  className="w-5 h-5 text-white transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 drop-shadow-xs"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M22 16.2L12.8 12.8V3.5C12.8 2.67 12.13 2 11.3 2C10.47 2 9.8 2.67 9.8 3.5V12.8L1.6 15.8V17.8L9.8 15.3V20.5L7.5 22V23.5L11.3 22.5L15.1 23.5V22L12.8 20.5V15.3L22 18.2V16.2Z" />
+                </svg>
+              </button>
+            )}
 
             {/* Mobile Hamburger Button */}
             <button

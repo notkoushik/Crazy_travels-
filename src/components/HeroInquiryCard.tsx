@@ -66,27 +66,9 @@ export function HeroInquiryCard({
     }
   }
 
-  // Collapsed Pill State if user clicked cross mark to cut it down
-  if (isCollapsed) {
-    return (
-      <button
-        onClick={() => setIsCollapsed(false)}
-        className="keka-spring-badge group flex items-center gap-2.5 px-5 py-3 rounded-2xl bg-gradient-to-r from-[#ef4934] to-[#dc3723] text-white shadow-2xl border border-white/25 cursor-pointer backdrop-blur-md hover:scale-105 active:scale-95 transition-all duration-300"
-      >
-        <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]" />
-        <span className="font-extrabold text-xs tracking-wide">
-          Plan Custom Trip · Express Interest
-        </span>
-        <span className="text-sm font-black group-hover:translate-x-1 transition-transform">
-          ➜
-        </span>
-      </button>
-    )
-  }
-
   return (
     <div
-      className={`hero-inquiry-card relative select-none font-inter w-[300px] sm:w-[330px] lg:w-[360px] min-h-[480px] rounded-[32px] p-6 sm:p-7 shadow-2xl backdrop-blur-md border border-white/25 flex flex-col justify-between text-white transition-all duration-300 ${className}`}
+      className={`hero-inquiry-card relative select-none font-jakarta w-[300px] sm:w-[330px] lg:w-[360px] min-h-[480px] rounded-[32px] p-6 sm:p-7 shadow-2xl backdrop-blur-md border border-white/25 flex flex-col justify-between text-white transition-all duration-300 ${className}`}
       style={{
         background:
           'radial-gradient(circle at 45% 20%, #f4503c 0%, #dc3723 55%, #b31e0f 100%)',
@@ -96,25 +78,21 @@ export function HeroInquiryCard({
     >
       {/* Top Header with Close Cross Mark */}
       <div className="w-full flex items-center justify-between">
-        <div className="flex items-center gap-2 text-white/95 text-[11px] font-bold uppercase tracking-wider font-inter-tight">
+        <div className="flex items-center gap-2 text-white/95 text-[11px] font-bold uppercase tracking-wider">
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]" />
           <span>Trip Details & Inquiry</span>
         </div>
-        <button
-          type="button"
-          onClick={() => {
-            if (onClose) {
-              onClose()
-            } else {
-              setIsCollapsed(true)
-            }
-          }}
-          className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/35 text-white flex items-center justify-center text-sm font-bold transition-all hover:scale-110 active:scale-95 cursor-pointer shadow-xs"
-          aria-label="Close trip details popup"
-          title="Close / minimize"
-        >
-          ✕
-        </button>
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/35 text-white flex items-center justify-center text-sm font-bold transition-all hover:scale-110 active:scale-95 cursor-pointer shadow-xs"
+            aria-label="Close trip details popup"
+            title="Close / minimize to flight icon"
+          >
+            ✕
+          </button>
+        )}
       </div>
 
       {/* Form Content or Submitted State */}
