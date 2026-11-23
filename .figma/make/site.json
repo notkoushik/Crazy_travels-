@@ -1,0 +1,14 @@
+{
+  "title": "Crazy Tours Travels | Handcrafted Holidays, Luxury Stays & Road Trips",
+  "description": "Explore curated holiday packages, boutique stays, scenic road trips, and custom travel experiences with Crazy Tours Travels.",
+  "icons": {
+    "icon": "/favicon.png"
+  },
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
