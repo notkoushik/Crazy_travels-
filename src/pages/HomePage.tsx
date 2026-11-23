@@ -2,7 +2,7 @@ import React, { FormEvent, useEffect, useRef, useState } from 'react'
 import { Currency, DestinationItem, PackageItem, RouteName } from '../types/travel'
 import { Icon } from '../components/Icon'
 import { GoogleVerifiedBadge } from '../components/GoogleVerifiedBadge'
-import { HeroPlaneLogoAnimation } from '../components/HeroPlaneLogoAnimation'
+import { HeroInquiryCard } from '../components/HeroInquiryCard'
 import { useDynamicStore } from '../services/dataStore'
 import {
   directoryGroups,
@@ -98,37 +98,41 @@ export function HomePage({
               }}
             >
               <div className="hero-content">
-                <span className="eyebrow">
+                <span className="eyebrow keka-fade-1">
                   <Icon name="sparkle" size={15} /> {slide.eyebrow}
                 </span>
-                <h1 className="text-white mt-4">{slide.title}</h1>
-                <p className="text-[#edf7f4] mt-5 leading-relaxed">{slide.copy}</p>
-                <div className="mt-8 flex items-center gap-4">
+                <h1 className="text-white mt-4 keka-fade-2 font-inter-tight font-extrabold tracking-tight">
+                  {slide.title}
+                </h1>
+                <p className="text-[#edf7f4] mt-5 leading-relaxed keka-fade-3 text-base sm:text-lg">
+                  {slide.copy}
+                </p>
+                <div className="mt-8 flex items-center gap-4 keka-fade-4">
                   <button
                     onClick={() => navigate(slide.actionRoute as RouteName)}
-                    className="px-6 py-3 rounded-full bg-[#ef4934] hover:bg-[#df3a25] text-white font-bold text-sm flex items-center gap-2 shadow-lg transition-all"
+                    className="px-6 py-3 rounded-full bg-[#ef4934] hover:bg-[#df3a25] text-white font-bold text-sm flex items-center gap-2 shadow-lg hover:shadow-xl hover:shadow-[#ef4934]/30 active:scale-95 transition-all"
                   >
                     <span>Explore This Journey</span>
                     <Icon name="arrow" size={16} />
                   </button>
                   <button
                     onClick={() => navigate('packages')}
-                    className="px-6 py-3 rounded-full bg-white/10 hover:bg-white/20 text-white font-semibold text-sm backdrop-blur-sm transition-all"
+                    className="px-6 py-3 rounded-full bg-white/10 hover:bg-white/20 text-white font-semibold text-sm backdrop-blur-sm active:scale-95 transition-all"
                   >
                     View All Holidays
                   </button>
                 </div>
 
-                {/* Mobile/Tablet trigger for Brand Flight Animation */}
-                <div className="lg:hidden mt-5">
+                {/* Mobile/Tablet Trigger for Clean Trip Details Popup */}
+                <div className="lg:hidden mt-6">
                   <button
                     type="button"
                     onClick={() => setShowMotionModal(true)}
-                    className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/15 hover:bg-white/25 text-white text-xs font-semibold backdrop-blur-md border border-white/20 transition-all shadow-xs"
+                    className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-full bg-gradient-to-r from-[#ef4934] to-[#dc3723] text-white text-xs font-bold shadow-lg shadow-black/25 border border-white/25 active:scale-95 transition-all"
                   >
-                    <span className="w-2 h-2 rounded-full bg-white animate-pulse"></span>
-                    <span>Watch Brand Flight (1.8s)</span>
-                    <span className="text-xs">✈</span>
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]" />
+                    <span>Plan Custom Trip · Express Interest</span>
+                    <span className="text-xs">➜</span>
                   </button>
                 </div>
               </div>
@@ -164,24 +168,20 @@ export function HomePage({
           ))}
         </div>
 
-        {/* Desktop Signature Hero Flight Animation Canvas (Plane to Logo - 1.8s) */}
-        <div className="hero-flight-stage hidden lg:flex flex-col items-center justify-center absolute right-[6%] xl:right-[8%] top-[44%] -translate-y-1/2 z-20 pointer-events-auto">
-          <HeroPlaneLogoAnimation key={heroIndex} variant="card" />
+        {/* Desktop Signature Clean Trip Details & Inquiry Stage (Direct Pop-Up, No Childish Flight Animation) */}
+        <div className="hero-flight-stage hidden lg:flex flex-col items-center justify-center absolute right-[5%] xl:right-[7%] top-[45%] -translate-y-1/2 z-20 pointer-events-auto keka-hero-card-float">
+          <HeroInquiryCard initialDestination={slides[heroIndex]?.location || 'Kashmir'} />
         </div>
       </section>
 
-      {/* Mobile/Tablet Modal for Brand Flight Animation */}
+      {/* Mobile/Tablet Clean Modal for Trip Details & Inquiry */}
       {showMotionModal && (
         <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="relative max-w-sm w-full">
-            <button
-              onClick={() => setShowMotionModal(false)}
-              className="absolute -top-10 right-0 px-3 py-1 rounded-full bg-white/20 text-white hover:bg-white/30 text-xs font-semibold backdrop-blur-xs transition-colors"
-              aria-label="Close modal"
-            >
-              ✕ Close
-            </button>
-            <HeroPlaneLogoAnimation variant="card" autoPlay={true} />
+          <div className="relative max-w-sm w-full flex justify-center">
+            <HeroInquiryCard
+              onClose={() => setShowMotionModal(false)}
+              initialDestination={slides[heroIndex]?.location || 'Kashmir'}
+            />
           </div>
         </div>
       )}

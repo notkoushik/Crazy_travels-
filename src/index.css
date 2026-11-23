@@ -770,3 +770,66 @@ footer { padding-top: 115px; background: var(--forest-dark); color: #c5d6d2; }
 .animate-slide-left {
   animation: slideLeft 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+/* ============================================================
+   KEKA-STYLE TYPOGRAPHY & SMOOTH MICRO-INTERACTION ANIMATIONS
+   ============================================================ */
+
+@keyframes kekaFadeUp {
+  0% {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes kekaWordSlide {
+  0% {
+    opacity: 0;
+    transform: translateY(16px);
+    filter: blur(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes kekaCardFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+.keka-fade-1 {
+  animation: kekaFadeUp 0.65s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+}
+
+.keka-fade-2 {
+  animation: kekaFadeUp 0.75s cubic-bezier(0.16, 1, 0.3, 1) 0.22s both;
+}
+
+.keka-fade-3 {
+  animation: kekaFadeUp 0.75s cubic-bezier(0.16, 1, 0.3, 1) 0.35s both;
+}
+
+.keka-fade-4 {
+  animation: kekaFadeUp 0.75s cubic-bezier(0.16, 1, 0.3, 1) 0.48s both;
+}
+
+.keka-word-rotate {
+  display: inline-block;
+  animation: kekaWordSlide 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.keka-hero-card-float {
+  animation: kekaCardFloat 6s ease-in-out infinite;
+}
+

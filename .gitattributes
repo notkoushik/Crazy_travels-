@@ -1,2 +1,18 @@
-# Disable Git LFS filters for all files to ensure direct binary storage in Git
-* -filter -diff -merge
+# Ensure code files are treated as text with normal diff
+*.ts text diff
+*.tsx text diff
+*.js text diff
+*.jsx text diff
+*.json text diff
+*.css text diff
+*.html text diff
+*.md text diff
+*.svg text diff
+
+# Binary image files stored directly in Git (no LFS filter)
+*.png -filter
+*.jpg -filter
+*.jpeg -filter
+*.webp -filter
+*.ico -filter
+*.gif -filter

@@ -34,59 +34,6 @@ export function Header({
 
   return (
     <header className="relative z-40 bg-white">
-      {/* Top Utility Bar */}
-      <div className="utility-bar bg-[#072f2b] text-[#dce9e6] py-1.5 border-b border-[#0b4941]/40 text-xs">
-        <div className="shell flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <span className="flex items-center gap-1.5 font-medium text-[#ffd0c7]">
-              <Icon name="shield" size={13} />
-              24/7 Verified Travel Concierge
-            </span>
-            <span className="hidden md:inline text-white/40">|</span>
-            <button
-              onClick={() => handleNav('contact')}
-              className="hidden md:inline-flex items-center gap-1 hover:text-white transition-colors"
-            >
-              <Icon name="pin" size={13} /> Our Stores & Offices
-            </button>
-            <span className="hidden lg:inline text-white/40">|</span>
-            <button
-              onClick={() => handleNav('manage-booking')}
-              className="hidden lg:inline-flex items-center gap-1 hover:text-white transition-colors"
-            >
-              <Icon name="search" size={13} /> Manage My Booking
-            </button>
-            <span className="hidden sm:inline text-white/40">|</span>
-            <button
-              onClick={() => handleNav('admin')}
-              className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#ef4934]/25 hover:bg-[#ef4934] text-[#ffd0c7] hover:text-white border border-[#ef4934]/40 text-[11px] font-bold transition-all shadow-xs"
-              title="Open Admin Operations Command Center"
-            >
-              <Icon name="settings" size={12} />
-              <span>Admin Portal</span>
-            </button>
-          </div>
-
-          <div className="flex items-center gap-5">
-            <a
-              href="tel:+918047112112"
-              className="flex items-center gap-1.5 font-semibold text-white hover:text-[#ffd0c7] transition-colors"
-            >
-              <Icon name="phone" size={13} />
-              <span className="hidden sm:inline">Call Toll-Free:</span> +91 8047 112 112
-            </a>
-            <button
-              onClick={onOpenCurrency}
-              className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 px-2.5 py-1 rounded-full text-[11px] font-semibold text-white transition-colors"
-              aria-label="Change currency or language"
-            >
-              <Icon name="globe" size={13} />
-              <span>EN / {currentCurrency}</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
       {/* Main Navigation Row */}
       <div className="border-b border-[#dfe5df]/80 bg-white sticky top-0 z-30 shadow-xs">
         <div className="shell nav-row flex items-center justify-between">
