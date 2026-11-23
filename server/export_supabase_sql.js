@@ -3,7 +3,7 @@ import path from 'node:path'
 import { pool } from './db.js'
 
 async function generateRelationalSchema() {
-  console.log('Generating fully connected relational Supabase schema with Foreign Keys...')
+  console.log('Generating fully connected relational Supabase schema with Drop & Alter safeguards...')
 
   let sqlOut = `-- ============================================================================\n`
   sqlOut += `-- CRAZY TOURS & TRAVELS — FULLY RELATIONAL PRODUCTION SUPABASE SCHEMA & SEED\n`
@@ -11,18 +11,33 @@ async function generateRelationalSchema() {
   sqlOut += `-- Features: Full Foreign Key constraints, Cascades, Indexes, and Relational Integrity\n`
   sqlOut += `-- ============================================================================\n\n`
   
-  // 0. Extensions
-  sqlOut += `-- 0. ENABLE USEFUL EXTENSIONS\n`
+  // 0. Drop existing tables if re-initializing cleanly (safe reverse-dependency order)
+  sqlOut += `-- 0. CLEAN RESET (Drops old incomplete tables if they already exist from previous runs)\n`
+  sqlOut += `DROP TABLE IF EXISTS media_assets CASCADE;\n`
+  sqlOut += `DROP TABLE IF EXISTS reviews CASCADE;\n`
+  sqlOut += `DROP TABLE IF EXISTS faqs CASCADE;\n`
+  sqlOut += `DROP TABLE IF EXISTS hero_slides CASCADE;\n`
+  sqlOut += `DROP TABLE IF EXISTS offers CASCADE;\n`
+  sqlOut += `DROP TABLE IF EXISTS stories CASCADE;\n`
+  sqlOut += `DROP TABLE IF EXISTS road_trips CASCADE;\n`
+  sqlOut += `DROP TABLE IF EXISTS inquiries CASCADE;\n`
+  sqlOut += `DROP TABLE IF EXISTS bookings CASCADE;\n`
+  sqlOut += `DROP TABLE IF EXISTS stays CASCADE;\n`
+  sqlOut += `DROP TABLE IF EXISTS packages CASCADE;\n`
+  sqlOut += `DROP TABLE IF EXISTS destinations CASCADE;\n\n`
+
+  // Extensions
+  sqlOut += `-- 1. ENABLE USEFUL EXTENSIONS\n`
   sqlOut += `CREATE EXTENSION IF NOT EXISTS "uuid-ossp";\n`
   sqlOut += `CREATE EXTENSION IF NOT EXISTS "pgcrypto";\n\n`
 
   sqlOut += `-- ============================================================================\n`
-  sqlOut += `-- 1. TABLE DEFINITIONS WITH RELATIONAL FOREIGN KEYS\n`
+  sqlOut += `-- 2. TABLE DEFINITIONS WITH RELATIONAL FOREIGN KEYS\n`
   sqlOut += `-- ============================================================================\n\n`
 
   // 1. Destinations (Parent Entity)
   sqlOut += `-- PARENT TABLE: Destinations\n`
-  sqlOut += `CREATE TABLE IF NOT EXISTS destinations (\n`
+  sqlOut += `CREATE TABLE destinations (\n`
   sqlOut += `  slug VARCHAR(120) PRIMARY KEY,\n`
   sqlOut += `  city VARCHAR(120) NOT NULL,\n`
   sqlOut += `  country VARCHAR(120) NOT NULL,\n`
@@ -63,7 +78,7 @@ async function generateRelationalSchema() {
 
   // 2. Packages (Child of Destinations)
   sqlOut += `-- CHILD TABLE: Tour Packages (Relates to Destinations via destination_slug)\n`
-  sqlOut += `CREATE TABLE IF NOT EXISTS packages (\n`
+  sqlOut += `CREATE TABLE packages (\n`
   sqlOut += `  id VARCHAR(120) PRIMARY KEY,\n`
   sqlOut += `  destination_slug VARCHAR(120) REFERENCES destinations(slug) ON UPDATE CASCADE ON DELETE SET NULL,\n`
   sqlOut += `  slug VARCHAR(120),\n`
@@ -95,7 +110,7 @@ async function generateRelationalSchema() {
 
   // 3. Stays (Child of Destinations)
   sqlOut += `-- CHILD TABLE: Stays & Havelis (Relates to Destinations via destination_slug)\n`
-  sqlOut += `CREATE TABLE IF NOT EXISTS stays (\n`
+  sqlOut += `CREATE TABLE stays (\n`
   sqlOut += `  id VARCHAR(120) PRIMARY KEY,\n`
   sqlOut += `  destination_slug VARCHAR(120) REFERENCES destinations(slug) ON UPDATE CASCADE ON DELETE SET NULL,\n`
   sqlOut += `  city VARCHAR(120) NOT NULL,\n`
@@ -116,7 +131,7 @@ async function generateRelationalSchema() {
 
   // 4. Bookings (Child of Packages)
   sqlOut += `-- CHILD TABLE: Bookings & Vouchers (Relates to Packages via package_id, RESTRICT delete prevents data loss)\n`
-  sqlOut += `CREATE TABLE IF NOT EXISTS bookings (\n`
+  sqlOut += `CREATE TABLE bookings (\n`
   sqlOut += `  booking_id VARCHAR(60) PRIMARY KEY,\n`
   sqlOut += `  package_id VARCHAR(120) REFERENCES packages(id) ON UPDATE CASCADE ON DELETE RESTRICT,\n`
   sqlOut += `  package_name VARCHAR(255) NOT NULL,\n`
@@ -136,7 +151,7 @@ async function generateRelationalSchema() {
 
   // 5. Inquiries (Child of Destinations)
   sqlOut += `-- CHILD TABLE: Customer CRM Inquiries (Relates to Destinations via destination_slug)\n`
-  sqlOut += `CREATE TABLE IF NOT EXISTS inquiries (\n`
+  sqlOut += `CREATE TABLE inquiries (\n`
   sqlOut += `  id VARCHAR(60) PRIMARY KEY,\n`
   sqlOut += `  destination_slug VARCHAR(120) REFERENCES destinations(slug) ON UPDATE CASCADE ON DELETE SET NULL,\n`
   sqlOut += `  full_name VARCHAR(255) NOT NULL,\n`
@@ -155,7 +170,7 @@ async function generateRelationalSchema() {
 
   // 6. Media Assets (Child of Destinations)
   sqlOut += `-- CHILD TABLE: Media Assets (Relates to Destinations via destination_slug)\n`
-  sqlOut += `CREATE TABLE IF NOT EXISTS media_assets (\n`
+  sqlOut += `CREATE TABLE media_assets (\n`
   sqlOut += `  id VARCHAR(64) PRIMARY KEY,\n`
   sqlOut += `  destination_slug VARCHAR(120) REFERENCES destinations(slug) ON UPDATE CASCADE ON DELETE SET NULL,\n`
   sqlOut += `  filename VARCHAR(255) NOT NULL,\n`
@@ -169,7 +184,7 @@ async function generateRelationalSchema() {
 
   // 7. Reviews (Child of Packages)
   sqlOut += `-- CHILD TABLE: Reviews (Relates to Packages via package_id)\n`
-  sqlOut += `CREATE TABLE IF NOT EXISTS reviews (\n`
+  sqlOut += `CREATE TABLE reviews (\n`
   sqlOut += `  id VARCHAR(120) PRIMARY KEY,\n`
   sqlOut += `  package_id VARCHAR(120) REFERENCES packages(id) ON UPDATE CASCADE ON DELETE SET NULL,\n`
   sqlOut += `  quote TEXT NOT NULL,\n`
@@ -181,7 +196,7 @@ async function generateRelationalSchema() {
 
   // Independent Tables: Road trips, Stories, Offers, Hero Slides, FAQs
   sqlOut += `-- INDEPENDENT CONTENT & MARKETING TABLES\n`
-  sqlOut += `CREATE TABLE IF NOT EXISTS road_trips (\n`
+  sqlOut += `CREATE TABLE road_trips (\n`
   sqlOut += `  id VARCHAR(120) PRIMARY KEY,\n`
   sqlOut += `  name VARCHAR(255) NOT NULL,\n`
   sqlOut += `  route VARCHAR(255) NOT NULL,\n`
@@ -194,7 +209,7 @@ async function generateRelationalSchema() {
   sqlOut += `  stops JSONB DEFAULT '[]'::jsonb\n`
   sqlOut += `);\n\n`
 
-  sqlOut += `CREATE TABLE IF NOT EXISTS stories (\n`
+  sqlOut += `CREATE TABLE stories (\n`
   sqlOut += `  id VARCHAR(120) PRIMARY KEY,\n`
   sqlOut += `  title VARCHAR(255) NOT NULL,\n`
   sqlOut += `  category VARCHAR(120) NOT NULL,\n`
@@ -206,7 +221,7 @@ async function generateRelationalSchema() {
   sqlOut += `  content JSONB DEFAULT '[]'::jsonb\n`
   sqlOut += `);\n\n`
 
-  sqlOut += `CREATE TABLE IF NOT EXISTS offers (\n`
+  sqlOut += `CREATE TABLE offers (\n`
   sqlOut += `  id VARCHAR(120) PRIMARY KEY,\n`
   sqlOut += `  code VARCHAR(60) NOT NULL,\n`
   sqlOut += `  title VARCHAR(255) NOT NULL,\n`
@@ -218,7 +233,7 @@ async function generateRelationalSchema() {
   sqlOut += `  image TEXT NOT NULL\n`
   sqlOut += `);\n\n`
 
-  sqlOut += `CREATE TABLE IF NOT EXISTS hero_slides (\n`
+  sqlOut += `CREATE TABLE hero_slides (\n`
   sqlOut += `  id SERIAL PRIMARY KEY,\n`
   sqlOut += `  image TEXT NOT NULL,\n`
   sqlOut += `  eyebrow VARCHAR(255) NOT NULL,\n`
@@ -229,7 +244,7 @@ async function generateRelationalSchema() {
   sqlOut += `  display_order INTEGER DEFAULT 0\n`
   sqlOut += `);\n\n`
 
-  sqlOut += `CREATE TABLE IF NOT EXISTS faqs (\n`
+  sqlOut += `CREATE TABLE faqs (\n`
   sqlOut += `  id SERIAL PRIMARY KEY,\n`
   sqlOut += `  question TEXT NOT NULL,\n`
   sqlOut += `  answer TEXT NOT NULL,\n`
@@ -238,25 +253,24 @@ async function generateRelationalSchema() {
 
   // 2. Foreign Key Indexes & Lookup Indexes
   sqlOut += `-- ============================================================================\n`
-  sqlOut += `-- 2. FOREIGN KEY INDEXES & HIGH-PERFORMANCE QUERY INDEXES\n`
+  sqlOut += `-- 3. INDEXES FOR HIGH-PERFORMANCE QUERYING & FOREIGN KEYS\n`
   sqlOut += `-- ============================================================================\n\n`
-  sqlOut += `CREATE INDEX IF NOT EXISTS idx_packages_destination ON packages(destination_slug);\n`
-  sqlOut += `CREATE INDEX IF NOT EXISTS idx_stays_destination ON stays(destination_slug);\n`
-  sqlOut += `CREATE INDEX IF NOT EXISTS idx_bookings_package ON bookings(package_id);\n`
-  sqlOut += `CREATE INDEX IF NOT EXISTS idx_inquiries_destination ON inquiries(destination_slug);\n`
-  sqlOut += `CREATE INDEX IF NOT EXISTS idx_media_destination ON media_assets(destination_slug);\n`
-  sqlOut += `CREATE INDEX IF NOT EXISTS idx_reviews_package ON reviews(package_id);\n\n`
-  sqlOut += `CREATE INDEX IF NOT EXISTS idx_destinations_trending ON destinations(is_trending, display_order);\n`
-  sqlOut += `CREATE INDEX IF NOT EXISTS idx_packages_theme ON packages(theme, featured);\n`
-  sqlOut += `CREATE INDEX IF NOT EXISTS idx_bookings_status ON bookings(status, submitted_at DESC);\n`
-  sqlOut += `CREATE INDEX IF NOT EXISTS idx_inquiries_status ON inquiries(status, created_at DESC);\n\n`
+  sqlOut += `CREATE INDEX idx_packages_destination ON packages(destination_slug);\n`
+  sqlOut += `CREATE INDEX idx_stays_destination ON stays(destination_slug);\n`
+  sqlOut += `CREATE INDEX idx_bookings_package ON bookings(package_id);\n`
+  sqlOut += `CREATE INDEX idx_inquiries_destination ON inquiries(destination_slug);\n`
+  sqlOut += `CREATE INDEX idx_media_destination ON media_assets(destination_slug);\n`
+  sqlOut += `CREATE INDEX idx_reviews_package ON reviews(package_id);\n\n`
+  sqlOut += `CREATE INDEX idx_destinations_trending ON destinations(is_trending, display_order);\n`
+  sqlOut += `CREATE INDEX idx_packages_theme ON packages(theme, featured);\n`
+  sqlOut += `CREATE INDEX idx_bookings_status ON bookings(status, submitted_at DESC);\n`
+  sqlOut += `CREATE INDEX idx_inquiries_status ON inquiries(status, created_at DESC);\n\n`
 
-  // 3. Populate Seed Data with populated Foreign Keys!
+  // 3. Populate Seed Data with Foreign Keys
   sqlOut += `-- ============================================================================\n`
-  sqlOut += `-- 3. SEED DATA (SAFE RE-RUNNABLE INSERT STATEMENTS WITH FOREIGN KEYS)\n`
+  sqlOut += `-- 4. SEED DATA (SAFE RE-RUNNABLE INSERT STATEMENTS WITH FOREIGN KEYS)\n`
   sqlOut += `-- ============================================================================\n\n`
 
-  // Export destinations first (parent)
   const tablesInOrder = [
     'destinations',
     'packages',
@@ -280,7 +294,6 @@ async function generateRelationalSchema() {
       sqlOut += `-- Data for ${table} (${rows.length} rows)\n`
 
       for (const row of rows) {
-        // Automatically inject foreign keys based on business mapping if not yet set
         if (table === 'packages' && !row.destination_slug) {
           const place = (row.place || '').toLowerCase()
           if (place.includes('udaipur')) row.destination_slug = 'udaipur'
@@ -356,7 +369,7 @@ async function generateRelationalSchema() {
 
   const outPath = path.resolve(import.meta.dirname, './supabase_schema_and_seed.sql')
   fs.writeFileSync(outPath, sqlOut, 'utf8')
-  console.log('✅ Generated relational supabase_schema_and_seed.sql successfully! Total size:', (sqlOut.length / 1024).toFixed(1), 'KB')
+  console.log('✅ Generated clean reset supabase_schema_and_seed.sql! Total size:', (sqlOut.length / 1024).toFixed(1), 'KB')
 
   process.exit(0)
 }

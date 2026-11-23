@@ -4,16 +4,30 @@
 -- Features: Full Foreign Key constraints, Cascades, Indexes, and Relational Integrity
 -- ============================================================================
 
--- 0. ENABLE USEFUL EXTENSIONS
+-- 0. CLEAN RESET (Drops old incomplete tables if they already exist from previous runs)
+DROP TABLE IF EXISTS media_assets CASCADE;
+DROP TABLE IF EXISTS reviews CASCADE;
+DROP TABLE IF EXISTS faqs CASCADE;
+DROP TABLE IF EXISTS hero_slides CASCADE;
+DROP TABLE IF EXISTS offers CASCADE;
+DROP TABLE IF EXISTS stories CASCADE;
+DROP TABLE IF EXISTS road_trips CASCADE;
+DROP TABLE IF EXISTS inquiries CASCADE;
+DROP TABLE IF EXISTS bookings CASCADE;
+DROP TABLE IF EXISTS stays CASCADE;
+DROP TABLE IF EXISTS packages CASCADE;
+DROP TABLE IF EXISTS destinations CASCADE;
+
+-- 1. ENABLE USEFUL EXTENSIONS
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- ============================================================================
--- 1. TABLE DEFINITIONS WITH RELATIONAL FOREIGN KEYS
+-- 2. TABLE DEFINITIONS WITH RELATIONAL FOREIGN KEYS
 -- ============================================================================
 
 -- PARENT TABLE: Destinations
-CREATE TABLE IF NOT EXISTS destinations (
+CREATE TABLE destinations (
   slug VARCHAR(120) PRIMARY KEY,
   city VARCHAR(120) NOT NULL,
   country VARCHAR(120) NOT NULL,
@@ -53,7 +67,7 @@ CREATE TABLE IF NOT EXISTS destinations (
 );
 
 -- CHILD TABLE: Tour Packages (Relates to Destinations via destination_slug)
-CREATE TABLE IF NOT EXISTS packages (
+CREATE TABLE packages (
   id VARCHAR(120) PRIMARY KEY,
   destination_slug VARCHAR(120) REFERENCES destinations(slug) ON UPDATE CASCADE ON DELETE SET NULL,
   slug VARCHAR(120),
@@ -84,7 +98,7 @@ CREATE TABLE IF NOT EXISTS packages (
 );
 
 -- CHILD TABLE: Stays & Havelis (Relates to Destinations via destination_slug)
-CREATE TABLE IF NOT EXISTS stays (
+CREATE TABLE stays (
   id VARCHAR(120) PRIMARY KEY,
   destination_slug VARCHAR(120) REFERENCES destinations(slug) ON UPDATE CASCADE ON DELETE SET NULL,
   city VARCHAR(120) NOT NULL,
@@ -104,7 +118,7 @@ CREATE TABLE IF NOT EXISTS stays (
 );
 
 -- CHILD TABLE: Bookings & Vouchers (Relates to Packages via package_id, RESTRICT delete prevents data loss)
-CREATE TABLE IF NOT EXISTS bookings (
+CREATE TABLE bookings (
   booking_id VARCHAR(60) PRIMARY KEY,
   package_id VARCHAR(120) REFERENCES packages(id) ON UPDATE CASCADE ON DELETE RESTRICT,
   package_name VARCHAR(255) NOT NULL,
@@ -123,7 +137,7 @@ CREATE TABLE IF NOT EXISTS bookings (
 );
 
 -- CHILD TABLE: Customer CRM Inquiries (Relates to Destinations via destination_slug)
-CREATE TABLE IF NOT EXISTS inquiries (
+CREATE TABLE inquiries (
   id VARCHAR(60) PRIMARY KEY,
   destination_slug VARCHAR(120) REFERENCES destinations(slug) ON UPDATE CASCADE ON DELETE SET NULL,
   full_name VARCHAR(255) NOT NULL,
@@ -141,7 +155,7 @@ CREATE TABLE IF NOT EXISTS inquiries (
 );
 
 -- CHILD TABLE: Media Assets (Relates to Destinations via destination_slug)
-CREATE TABLE IF NOT EXISTS media_assets (
+CREATE TABLE media_assets (
   id VARCHAR(64) PRIMARY KEY,
   destination_slug VARCHAR(120) REFERENCES destinations(slug) ON UPDATE CASCADE ON DELETE SET NULL,
   filename VARCHAR(255) NOT NULL,
@@ -154,7 +168,7 @@ CREATE TABLE IF NOT EXISTS media_assets (
 );
 
 -- CHILD TABLE: Reviews (Relates to Packages via package_id)
-CREATE TABLE IF NOT EXISTS reviews (
+CREATE TABLE reviews (
   id VARCHAR(120) PRIMARY KEY,
   package_id VARCHAR(120) REFERENCES packages(id) ON UPDATE CASCADE ON DELETE SET NULL,
   quote TEXT NOT NULL,
@@ -165,7 +179,7 @@ CREATE TABLE IF NOT EXISTS reviews (
 );
 
 -- INDEPENDENT CONTENT & MARKETING TABLES
-CREATE TABLE IF NOT EXISTS road_trips (
+CREATE TABLE road_trips (
   id VARCHAR(120) PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
   route VARCHAR(255) NOT NULL,
@@ -178,7 +192,7 @@ CREATE TABLE IF NOT EXISTS road_trips (
   stops JSONB DEFAULT '[]'::jsonb
 );
 
-CREATE TABLE IF NOT EXISTS stories (
+CREATE TABLE stories (
   id VARCHAR(120) PRIMARY KEY,
   title VARCHAR(255) NOT NULL,
   category VARCHAR(120) NOT NULL,
@@ -190,7 +204,7 @@ CREATE TABLE IF NOT EXISTS stories (
   content JSONB DEFAULT '[]'::jsonb
 );
 
-CREATE TABLE IF NOT EXISTS offers (
+CREATE TABLE offers (
   id VARCHAR(120) PRIMARY KEY,
   code VARCHAR(60) NOT NULL,
   title VARCHAR(255) NOT NULL,
@@ -202,7 +216,7 @@ CREATE TABLE IF NOT EXISTS offers (
   image TEXT NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS hero_slides (
+CREATE TABLE hero_slides (
   id SERIAL PRIMARY KEY,
   image TEXT NOT NULL,
   eyebrow VARCHAR(255) NOT NULL,
@@ -213,7 +227,7 @@ CREATE TABLE IF NOT EXISTS hero_slides (
   display_order INTEGER DEFAULT 0
 );
 
-CREATE TABLE IF NOT EXISTS faqs (
+CREATE TABLE faqs (
   id SERIAL PRIMARY KEY,
   question TEXT NOT NULL,
   answer TEXT NOT NULL,
@@ -221,23 +235,23 @@ CREATE TABLE IF NOT EXISTS faqs (
 );
 
 -- ============================================================================
--- 2. FOREIGN KEY INDEXES & HIGH-PERFORMANCE QUERY INDEXES
+-- 3. INDEXES FOR HIGH-PERFORMANCE QUERYING & FOREIGN KEYS
 -- ============================================================================
 
-CREATE INDEX IF NOT EXISTS idx_packages_destination ON packages(destination_slug);
-CREATE INDEX IF NOT EXISTS idx_stays_destination ON stays(destination_slug);
-CREATE INDEX IF NOT EXISTS idx_bookings_package ON bookings(package_id);
-CREATE INDEX IF NOT EXISTS idx_inquiries_destination ON inquiries(destination_slug);
-CREATE INDEX IF NOT EXISTS idx_media_destination ON media_assets(destination_slug);
-CREATE INDEX IF NOT EXISTS idx_reviews_package ON reviews(package_id);
+CREATE INDEX idx_packages_destination ON packages(destination_slug);
+CREATE INDEX idx_stays_destination ON stays(destination_slug);
+CREATE INDEX idx_bookings_package ON bookings(package_id);
+CREATE INDEX idx_inquiries_destination ON inquiries(destination_slug);
+CREATE INDEX idx_media_destination ON media_assets(destination_slug);
+CREATE INDEX idx_reviews_package ON reviews(package_id);
 
-CREATE INDEX IF NOT EXISTS idx_destinations_trending ON destinations(is_trending, display_order);
-CREATE INDEX IF NOT EXISTS idx_packages_theme ON packages(theme, featured);
-CREATE INDEX IF NOT EXISTS idx_bookings_status ON bookings(status, submitted_at DESC);
-CREATE INDEX IF NOT EXISTS idx_inquiries_status ON inquiries(status, created_at DESC);
+CREATE INDEX idx_destinations_trending ON destinations(is_trending, display_order);
+CREATE INDEX idx_packages_theme ON packages(theme, featured);
+CREATE INDEX idx_bookings_status ON bookings(status, submitted_at DESC);
+CREATE INDEX idx_inquiries_status ON inquiries(status, created_at DESC);
 
 -- ============================================================================
--- 3. SEED DATA (SAFE RE-RUNNABLE INSERT STATEMENTS WITH FOREIGN KEYS)
+-- 4. SEED DATA (SAFE RE-RUNNABLE INSERT STATEMENTS WITH FOREIGN KEYS)
 -- ============================================================================
 
 -- Data for destinations (6 rows)
