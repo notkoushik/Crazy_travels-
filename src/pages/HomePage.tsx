@@ -435,16 +435,11 @@ export function HomePage({
 
             {/* Left Column: Pure English Brand Information (Right side empty for landscape view) */}
             <div className="hero-info-panel">
-              <p className="hero-eyebrow">TRAVEL WITH A LOCAL TOUCH</p>
+              <p className="hero-eyebrow">Travel with a local touch</p>
 
-              <h1 className="hero-title">Crazy Tours</h1>
+              <h1 className="hero-title">Crazy Tours Travel</h1>
 
-              <div className="hero-subtitle-wrap">
-                <p className="hero-subtitle">Handcrafted Journeys Across India &amp; Beyond</p>
-                <svg className="hero-accent-stroke" viewBox="0 0 160 8" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M2 5.5C45 2 120 1.8 158 5.5" stroke="#ef4934" strokeWidth="2.8" strokeLinecap="round" />
-                </svg>
-              </div>
+              <p className="hero-subtitle">Handcrafted journeys across India and beyond</p>
 
               {/* 4 Feature Badges in a single horizontal strip */}
               <div className="hero-features-strip">

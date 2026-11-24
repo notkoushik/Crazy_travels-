@@ -19,18 +19,18 @@ export function Footer({ navigate, onToast }: FooterProps) {
   }
 
   return (
-    <footer className="bg-[#072f2b] text-[#dce9e6] pt-16 pb-12 border-t border-[#0b4941]">
+    <footer className="site-footer bg-[#072f2b] text-[#dce9e6] pt-16 pb-12 border-t border-[#0b4941]">
       <div className="shell">
         {/* Top Newsletter & Assurance Bar */}
         <div className="bg-[#0b4941]/60 rounded-3xl p-8 mb-16 border border-white/10 flex flex-col lg:flex-row items-center justify-between gap-8">
           <div className="max-w-xl text-center lg:text-left">
-            <span className="text-[#ef4934] font-bold text-xs uppercase tracking-widest flex items-center justify-center lg:justify-start gap-2 mb-2">
-              <Icon name="sparkle" size={14} /> Secret Travel Postcards & Flash Deals
+            <span className="text-[#ffb4a5] font-semibold text-xs flex items-center justify-center lg:justify-start gap-2 mb-2">
+              <Icon name="sparkle" size={14} /> Secret travel postcards &amp; flash deals
             </span>
-            <h3 className="text-2xl sm:text-3xl font-serif text-white font-normal mb-2">
+            <h3 className="footer-newsletter-title text-white mb-2">
               Stay curious. Let us bring India to your inbox.
             </h3>
-            <p className="text-sm text-[#dce9e6]/80">
+            <p className="text-sm leading-relaxed text-[#c3d7d1]">
               Unpublished itineraries, seasonal departure discounts, and slow travel notes. Never spam.
             </p>
           </div>
@@ -40,14 +40,15 @@ export function Footer({ navigate, onToast }: FooterProps) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email address"
+              aria-label="Email address for travel postcards"
               required
               className="min-w-0 flex-1 px-4 py-3 rounded-xl bg-white/10 text-white placeholder-white/50 border border-white/20 text-sm focus:outline-none focus:border-[#ef4934]"
             />
             <button
               type="submit"
-              className="px-6 py-3 rounded-xl bg-[#ef4934] hover:bg-[#df3a25] text-white font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-[#ef4934]/30 flex-none"
+              className="px-6 py-3 rounded-xl bg-[#c83c2c] hover:bg-[#ae3224] text-white font-semibold text-sm flex items-center justify-center gap-2 transition-all flex-none"
             >
-              <span>Join Club</span>
+              <span>Join the club</span>
               <Icon name="arrow" size={16} />
             </button>
           </form>
@@ -78,7 +79,7 @@ export function Footer({ navigate, onToast }: FooterProps) {
                 <span>Offices in Mumbai, New Delhi & Bengaluru</span>
               </p>
             </div>
-            <div className="flex items-center gap-3 pt-2">
+            <div className="flex flex-wrap items-center gap-3 pt-2">
               <span className="text-[10px] uppercase tracking-wider bg-white/10 px-2.5 py-1 rounded-md text-white/80 font-bold">
                 IATA Accredited
               </span>
@@ -90,8 +91,8 @@ export function Footer({ navigate, onToast }: FooterProps) {
 
           {/* Col 2: Discover */}
           <div className="space-y-3">
-            <h4 className="text-white font-bold text-sm tracking-wide uppercase">Discover</h4>
-            <ul className="space-y-2 text-sm text-[#dce9e6]/75">
+            <h4 className="footer-nav-heading text-white">Discover</h4>
+            <ul className="footer-nav-links space-y-2">
               <li>
                 <button onClick={() => navigate('packages')} className="hover:text-white transition-colors">
                   All Holiday Packages
@@ -127,15 +128,15 @@ export function Footer({ navigate, onToast }: FooterProps) {
 
           {/* Col 3: Plan & Customize */}
           <div className="space-y-3">
-            <h4 className="text-white font-bold text-sm tracking-wide uppercase">Plan & Design</h4>
-            <ul className="space-y-2 text-sm text-[#dce9e6]/75">
+            <h4 className="footer-nav-heading text-white">Plan &amp; design</h4>
+            <ul className="footer-nav-links space-y-2">
               <li>
                 <button onClick={() => navigate('custom-trip')} className="text-[#ffd0c7] font-semibold hover:text-white transition-colors">
                   ✦ Custom Trip Designer
                 </button>
               </li>
               <li>
-                <button onClick={() => navigate('offers')} className="text-[#ef4934] font-semibold hover:underline">
+                <button onClick={() => navigate('offers')} className="text-[#ffb4a5] font-semibold hover:underline">
                   Crazy Deals & Vouchers
                 </button>
               </li>
@@ -159,8 +160,8 @@ export function Footer({ navigate, onToast }: FooterProps) {
 
           {/* Col 4: Support & Legal */}
           <div className="space-y-3">
-            <h4 className="text-white font-bold text-sm tracking-wide uppercase">Company & Trust</h4>
-            <ul className="space-y-2 text-sm text-[#dce9e6]/75">
+            <h4 className="footer-nav-heading text-white">Company &amp; trust</h4>
+            <ul className="footer-nav-links space-y-2">
               <li>
                 <button onClick={() => navigate('about')} className="hover:text-white transition-colors">
                   About Crazy Tours Travel
@@ -191,9 +192,9 @@ export function Footer({ navigate, onToast }: FooterProps) {
         </div>
 
         {/* Bottom Copyright & Disclaimer */}
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-[#dce9e6]/50 gap-4">
+        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-[#afc7c1] gap-4">
           <p>© 2026 Crazy Tours Travel All rights reserved. GST & Ministry of Tourism registered.</p>
-          <div className="flex items-center gap-6">
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
             <button onClick={() => navigate('terms')} className="hover:underline">
               Terms & Conditions
             </button>
