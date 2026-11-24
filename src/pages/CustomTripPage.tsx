@@ -1,16 +1,22 @@
-import React, { useState } from 'react'
-import { RouteName } from '../types/travel'
+import React, { useEffect, useState } from 'react'
+import { DestinationItem, RouteName } from '../types/travel'
 import { Icon } from '../components/Icon'
 import { dataStore } from '../services/dataStore'
 
 interface CustomTripPageProps {
   navigate: (route: RouteName) => void
   onToast: (msg: string) => void
+  catalogDestinations: DestinationItem[]
+  destinationSlug?: string
 }
 
-export function CustomTripPage({ navigate, onToast }: CustomTripPageProps) {
+export function CustomTripPage({ navigate, onToast, catalogDestinations, destinationSlug }: CustomTripPageProps) {
   const [step, setStep] = useState(1)
-  const [destinations, setDestinations] = useState<string[]>([])
+  const requestedCity = catalogDestinations.find(({ slug }) => encodeURIComponent(slug) === destinationSlug)?.city
+  const [destinations, setDestinations] = useState<string[]>(() => requestedCity ? [requestedCity] : [])
+  useEffect(() => {
+    if (requestedCity) setDestinations([requestedCity])
+  }, [requestedCity])
   const [style, setStyle] = useState('Romantic / Honeymoon')
   const [duration, setDuration] = useState('7 - 9 Days')
   const [month, setMonth] = useState('April 2026')
@@ -24,16 +30,7 @@ export function CustomTripPage({ navigate, onToast }: CustomTripPageProps) {
   const [notes, setNotes] = useState('')
   const [submitted, setSubmitted] = useState(false)
 
-  const availableDests = [
-    'Kashmir & Gulmarg',
-    'Kerala & Backwaters',
-    'Rajasthan (Jaipur / Udaipur)',
-    'Andaman Islands',
-    'Ladakh & Pangong Lake',
-    'Sikkim & Darjeeling',
-    'Goa & Konkan Coast',
-    'Himachal & Spiti',
-  ]
+  const availableDests = [...new Set(catalogDestinations.map(({ city }) => city))]
 
   const toggleDest = (d: string) => {
     setDestinations((prev) =>
@@ -52,7 +49,7 @@ export function CustomTripPage({ navigate, onToast }: CustomTripPageProps) {
       await dataStore.addInquiry({
         id: inqId,
         fullName: name,
-        email: email || 'lead@crazytours.com',
+        email,
         phone: phone,
         preferredDestination: destinations.length ? destinations.join(', ') : 'Any Recommended Region',
         travelMonth: month,
@@ -65,11 +62,10 @@ export function CustomTripPage({ navigate, onToast }: CustomTripPageProps) {
         createdAt: new Date().toISOString(),
       })
       setSubmitted(true)
-      onToast('Your tailor-made itinerary request has been submitted to PostgreSQL CRM!')
+      onToast('Your tailor-made itinerary request has been received.')
     } catch (err) {
       console.error('Failed to submit inquiry:', err)
-      setSubmitted(true)
-      onToast('Your tailor-made itinerary request has been received!')
+      onToast('We couldn’t send your itinerary request. Please try again.')
     }
   }
 
@@ -106,7 +102,7 @@ export function CustomTripPage({ navigate, onToast }: CustomTripPageProps) {
                     Your Custom Itinerary Is Being Designed!
                   </h3>
                   <p className="text-sm text-gray-600 max-w-md mx-auto leading-relaxed">
-                    Thank you, <strong>{name}</strong>. An exclusive destination specialist has received your requirements and is preparing a personalized day-by-day itinerary proposal. We will connect with you at <strong>{phone}</strong> within 30 minutes.
+                    Thank you, <strong>{name}</strong>. Our travel team will review your preferences and contact you at <strong>{phone}</strong> to discuss your itinerary.
                   </p>
                   <div className="pt-4 flex justify-center gap-4">
                     <button
@@ -218,7 +214,7 @@ export function CustomTripPage({ navigate, onToast }: CustomTripPageProps) {
                         <button
                           type="button"
                           onClick={() => {
-                            if (destinations.length === 0) {
+                            if (availableDests.length > 0 && destinations.length === 0) {
                               onToast('Please pick at least one destination to proceed.')
                               return
                             }

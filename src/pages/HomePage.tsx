@@ -13,8 +13,6 @@ import {
   nationalDestinations,
   allPackages,
   reviews,
-  services,
-  socialStories,
 } from '../data/travelData'
 import kashmirImage from '../assets/wayfare-kashmir.png'
 import socialHimachal from '../assets/wayfare-social-himachal.png'
@@ -27,6 +25,35 @@ interface HomePageProps {
   currency: Currency
   onToast: (msg: string) => void
   onOpenStory: (story: any, index?: number) => void
+}
+
+function HomePackageCard({ trip, currency, navigate }: {
+  trip: PackageItem
+  currency: Currency
+  navigate: HomePageProps['navigate']
+}) {
+  return (
+    <article className="package-card">
+      <div className="package-image">
+        <CatalogPhoto src={trip.image} alt="" loading="lazy" />
+        <span>{trip.duration}</span>
+      </div>
+      <div className="package-body">
+        <p>{trip.place}</p>
+        <h3>{trip.title}</h3>
+        <div className="package-meta">
+          <span>{trip.theme}</span>
+          {trip.reviewCount > 0 && trip.rating > 0 && <span>{trip.rating} ★ ({trip.reviewCount})</span>}
+        </div>
+        <div className="package-price">
+          <span>From <strong>{formatPrice(trip.priceNum, currency)}</strong> per traveller</span>
+          <button type="button" onClick={() => navigate(`package/${trip.id}`)} aria-label={`View ${trip.title}`}>
+            <Icon name="arrow" size={18} />
+          </button>
+        </div>
+      </div>
+    </article>
+  )
 }
 
 function ReelVideoCard({
@@ -203,6 +230,12 @@ export function HomePage({
   const brandPillars = sf.brandPillars.length > 0 ? sf.brandPillars : defaultStorefrontConfig.brandPillars
   const stageImage = brandPillars[0]?.stageImage || 'https://images.unsplash.com/photo-1521336575822-6da63fb45455?auto=format&fit=crop&w=1500&q=85'
   const trustStats = sf.trustStats || defaultStorefrontConfig.trustStats!
+
+  const rankedPackages = [...displayPackages].sort((left, right) => Number(!!right.featured) - Number(!!left.featured))
+  const adventurePackages = rankedPackages.filter((trip) => trip.theme === 'Adventure').slice(0, 3)
+  const offeredDestinations = store.destinationsLoaded || store.isLoading ? store.destinations : nationalDestinations
+  const [customDestination, setCustomDestination] = useState('')
+  const selectedDestination = offeredDestinations.find(({ slug }) => slug === customDestination)
 
   const [selectedHeroIndex, setHeroIndex] = useState(0)
   const heroIndex = selectedHeroIndex % slides.length
@@ -653,6 +686,53 @@ export function HomePage({
         </div>
       </section>
 
+      {/* Customization Showcase */}
+      <section className="shell section" aria-labelledby="home-customization-heading">
+        <div className="section-heading">
+          <h2 id="home-customization-heading">We offer customization</h2>
+        </div>
+        <div className="customization-cards">
+          <article className="customization-card">
+            <CatalogPhoto src={(selectedDestination ?? offeredDestinations[0])?.image} alt="" loading="lazy" className="customization-photo" />
+            <div className="customization-content">
+              <h3>Make the destination your own</h3>
+              <p>Choose where you want to go. We’ll tailor the route, stays and pace to how you like to travel.</p>
+              <div className="customization-actions">
+                {offeredDestinations.length > 0 && (
+                  <select aria-label="Destination to customize" value={selectedDestination?.slug ?? ''} onChange={(event) => setCustomDestination(event.target.value)}>
+                    <option value="">Choose a destination</option>
+                    {offeredDestinations.map(({ slug, city }) => <option value={slug} key={slug}>{city}</option>)}
+                  </select>
+                )}
+                <button type="button" className="customization-button" onClick={() => navigate(selectedDestination ? `custom-trip/${encodeURIComponent(selectedDestination.slug)}` : 'custom-trip')}>
+                  Customize my trip <Icon name="arrow" size={16} />
+                </button>
+              </div>
+            </div>
+          </article>
+          <article className="customization-card">
+            <CatalogPhoto src={adventurePackages[0]?.image} alt="" loading="lazy" className="customization-photo" />
+            <div className="customization-content">
+              <h3>Find your next adventure</h3>
+              <p>{adventurePackages.length > 0
+                ? 'Explore our adventure itineraries and ask us to tailor the experiences for your group.'
+                : 'Tell us what you’d like to try and we’ll help you build a trip around it.'}</p>
+              <div className="customization-actions">
+                {adventurePackages.length > 0 ? adventurePackages.map((trip) => (
+                  <button key={trip.id} type="button" className="customization-button" onClick={() => navigate(`package/${trip.id}`)}>
+                    {trip.title} <Icon name="arrow" size={16} />
+                  </button>
+                )) : (
+                  <button type="button" className="customization-button" onClick={() => navigate('custom-trip')}>
+                    Plan an adventure <Icon name="arrow" size={16} />
+                  </button>
+                )}
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
       {/* Journeys With Soul (Packages Showcase) */}
       <section className="journeys">
         <div className="shell section">
@@ -697,7 +777,65 @@ export function HomePage({
         </div>
       </section>
 
-      {/* Travel Board Feature */}
+      {/* Social Moments Stories & Instagram Reels Video Section */}
+      {store.reels.length > 0 && <section className="social-section" id="instagram-reels">
+        <div className="shell social-layout">
+          <div className="social-intro">
+            <span className="kicker">Follow @crazytourstravels</span>
+            <h2>Small moments.<br />Real customer stories.</h2>
+            <p>
+              Live notes and customer video reviews from travelers across Kashmir, Kerala, Rajasthan, Ladakh, and beyond.
+              Watch them run simultaneously or click any reel to experience full sound and reviews.
+            </p>
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <a
+                href="https://www.instagram.com/crazytourstravels/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-gradient-to-r from-[#f09433] via-[#dc2743] to-[#bc1888] text-white text-xs font-bold shadow-md hover:opacity-95 transition-all"
+              >
+                <Icon name="instagram" size={15} />
+                <span>Follow on Instagram</span>
+              </a>
+              {(reelNavigation.previous || reelNavigation.next) && (
+                <div className="social-reel-controls">
+                  <button
+                    type="button"
+                    onClick={() => scrollSocial(-1)}
+                    disabled={!reelNavigation.previous}
+                    aria-label="Previous reel"
+                    aria-controls="instagram-reel-track"
+                  >
+                    <Icon name="chevron" size={18} className="rotate-180" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => scrollSocial(1)}
+                    disabled={!reelNavigation.next}
+                    aria-label="Next reel"
+                    aria-controls="instagram-reel-track"
+                  >
+                    <Icon name="chevron" size={18} />
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div id="instagram-reel-track" className="social-track" ref={socialTrackRef}>
+            {store.reels.map(
+              (reel, index) => (
+                <ReelVideoCard
+                  key={reel.id || index}
+                  reel={reel}
+                  index={index}
+                  onOpen={(r, idx) => onOpenStory(r, idx)}
+                />
+              )
+            )}
+          </div>
+        </div>
+      </section>}
       <section className="board-section">
         <div className="shell section">
           <div className="section-heading">
@@ -830,66 +968,6 @@ export function HomePage({
           </div>
         </div>
       </section>
-
-      {/* Social Moments Stories & Instagram Reels Video Section */}
-      {store.reels.length > 0 && <section className="social-section" id="instagram-reels">
-        <div className="shell social-layout">
-          <div className="social-intro">
-            <span className="kicker">Follow @crazytourstravels</span>
-            <h2>Small moments.<br />Real customer stories.</h2>
-            <p>
-              Live notes and customer video reviews from travelers across Kashmir, Kerala, Rajasthan, Ladakh, and beyond.
-              Watch them run simultaneously or click any reel to experience full sound and reviews.
-            </p>
-            <div className="mt-4 flex flex-wrap items-center gap-3">
-              <a
-                href="https://www.instagram.com/crazytourstravels/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-gradient-to-r from-[#f09433] via-[#dc2743] to-[#bc1888] text-white text-xs font-bold shadow-md hover:opacity-95 transition-all"
-              >
-                <Icon name="instagram" size={15} />
-                <span>Follow on Instagram</span>
-              </a>
-              {(reelNavigation.previous || reelNavigation.next) && (
-                <div className="social-reel-controls">
-                  <button
-                    type="button"
-                    onClick={() => scrollSocial(-1)}
-                    disabled={!reelNavigation.previous}
-                    aria-label="Previous reel"
-                    aria-controls="instagram-reel-track"
-                  >
-                    <Icon name="chevron" size={18} className="rotate-180" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => scrollSocial(1)}
-                    disabled={!reelNavigation.next}
-                    aria-label="Next reel"
-                    aria-controls="instagram-reel-track"
-                  >
-                    <Icon name="chevron" size={18} />
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div id="instagram-reel-track" className="social-track" ref={socialTrackRef}>
-            {store.reels.map(
-              (reel, index) => (
-                <ReelVideoCard
-                  key={reel.id || index}
-                  reel={reel}
-                  index={index}
-                  onOpen={(r, idx) => onOpenStory(r, idx)}
-                />
-              )
-            )}
-          </div>
-        </div>
-      </section>}
 
       {/* Custom Trip Planner CTA */}
       <section className="planner shell">

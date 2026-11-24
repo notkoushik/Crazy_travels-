@@ -572,47 +572,42 @@
 
 .section-link { display: flex; align-items: center; gap: 8px; padding-bottom: 5px; border-bottom: 1px solid #9aaba6; color: var(--forest); font-size: 12px; font-weight: 700; }
 .section-link:hover { color: var(--coral); border-color: var(--coral); }
-.specials-section { background: var(--cream); }
-.specials-grid { display: grid; grid-template-columns: 1.05fr 1.35fr .8fr; grid-template-rows: 245px 185px; gap: 18px; }
-.special-card { position: relative; overflow: hidden; border-radius: 18px; padding: 28px; display: flex; flex-direction: column; align-items: flex-start; background-position: center; background-size: cover; color: white; }
-.special-card > span { font-size: 9px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
-.special-card h3 { margin-top: 7px; max-width: 390px; font-family: var(--travel-heading-font); font-size: 29px; font-weight: 400; line-height: 1.06; }
-.special-card p { margin-top: 8px; max-width: 350px; font-size: 12px; line-height: 1.5; }
-.special-card > strong { margin-top: 8px; font-size: 12px; }
-.special-card button { margin-top: auto; display: flex; align-items: center; gap: 7px; padding: 9px 14px; border-radius: 24px; background: white; color: var(--forest); font-size: 10px; font-weight: 700; }
-.special-card button:hover { background: var(--coral); color: white; }
-.special-japan { grid-column: 2 / 4; grid-row: 1; }
-.special-spiritual { grid-column: 1; grid-row: 1 / 3; background: linear-gradient(0deg, rgba(6,39,35,.88), rgba(6,39,35,.05)), url('https://images.unsplash.com/photo-1620766182966-c6eb5ed2b788?auto=format&fit=crop&w=900&q=85') center/cover; }
-.special-spiritual h3 { margin-top: auto; }
-.special-spiritual button { margin-top: 18px; }
-.special-small { color: var(--ink); }
-.special-small > svg { color: var(--coral); }
-.special-small h3 { font-size: 21px; }
-.special-small button { width: 38px; height: 38px; padding: 0; justify-content: center; background: var(--forest); color: white; }
-.special-small-photo { background-position: center; background-size: cover; color: white; }
-.special-small-photo > svg { color: #ffc4b6; }
-.special-small-photo button { background: white; color: var(--forest); }
-.special-build { background: #e3f0ed; }
-.special-reward { background: var(--sand); }
+.customization-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.customization-card { display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--line); border-radius: 20px; background: #fff; }
+.customization-photo { width: 100%; height: clamp(155px, 20vw, 235px); object-fit: cover; }
+.customization-content { display: flex; flex: 1; flex-direction: column; gap: 9px; padding: clamp(18px, 2.6vw, 28px); }
+.customization-content h3 { color: var(--forest-dark); font-size: clamp(23px, 2.6vw, 32px); line-height: 1.12; }
+.customization-content p { margin-bottom: 10px; color: #51645d; font-size: 14px; line-height: 1.55; }
+.customization-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: auto; }
+.customization-actions select, .customization-button { min-height: 44px; max-width: 100%; padding: 8px 12px; border-radius: 10px; font-size: 13px; font-weight: 650; }
+.customization-actions select { min-width: 0; border: 1px solid #cbdad0; background: white; color: var(--forest-dark); }
+.customization-button { display: inline-flex; align-items: center; justify-content: space-between; gap: 8px; background: var(--forest); color: white; text-align: left; }
+.customization-button:hover { background: var(--forest-dark); }
+.customization-button svg { flex: none; }
 
 .journeys { background: var(--forest-dark); color: white; }
 .section-heading.light .kicker { color: #f6a895; }
 .text-link { display: flex; align-items: center; gap: 8px; padding-bottom: 5px; border-bottom: 1px solid #8fa8a3; color: #d9e7e4; font-size: 12px; }
-.package-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-.package-card { overflow: hidden; border-radius: 15px; background: #fff; color: var(--ink); }
+.package-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.package-grid.package-browse {
+  grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: calc((100% - 40px) / 3);
+  overflow-x: auto; scroll-snap-type: x mandatory; padding-block: 6px 12px; scrollbar-color: #b8c9bf transparent;
+}
+.package-browse .package-card { scroll-snap-align: start; }
+.package-card { overflow: hidden; display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 15px; background: #fff; color: var(--ink); }
 .package-card:hover { transform: translateY(-5px); box-shadow: 0 20px 45px rgba(0,0,0,.22); }
 .package-image { position: relative; height: 235px; overflow: hidden; }
 .package-image img, .package-image .catalog-photo-placeholder { width: 100%; height: 100%; object-fit: cover; transition: transform .5s; }
 .package-card:hover .package-image img { transform: scale(1.04); }
 .package-image > span { position: absolute; left: 14px; top: 14px; padding: 6px 10px; border-radius: 20px; background: white; color: var(--forest); font-size: 10px; font-weight: 700; }
-.package-body { padding: 20px; }
+.package-body { display: flex; flex: 1; flex-direction: column; padding: 20px; }
 .package-body > p { color: var(--coral); font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
 .package-body h3 { margin: 8px 0 17px; font-family: var(--travel-heading-font); font-size: 24px; line-height: 1.1; font-weight: 400; }
-.package-meta { display: flex; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid var(--line); color: #81908c; font-size: 9px; }
+.package-meta { display: flex; justify-content: space-between; margin-top: auto; padding-bottom: 16px; border-bottom: 1px solid var(--line); color: #51645d; font-size: 11px; }
 .package-meta b { color: #e9a120; }
 .package-price { display: flex; align-items: center; justify-content: space-between; padding-top: 16px; color: #73827e; font-size: 10px; }
 .package-price strong { color: var(--ink); font-size: 16px; }
-.package-price button { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 50%; background: var(--forest); color: white; }
+.package-price button { flex: none; width: 38px; height: 38px; display: grid; place-items: center; border-radius: 50%; background: var(--forest); color: white; }
 
 .board-section { background: #f0f5f3; }
 .board-feature { position: relative; height: 440px; overflow: hidden; border-radius: 22px; color: white; }
@@ -981,9 +976,6 @@ footer { padding-top: 115px; background: var(--forest-dark); color: #c5d6d2; }
   .trust-strip { grid-template-columns: 1fr; }
   .trust-strip > div + div { border-left: 0; border-top: 1px solid var(--line); }
   .destination-card { flex-basis: 255px; }
-  .specials-grid { grid-template-columns: 1fr 1fr; grid-template-rows: 310px 230px 200px; }
-  .special-japan { grid-column: 1 / 3; grid-row: 1; }
-  .special-spiritual { grid-column: 1; grid-row: 2 / 4; }
   .stays-grid { grid-template-columns: 1fr 1fr; }
   .routes-section .section { grid-template-columns: 1fr; gap: 40px; }
   .forex-grid { grid-template-columns: 1fr 1fr; }
@@ -1008,7 +1000,7 @@ footer { padding-top: 115px; background: var(--forest-dark); color: #c5d6d2; }
   .destination-intro, .destination-experiences, .destination-itinerary { gap: 45px; }
   .destination-stay { gap: 38px; }
   .package-grid { grid-template-columns: 1fr 1fr; }
-  .package-card:last-child { display: none; }
+  .package-grid.package-browse { grid-auto-columns: calc((100% - 20px) / 2); }
   .planner { grid-template-columns: .7fr 1.3fr; }
   .newsletter { flex-direction: column; align-items: flex-start; }
   .footer-grid { grid-template-columns: 1.6fr repeat(2, 1fr); }
@@ -1177,9 +1169,6 @@ footer { padding-top: 115px; background: var(--forest-dark); color: #c5d6d2; }
   .destination-card { flex: 0 0 76%; min-width: 220px; height: 395px; border-radius: 110px 110px 20px 20px; }
   .destination-arrow { display: none; }
   .section-link { align-self: flex-start; }
-  .specials-grid { display: flex; overflow-x: auto; margin-right: -14px; padding-right: 14px; scroll-snap-type: x mandatory; }
-  .special-card { flex: 0 0 86%; min-height: 370px; scroll-snap-align: start; }
-  .special-small { min-height: 300px; }
   .board-feature { height: 520px; }
   .board-feature:after { background: linear-gradient(0deg, rgba(5,38,34,.92), rgba(5,38,34,.05) 80%); }
   .board-overlay { left: 25px; right: 25px; top: auto; bottom: 42px; transform: none; }
@@ -1210,7 +1199,7 @@ footer { padding-top: 115px; background: var(--forest-dark); color: #c5d6d2; }
   .social-card { flex-basis: 72%; height: 420px; }
   .package-grid { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; margin-right: -14px; padding: 5px 14px 25px 0; }
   .package-card { flex: 0 0 87%; scroll-snap-align: start; }
-  .package-card:last-child { display: block; }
+  .customization-cards { grid-template-columns: 1fr; }
   .package-image { height: 220px; }
   .planner { margin-block: 70px; grid-template-columns: 1fr; }
   .planner-art { min-height: 190px; }

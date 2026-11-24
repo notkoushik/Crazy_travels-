@@ -241,6 +241,7 @@ export type RouteName =
   | 'stories'
   | 'offers'
   | 'custom-trip'
+  | `custom-trip/${string}`
   | 'about'
   | 'contact'
   | 'help'
