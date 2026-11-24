@@ -7,8 +7,8 @@ export interface DestinationVideoInfo {
 }
 
 export const heroVideoConfig = {
-  videoUrl: '/Video/optimized/destination_slow_travel.mp4',
-  posterUrl: '/Video/optimized/destination_slow_travel_poster.jpg',
+  videoUrl: '/Video/optimized/destination_himachal.mp4',
+  posterUrl: '/Video/optimized/destination_himachal_poster.jpg',
   eyebrow: 'TRAVEL WITH A LOCAL TOUCH',
   title: 'Crazy Tours',
   subtitle: 'Handcrafted Journeys Across India & Beyond',
