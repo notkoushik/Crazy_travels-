@@ -12,6 +12,7 @@ import {
   hotelStays,
   nationalDestinations,
   allPackages,
+  instagramReels,
   reviews,
 } from '../data/travelData'
 import kashmirImage from '../assets/wayfare-kashmir.png'
@@ -312,9 +313,13 @@ export function HomePage({
   const stageImage = brandPillars[0]?.stageImage || 'https://images.unsplash.com/photo-1521336575822-6da63fb45455?auto=format&fit=crop&w=1500&q=85'
   const trustStats = sf.trustStats || defaultStorefrontConfig.trustStats!
 
+  const displayReels = store.reels.length > 0 ? store.reels : instagramReels
   const rankedPackages = [...displayPackages].sort((left, right) => Number(!!right.featured) - Number(!!left.featured))
+  const recommendedPackages = rankedPackages.slice(0, 3)
   const adventurePackages = rankedPackages.filter((trip) => trip.theme === 'Adventure').slice(0, 3)
   const offeredDestinations = store.destinationsLoaded || store.isLoading ? store.destinations : nationalDestinations
+  const [activeCustomDestSlug, setActiveCustomDestSlug] = useState('kashmir')
+  const activeCustomDest = customizationDestinations.find((d) => d.slug === activeCustomDestSlug) || customizationDestinations[0]
   const [customDestination, setCustomDestination] = useState('')
   const selectedDestination = offeredDestinations.find(({ slug }) => slug === customDestination)
 
@@ -979,7 +984,7 @@ export function HomePage({
             </div>
 
             <div id="instagram-reel-track" className="social-track" ref={socialTrackRef}>
-              {displayReels.map((reel, index) => (
+              {displayReels.map((reel: InstagramReelItem, index: number) => (
                 <ReelVideoCard
                   key={reel.id || index}
                   reel={reel}
