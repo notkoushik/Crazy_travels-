@@ -10,6 +10,7 @@ import {
 
 export type AdminTab =
   | 'dashboard'
+  | 'storefront'
   | 'destinations'
   | 'packages'
   | 'stays'

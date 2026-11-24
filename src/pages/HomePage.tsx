@@ -3,7 +3,7 @@ import { CatalogPhoto } from '../components/CatalogPhoto'
 import { Currency, DestinationItem, InstagramReelItem, PackageItem, RouteName } from '../types/travel'
 import { Icon } from '../components/Icon'
 import { GoogleVerifiedBadge } from '../components/GoogleVerifiedBadge'
-import { useDynamicStore } from '../services/dataStore'
+import { defaultStorefrontConfig, useDynamicStore } from '../services/dataStore'
 import {
   directoryGroups,
   faqs,
@@ -167,10 +167,42 @@ export function HomePage({
   onOpenStory,
 }: HomePageProps) {
   const store = useDynamicStore()
+  const sf = store.storefront || defaultStorefrontConfig
+  const headers = sf.sectionHeaders || defaultStorefrontConfig.sectionHeaders
   const slides = store.heroSlides.length > 0 ? store.heroSlides : heroSlides
   const displayPackages = store.packagesLoaded || store.isLoading ? store.packages : allPackages
   const displayStays = store.stays.length > 0 ? store.stays : hotelStays
-  const homePackages = [...displayPackages].sort((left, right) => Number(!!right.featured) - Number(!!left.featured)).slice(0, 3)
+  const displayReviews = store.reviews.length > 0 ? store.reviews : reviews
+
+  const trendingDestinations = [...store.destinations]
+    .filter((destination) => destination.isTrending !== false)
+    .sort((a, b) => ((a as any).displayOrder ?? 0) - ((b as any).displayOrder ?? 0))
+
+  const homePackages = (() => {
+    const featured = [...displayPackages]
+      .filter((pkg) => pkg.featured)
+      .sort((left, right) => ((left as any).homeSpotlightOrder ?? 99) - ((right as any).homeSpotlightOrder ?? 99))
+    if (featured.length >= 3) return featured.slice(0, 3)
+    const remaining = displayPackages.filter((p) => !featured.some((f) => f.id === p.id))
+    return [...featured, ...remaining].slice(0, 3)
+  })()
+
+  const homeStays = (() => {
+    const featured = [...displayStays]
+      .filter((stay) => (stay as any).isHomeFeatured !== false)
+      .sort((a, b) => ((a as any).homeDisplayOrder ?? 99) - ((b as any).homeDisplayOrder ?? 99))
+    return featured.length > 0 ? featured : displayStays
+  })()
+
+  const special1 = sf.specials.find((s) => s.slotIndex === 1) || defaultStorefrontConfig.specials[0]
+  const special2 = sf.specials.find((s) => s.slotIndex === 2) || defaultStorefrontConfig.specials[1]
+  const special3 = sf.specials.find((s) => s.slotIndex === 3) || defaultStorefrontConfig.specials[2]
+  const special4 = sf.specials.find((s) => s.slotIndex === 4) || defaultStorefrontConfig.specials[3]
+
+  const boardFeature = sf.boardFeature || defaultStorefrontConfig.boardFeature!
+  const brandPillars = sf.brandPillars.length > 0 ? sf.brandPillars : defaultStorefrontConfig.brandPillars
+  const stageImage = brandPillars[0]?.stageImage || 'https://images.unsplash.com/photo-1521336575822-6da63fb45455?auto=format&fit=crop&w=1500&q=85'
+  const trustStats = sf.trustStats || defaultStorefrontConfig.trustStats!
 
   const [selectedHeroIndex, setHeroIndex] = useState(0)
   const heroIndex = selectedHeroIndex % slides.length
@@ -430,13 +462,13 @@ export function HomePage({
             <div>
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#ef4934]/10 text-[#ef4934] text-xs font-bold tracking-wider uppercase mb-2.5">
                 <Icon name="sparkle" size={12} />
-                <span>India, beautifully explored</span>
+                <span>{headers.trending?.kicker || 'India, beautifully explored'}</span>
               </div>
               <h2 className="font-serif text-3xl md:text-4xl lg:text-[44px] text-[#072f2b] tracking-tight font-normal">
-                Trending destinations
+                {headers.trending?.title || 'Trending destinations'}
               </h2>
               <p className="text-gray-500 text-sm mt-2 max-w-xl leading-relaxed">
-                Six remarkable places curated for immersive discovery. Each one designed as a deep journey, not a tourist checklist.
+                {headers.trending?.subtitle || 'Six remarkable places curated for immersive discovery. Each one designed as a deep journey, not a tourist checklist.'}
               </p>
             </div>
 
@@ -461,7 +493,7 @@ export function HomePage({
 
           <div className="destination-carousel">
             <div className="destination-track" ref={destinationTrack}>
-              {store.destinations.filter((destination) => destination.isTrending !== false).map((destination) => {
+              {trendingDestinations.map((destination) => {
                 const isSaved = saved.includes(destination.city)
                 return (
                   <article className="destination-card group" key={destination.slug}>
@@ -550,8 +582,8 @@ export function HomePage({
       <section className="specials-section shell section">
         <div className="section-heading">
           <div>
-            <span className="kicker">Limited seasonal departures</span>
-            <h2>Crazy Specials & Offers</h2>
+            <span className="kicker">{headers.specials?.kicker || 'Limited seasonal departures'}</span>
+            <h2>{headers.specials?.title || 'Crazy Specials & Offers'}</h2>
           </div>
           <button onClick={() => navigate('offers')} className="section-link">
             See all offers <Icon name="arrow" size={17} />
@@ -561,44 +593,45 @@ export function HomePage({
           <article
             className="special-card special-japan"
             style={{
-              backgroundImage: `linear-gradient(90deg, rgba(22,38,34,.82), rgba(22,38,34,.08)), url(${kashmirImage})`,
+              backgroundImage: `linear-gradient(90deg, rgba(22,38,34,.82), rgba(22,38,34,.08)), url(${special1.image || kashmirImage})`,
             }}
           >
-            <span>April departures · Limited season</span>
-            <h3>Kashmir in full bloom</h3>
-            <p>6 days of tulip gardens, houseboat evenings and mountain air.</p>
-            <strong>From {formatPrice(36800, currency)}</strong>
-            <button onClick={() => navigate('destination/srinagar')}>
-              See the journey <Icon name="arrow" size={16} />
+            <span>{special1.badge}</span>
+            <h3>{special1.title}</h3>
+            <p>{special1.description}</p>
+            {special1.priceNum ? <strong>From {formatPrice(special1.priceNum, currency)}</strong> : null}
+            <button onClick={() => navigate(special1.actionRoute as RouteName)}>
+              {special1.actionLabel || 'See the journey'} <Icon name="arrow" size={16} />
             </button>
           </article>
 
           <article
             className="special-card special-spiritual"
             style={{
-              backgroundImage: `linear-gradient(0deg, rgba(6,39,35,.88), rgba(6,39,35,.12)), url(${socialHimachal})`,
+              backgroundImage: `linear-gradient(0deg, rgba(6,39,35,.88), rgba(6,39,35,.12)), url(${special2.image || socialHimachal})`,
             }}
           >
-            <span>September departures</span>
-            <h3>High roads of Ladakh</h3>
-            <p>Monasteries, mountain passes and nights beneath a spectacular sky.</p>
-            <button onClick={() => navigate('road-trips')}>
-              Explore the route <Icon name="arrow" size={16} />
+            <span>{special2.badge}</span>
+            <h3>{special2.title}</h3>
+            <p>{special2.description}</p>
+            {special2.priceNum ? <strong>From {formatPrice(special2.priceNum, currency)}</strong> : null}
+            <button onClick={() => navigate(special2.actionRoute as RouteName)}>
+              {special2.actionLabel || 'Explore the route'} <Icon name="arrow" size={16} />
             </button>
           </article>
 
           <article
             className="special-card special-small special-small-photo special-build"
             style={{
-              backgroundImage: `linear-gradient(0deg, rgba(6,39,35,.8), rgba(6,39,35,.14)), url(https://images.unsplash.com/photo-1593693411515-c20261bcad6e?auto=format&fit=crop&w=700&q=85)`,
+              backgroundImage: `linear-gradient(0deg, rgba(6,39,35,.8), rgba(6,39,35,.14)), url(${special3.image})`,
             }}
           >
             <Icon name="sparkle" size={28} />
-            <h3>Monsoon in Kerala</h3>
-            <p>Tea-country mist, restorative stays and slow backwater days.</p>
+            <h3>{special3.title}</h3>
+            <p>{special3.description}</p>
             <button
-              onClick={() => navigate('destination/munnar')}
-              aria-label="Build your itinerary"
+              onClick={() => navigate(special3.actionRoute as RouteName)}
+              aria-label={special3.actionLabel || 'Build your itinerary'}
             >
               <Icon name="arrow" size={18} />
             </button>
@@ -607,13 +640,13 @@ export function HomePage({
           <article
             className="special-card special-small special-small-photo special-reward"
             style={{
-              backgroundImage: `linear-gradient(0deg, rgba(6,39,35,.82), rgba(6,39,35,.12)), url(https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&w=700&q=85)`,
+              backgroundImage: `linear-gradient(0deg, rgba(6,39,35,.82), rgba(6,39,35,.12)), url(${special4.image})`,
             }}
           >
             <Icon name="wallet" size={28} />
-            <h3>Rajasthan by road</h3>
-            <p>Palace stays, craft towns and golden desert evenings.</p>
-            <button onClick={() => navigate('road-trips')} aria-label="See road trips">
+            <h3>{special4.title}</h3>
+            <p>{special4.description}</p>
+            <button onClick={() => navigate(special4.actionRoute as RouteName)} aria-label={special4.actionLabel || 'See road trips'}>
               <Icon name="arrow" size={18} />
             </button>
           </article>
@@ -625,8 +658,8 @@ export function HomePage({
         <div className="shell section">
           <div className="section-heading light">
             <div>
-              <span className="kicker">Made to linger</span>
-              <h2>Journeys with a little more soul</h2>
+              <span className="kicker">{headers.soul?.kicker || 'Made to linger'}</span>
+              <h2>{headers.soul?.title || 'Journeys with a little more soul'}</h2>
             </div>
             <button onClick={() => navigate('packages')} className="text-link">
               View all {displayPackages.length} journeys <Icon name="arrow" size={17} />
@@ -664,13 +697,13 @@ export function HomePage({
         </div>
       </section>
 
-      {/* Travel Board Feature (Hampi) */}
+      {/* Travel Board Feature */}
       <section className="board-section">
         <div className="shell section">
           <div className="section-heading">
             <div>
-              <span className="kicker">Selected with local experts</span>
-              <h2>Travel boards recommend</h2>
+              <span className="kicker">{headers.board?.kicker || boardFeature.kicker}</span>
+              <h2>{headers.board?.title || boardFeature.sectionTitle}</h2>
             </div>
             <button onClick={() => navigate('stories')} className="section-link">
               View all stories <Icon name="arrow" size={17} />
@@ -678,15 +711,15 @@ export function HomePage({
           </div>
           <div className="board-feature">
             <img
-              src="https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&w=1600&q=88"
-              alt="Ancient stone landscape in Hampi"
+              src={boardFeature.image}
+              alt={boardFeature.headline}
             />
             <div className="board-overlay">
-              <span>In partnership with local storytellers</span>
-              <h3>Hampi, beyond the monuments</h3>
-              <p>Riverside walks, ancient stories and boulder-lit sunsets—discover Karnataka at a gentler pace.</p>
-              <button onClick={() => navigate('destination/hampi')}>
-                Explore Hampi <Icon name="arrow" size={17} />
+              <span>{boardFeature.partnerBadge}</span>
+              <h3>{boardFeature.headline}</h3>
+              <p>{boardFeature.description}</p>
+              <button onClick={() => navigate(boardFeature.actionRoute as RouteName)}>
+                {boardFeature.actionLabel} <Icon name="arrow" size={17} />
               </button>
             </div>
             <div className="board-progress">
@@ -703,15 +736,15 @@ export function HomePage({
         <div className="shell section">
           <div className="section-heading">
             <div>
-              <span className="kicker">Stay somewhere memorable</span>
-              <h2>Explore boutique hotel stays</h2>
+              <span className="kicker">{headers.stays?.kicker || 'Stay somewhere memorable'}</span>
+              <h2>{headers.stays?.title || 'Explore boutique hotel stays'}</h2>
             </div>
             <button onClick={() => navigate('stays')} className="section-link">
               Browse all stays <Icon name="arrow" size={17} />
             </button>
           </div>
           <div className="stays-grid">
-            {displayStays.map((stay) => (
+            {homeStays.map((stay) => (
               <article className="stay-card" key={stay.id}>
                 <CatalogPhoto src={stay.image} alt={`${stay.type} in ${stay.city}`} />
                 <div className="stay-card-scrim" />
@@ -733,35 +766,25 @@ export function HomePage({
       <section className="why-section shell section">
         <div className="section-heading">
           <div>
-            <span className="kicker">Why travel with Crazy Tours Travel</span>
-            <h2>Expertly planned. Genuinely personal.</h2>
+            <span className="kicker">{headers.pillars?.kicker || 'Why travel with Crazy Tours Travel'}</span>
+            <h2>{headers.pillars?.title || 'Expertly planned. Genuinely personal.'}</h2>
           </div>
         </div>
         <div className="why-stage">
           <img
-            src="https://images.unsplash.com/photo-1521336575822-6da63fb45455?auto=format&fit=crop&w=1500&q=85"
+            src={stageImage}
             alt="Travellers beginning a new journey"
           />
-          <article className="why-card why-one">
-            <span>01</span>
-            <h3>Human expertise</h3>
-            <p>Real travel designers who listen before they plan. No auto-generated templates.</p>
-          </article>
-          <article className="why-card why-two">
-            <span>02</span>
-            <h3>Built around you</h3>
-            <p>Your pace, preferences and non-negotiables come first.</p>
-          </article>
-          <article className="why-card why-three">
-            <span>03</span>
-            <h3>Here when needed</h3>
-            <p>Reliable 24/7 on-trip concierge support from first departure to your return home.</p>
-          </article>
-          <article className="why-card why-four">
-            <span>04</span>
-            <h3>Clear and considered</h3>
-            <p>Certified heritage properties and transparent trip pricing with zero hidden fees.</p>
-          </article>
+          {brandPillars.slice(0, 4).map((pillar, idx) => {
+            const classNames = ['why-one', 'why-two', 'why-three', 'why-four']
+            return (
+              <article className={`why-card ${classNames[idx] || 'why-one'}`} key={pillar.id || pillar.stepNumber || idx}>
+                <span>{pillar.stepNumber}</span>
+                <h3>{pillar.title}</h3>
+                <p>{pillar.description}</p>
+              </article>
+            )
+          })}
         </div>
       </section>
 
@@ -769,29 +792,29 @@ export function HomePage({
       <section className="love-section">
         <div className="shell section">
           <div className="love-heading">
-            <span className="kicker">The Crazy Tours Travel difference</span>
-            <h2>Why travellers return to us</h2>
+            <span className="kicker">{headers.stats?.kicker || 'The Crazy Tours Travel difference'}</span>
+            <h2>{headers.stats?.title || 'Why travellers return to us'}</h2>
           </div>
           <div className="stats-row">
             <div>
-              <strong>18</strong>
-              <span>years exploring</span>
+              <strong>{trustStats.stat1Value}</strong>
+              <span>{trustStats.stat1Label}</span>
             </div>
             <div>
-              <strong>28</strong>
-              <span>states explored</span>
+              <strong>{trustStats.stat2Value}</strong>
+              <span>{trustStats.stat2Label}</span>
             </div>
             <div>
-              <strong>24k</strong>
-              <span>journeys planned</span>
+              <strong>{trustStats.stat3Value}</strong>
+              <span>{trustStats.stat3Label}</span>
             </div>
             <div>
-              <strong>4.9</strong>
-              <span>average traveller rating</span>
+              <strong>{trustStats.stat4Value}</strong>
+              <span>{trustStats.stat4Label}</span>
             </div>
           </div>
           <div className="review-track">
-            {reviews.map((review) => (
+            {displayReviews.map((review) => (
               <article className="review-card" key={review.id}>
                 <span className="quote-mark">“</span>
                 <p>{review.quote}</p>

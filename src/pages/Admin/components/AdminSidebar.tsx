@@ -53,6 +53,40 @@ export function AdminSidebar({
 
         <div>
           <div className="px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 font-inter-tight">
+            Merchandising &amp; Storefront
+          </div>
+          <nav className="space-y-1 mt-1">
+            <button
+              onClick={() => setActiveTab('storefront')}
+              className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                activeTab === 'storefront'
+                  ? 'bg-slate-900 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <Icon
+                  name="sparkle"
+                  size={15}
+                  className={activeTab === 'storefront' ? 'text-amber-400' : 'text-slate-400'}
+                />
+                <span>Storefront Studio</span>
+              </div>
+              <span
+                className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${
+                  activeTab === 'storefront'
+                    ? 'bg-amber-500/20 text-amber-200'
+                    : 'bg-amber-50 text-amber-700 border border-amber-200/60'
+                }`}
+              >
+                7 Modules
+              </span>
+            </button>
+          </nav>
+        </div>
+
+        <div>
+          <div className="px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 font-inter-tight">
             Inventory & Content
           </div>
           <nav className="space-y-1 mt-1">

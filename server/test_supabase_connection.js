@@ -2,14 +2,12 @@ import pg from 'pg'
 
 const { Client } = pg
 
-const connectionString = 'postgresql://postgres.fduntharvybghpwiecep:Koushik.git@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres'
+const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:0907@localhost:5432/crazy_tours_db'
 
 console.log('Testing connection to Supabase database...')
 const client = new Client({
   connectionString,
-  ssl: {
-    rejectUnauthorized: false
-  }
+  ssl: connectionString.includes('localhost') || connectionString.includes('127.0.0.1') ? false : { rejectUnauthorized: false }
 })
 
 try {

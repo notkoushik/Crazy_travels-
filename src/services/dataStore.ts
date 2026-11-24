@@ -7,9 +7,21 @@ import {
   StoryItem,
   OfferItem,
   InstagramReelItem,
+  ReviewItem,
   BookingSubmission,
   InquirySubmission,
 } from '../types/travel'
+import {
+  nationalDestinations,
+  allPackages,
+  hotelStays,
+  roadTrips,
+  stories as defaultStories,
+  offers as defaultOffers,
+  heroSlides as defaultHeroSlides,
+  instagramReels as defaultReels,
+  reviews as defaultReviews,
+} from '../data/travelData'
 
 const EVENT_NAME = 'crazy_tours_store_updated'
 const ADMIN_TOKEN_KEY = 'crazy_tours_admin_token'
@@ -21,6 +33,207 @@ export interface HeroSlideItem {
   copy: string
   location: string
   actionRoute: string
+}
+
+export interface SpecialItem {
+  id: string
+  slotIndex: number
+  badge: string
+  title: string
+  description: string
+  priceNum?: number
+  image: string
+  actionRoute: string
+  actionLabel: string
+}
+
+export interface BoardFeatureItem {
+  id: string
+  kicker: string
+  sectionTitle: string
+  partnerBadge: string
+  headline: string
+  description: string
+  image: string
+  actionRoute: string
+  actionLabel: string
+}
+
+export interface BrandPillarItem {
+  id: string
+  stepNumber: string
+  title: string
+  description: string
+  displayOrder: number
+  stageImage?: string
+}
+
+export interface TrustStatsItem {
+  id: string
+  stat1Value: string
+  stat1Label: string
+  stat2Value: string
+  stat2Label: string
+  stat3Value: string
+  stat3Label: string
+  stat4Value: string
+  stat4Label: string
+}
+
+export interface SectionHeaderItem {
+  kicker?: string
+  title: string
+  subtitle?: string
+}
+
+export interface StorefrontConfig {
+  specials: SpecialItem[]
+  boardFeature: BoardFeatureItem | null
+  brandPillars: BrandPillarItem[]
+  trustStats: TrustStatsItem | null
+  sectionHeaders: Record<string, SectionHeaderItem>
+}
+
+export const defaultStorefrontConfig: StorefrontConfig = {
+  specials: [
+    {
+      id: 'special-1',
+      slotIndex: 1,
+      badge: 'April departures · Limited season',
+      title: 'Kashmir in full bloom',
+      description: '6 days of tulip gardens, houseboat evenings and mountain air.',
+      priceNum: 36800,
+      image: 'https://images.unsplash.com/photo-1595815771614-ade9d652a65d?auto=format&fit=crop&w=1200&q=88',
+      actionRoute: 'destination/srinagar',
+      actionLabel: 'See the journey',
+    },
+    {
+      id: 'special-2',
+      slotIndex: 2,
+      badge: 'September departures',
+      title: 'High roads of Ladakh',
+      description: 'Monasteries, mountain passes and nights beneath a spectacular sky.',
+      priceNum: 42000,
+      image: 'https://images.unsplash.com/photo-1506197603052-3cc9c3a201bd?auto=format&fit=crop&w=800&q=88',
+      actionRoute: 'road-trips',
+      actionLabel: 'Explore the route',
+    },
+    {
+      id: 'special-3',
+      slotIndex: 3,
+      badge: 'Monsoon in Kerala',
+      title: 'Monsoon in Kerala',
+      description: 'Tea-country mist, restorative stays and slow backwater days.',
+      priceNum: 28500,
+      image: 'https://images.unsplash.com/photo-1593693411515-c20261bcad6e?auto=format&fit=crop&w=700&q=85',
+      actionRoute: 'destination/munnar',
+      actionLabel: 'Build your itinerary',
+    },
+    {
+      id: 'special-4',
+      slotIndex: 4,
+      badge: 'Rajasthan by road',
+      title: 'Rajasthan by road',
+      description: 'Palace stays, craft towns and golden desert evenings.',
+      priceNum: 31000,
+      image: 'https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&w=700&q=85',
+      actionRoute: 'road-trips',
+      actionLabel: 'See road trips',
+    },
+  ],
+  boardFeature: {
+    id: 'main-board-feature',
+    kicker: 'Selected with local experts',
+    sectionTitle: 'Travel boards recommend',
+    partnerBadge: 'In partnership with local storytellers',
+    headline: 'Hampi, beyond the monuments',
+    description: 'Riverside walks, ancient stories and boulder-lit sunsets—discover Karnataka at a gentler pace.',
+    image: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&w=1600&q=88',
+    actionRoute: 'destination/hampi',
+    actionLabel: 'Explore Hampi',
+  },
+  brandPillars: [
+    {
+      id: 'pillar-1',
+      stepNumber: '01',
+      title: 'Human expertise',
+      description: 'Real travel designers who listen before they plan. No auto-generated templates.',
+      displayOrder: 1,
+      stageImage: 'https://images.unsplash.com/photo-1521336575822-6da63fb45455?auto=format&fit=crop&w=1500&q=85',
+    },
+    {
+      id: 'pillar-2',
+      stepNumber: '02',
+      title: 'Built around you',
+      description: 'Your pace, preferences and non-negotiables come first.',
+      displayOrder: 2,
+      stageImage: 'https://images.unsplash.com/photo-1521336575822-6da63fb45455?auto=format&fit=crop&w=1500&q=85',
+    },
+    {
+      id: 'pillar-3',
+      stepNumber: '03',
+      title: 'Here when needed',
+      description: 'Reliable 24/7 on-trip concierge support from first departure to your return home.',
+      displayOrder: 3,
+      stageImage: 'https://images.unsplash.com/photo-1521336575822-6da63fb45455?auto=format&fit=crop&w=1500&q=85',
+    },
+    {
+      id: 'pillar-4',
+      stepNumber: '04',
+      title: 'Clear and considered',
+      description: 'Certified heritage properties and transparent trip pricing with zero hidden fees.',
+      displayOrder: 4,
+      stageImage: 'https://images.unsplash.com/photo-1521336575822-6da63fb45455?auto=format&fit=crop&w=1500&q=85',
+    },
+  ],
+  trustStats: {
+    id: 'main-trust-stats',
+    stat1Value: '18',
+    stat1Label: 'years exploring',
+    stat2Value: '28',
+    stat2Label: 'states explored',
+    stat3Value: '24k',
+    stat3Label: 'journeys planned',
+    stat4Value: '4.9',
+    stat4Label: 'average traveller rating',
+  },
+  sectionHeaders: {
+    trending: {
+      kicker: 'India, beautifully explored',
+      title: 'Trending destinations',
+      subtitle: 'Six remarkable places curated for immersive discovery. Each one designed as a deep journey, not a tourist checklist.',
+    },
+    specials: {
+      kicker: 'Limited seasonal departures',
+      title: 'Crazy Specials & Offers',
+      subtitle: 'Handcrafted seasonal breaks with exclusive benefits and private local hosts.',
+    },
+    soul: {
+      kicker: 'Made to linger',
+      title: 'Journeys with a little more soul',
+      subtitle: 'Signature departures celebrating unhurried discovery and living heritage.',
+    },
+    board: {
+      kicker: 'Selected with local experts',
+      title: 'Travel boards recommend',
+      subtitle: 'Curated stories and architectural journeys handpicked by regional explorers.',
+    },
+    stays: {
+      kicker: 'Stay somewhere memorable',
+      title: 'Explore boutique hotel stays',
+      subtitle: 'Heritage havelis, luxury houseboats, and serene plantation estates.',
+    },
+    pillars: {
+      kicker: 'Why travel with Crazy Tours Travel',
+      title: 'Expertly planned. Genuinely personal.',
+      subtitle: 'The craft behind each journey.',
+    },
+    stats: {
+      kicker: 'The Crazy Tours Travel difference',
+      title: 'Why travellers return to us',
+      subtitle: 'Decades of authentic travel design across India.',
+    },
+  },
 }
 
 export interface DynamicStoreStats {
@@ -45,6 +258,8 @@ export interface DynamicStoreState {
   offers: OfferItem[]
   heroSlides: HeroSlideItem[]
   reels: InstagramReelItem[]
+  reviews: ReviewItem[]
+  storefront: StorefrontConfig
   bookings: BookingSubmission[]
   inquiries: InquirySubmission[]
   stats: DynamicStoreStats
@@ -54,16 +269,18 @@ export interface DynamicStoreState {
 }
 
 const emptyInitialState: DynamicStoreState = {
-  destinations: [],
-  packages: [],
-  destinationsLoaded: false,
-  packagesLoaded: false,
-  stays: [],
-  roadTrips: [],
-  stories: [],
-  offers: [],
-  heroSlides: [],
-  reels: [],
+  destinations: nationalDestinations,
+  packages: allPackages,
+  destinationsLoaded: true,
+  packagesLoaded: true,
+  stays: hotelStays,
+  roadTrips: roadTrips,
+  stories: defaultStories,
+  offers: defaultOffers,
+  heroSlides: defaultHeroSlides,
+  reels: defaultReels,
+  reviews: defaultReviews,
+  storefront: defaultStorefrontConfig,
   bookings: [],
   inquiries: [],
   stats: {
@@ -72,11 +289,11 @@ const emptyInitialState: DynamicStoreState = {
     confirmedBookings: 0,
     totalInquiries: 0,
     newInquiries: 0,
-    activeDestinations: 0,
+    activeDestinations: 6,
     activeTravelers: 38,
     monthlyGrowth: 28.4,
   },
-  isLoading: true,
+  isLoading: false,
   isDatabaseConnected: false,
   lastSyncedAt: null,
 }
@@ -136,6 +353,8 @@ export const dataStore = {
         offersRes,
         heroSlidesRes,
         reelsRes,
+        reviewsRes,
+        storefrontRes,
       ] = await Promise.all([
         fetchCatalogCollection<DestinationItem>('/api/destinations'),
         fetchCatalogCollection<PackageItem>('/api/packages'),
@@ -145,6 +364,8 @@ export const dataStore = {
         fetchCatalogCollection<OfferItem>('/api/offers'),
         fetchCatalogCollection<HeroSlideItem>('/api/hero-slides'),
         fetchCatalogCollection<InstagramReelItem>('/api/reels'),
+        fetchCatalogCollection<ReviewItem>('/api/reviews'),
+        fetch('/api/storefront-config').then((r) => (r.ok ? r.json() : null)).catch(() => null),
       ])
 
       if (request !== catalogRequest) return currentStore
@@ -160,8 +381,10 @@ export const dataStore = {
         offers: offersRes ?? currentStore.offers,
         heroSlides: heroSlidesRes ?? currentStore.heroSlides,
         reels: reelsRes ?? currentStore.reels,
+        reviews: reviewsRes ?? currentStore.reviews,
+        storefront: storefrontRes?.specials ? storefrontRes : currentStore.storefront,
         isLoading: false,
-        isDatabaseConnected: [destinationsRes, packagesRes, staysRes, roadTripsRes, storiesRes, offersRes, heroSlidesRes, reelsRes].some((collection) => collection !== null),
+        isDatabaseConnected: [destinationsRes, packagesRes, staysRes, roadTripsRes, storiesRes, offersRes, heroSlidesRes, reelsRes, storefrontRes].some((collection) => collection !== null),
         lastSyncedAt: new Date().toISOString(),
       }
       notifyListeners()
@@ -566,6 +789,70 @@ export const dataStore = {
     if (!res.ok) throw new Error('Could not delete the reel.')
     currentStore = { ...currentStore, reels: currentStore.reels.filter((reel) => reel.id !== id) }
     notifyListeners()
+  },
+
+  saveSpecial: async (slotIndex: number, updates: Partial<SpecialItem>) => {
+    const res = await fetch(`/api/storefront/specials/${slotIndex}`, {
+      method: 'PUT',
+      headers: getAdminHeaders(),
+      body: JSON.stringify(updates),
+    })
+    if (!res.ok) throw new Error('Failed to update special offer')
+    await dataStore.fetchInitialData()
+  },
+
+  saveBoardFeature: async (updates: Partial<BoardFeatureItem>) => {
+    const res = await fetch('/api/storefront/board-feature', {
+      method: 'PUT',
+      headers: getAdminHeaders(),
+      body: JSON.stringify(updates),
+    })
+    if (!res.ok) throw new Error('Failed to update board feature')
+    await dataStore.fetchInitialData()
+  },
+
+  saveBrandPillars: async (stageImage: string, pillars: BrandPillarItem[]) => {
+    const res = await fetch('/api/storefront/brand-pillars', {
+      method: 'PUT',
+      headers: getAdminHeaders(),
+      body: JSON.stringify({ stageImage, pillars }),
+    })
+    if (!res.ok) throw new Error('Failed to update brand pillars')
+    await dataStore.fetchInitialData()
+  },
+
+  saveTrustStats: async (updates: Partial<TrustStatsItem>) => {
+    const res = await fetch('/api/storefront/trust-stats', {
+      method: 'PUT',
+      headers: getAdminHeaders(),
+      body: JSON.stringify(updates),
+    })
+    if (!res.ok) throw new Error('Failed to update trust statistics')
+    await dataStore.fetchInitialData()
+  },
+
+  saveSectionHeader: async (sectionKey: string, header: SectionHeaderItem) => {
+    const res = await fetch(`/api/storefront/section-headers/${encodeURIComponent(sectionKey)}`, {
+      method: 'PUT',
+      headers: getAdminHeaders(),
+      body: JSON.stringify(header),
+    })
+    if (!res.ok) throw new Error('Failed to update section header')
+    await dataStore.fetchInitialData()
+  },
+
+  saveCuratedSelection: async (curations: {
+    trendingDestinations?: Array<{ slug: string; isTrending: boolean; displayOrder: number }>
+    soulfulPackages?: Array<{ id: string; featured: boolean; homeSpotlightOrder: number }>
+    featuredStays?: Array<{ id: string; isHomeFeatured: boolean; homeDisplayOrder: number }>
+  }) => {
+    const res = await fetch('/api/storefront/curated-selection', {
+      method: 'PUT',
+      headers: getAdminHeaders(),
+      body: JSON.stringify(curations),
+    })
+    if (!res.ok) throw new Error('Failed to update curated selection')
+    await dataStore.fetchInitialData()
   },
 
   refresh: async () => {

@@ -25,6 +25,7 @@ import { InquiriesTab } from './tabs/InquiriesTab'
 import { OffersTab } from './tabs/OffersTab'
 import { ReelsTab } from './tabs/ReelsTab'
 import { SettingsTab } from './tabs/SettingsTab'
+import { StorefrontStudioPage } from './tabs/StorefrontStudioPage'
 
 import { DestinationEditor } from './components/DestinationEditor'
 import { PackageEditor } from './components/PackageEditor'
@@ -44,6 +45,7 @@ const adminTabs = {
   inquiries: 'Inquiries',
   offers: 'Offers',
   reels: 'Instagram Reels',
+  storefront: 'Storefront Studio',
   settings: 'Database sync',
 } satisfies Record<AdminTab, string>
 
@@ -363,6 +365,24 @@ function AdminDashboardContent({
               onSaveReel={store.saveReel}
               onDeleteReel={store.deleteReel}
               onToast={onToast}
+            />
+          )}
+
+          {activeTab === 'storefront' && (
+            <StorefrontStudioPage
+              storefront={store.storefront}
+              destinations={store.destinations}
+              packages={store.packages}
+              stays={store.stays}
+              reviews={store.reviews}
+              onSaveSpecial={store.saveSpecial}
+              onSaveBoardFeature={store.saveBoardFeature}
+              onSaveBrandPillars={store.saveBrandPillars}
+              onSaveTrustStats={store.saveTrustStats}
+              onSaveSectionHeader={store.saveSectionHeader}
+              onSaveCuratedSelection={store.saveCuratedSelection}
+              onToast={onToast}
+              navigate={navigate}
             />
           )}
 

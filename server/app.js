@@ -4,6 +4,7 @@ import crypto from 'crypto'
 import { fileURLToPath } from 'url'
 import { registerCatalogMedia } from './catalog_media.js'
 import { registerReelMedia } from './reel_media.js'
+import { registerStorefrontRoutes } from './storefront_routes.js'
 import { pool } from './db.js'
 
 // ==============================================================================
@@ -169,6 +170,7 @@ app.use((req, res, next) => {
 
 registerCatalogMedia(app, pool, requireAdminAuth)
 registerReelMedia(app, pool, requireAdminAuth)
+registerStorefrontRoutes(app, pool, requireAdminAuth)
 
 // Health check
 app.get('/api/health', async (req, res) => {
