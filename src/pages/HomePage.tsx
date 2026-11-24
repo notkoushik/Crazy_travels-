@@ -184,6 +184,87 @@ function ReelVideoCard({
   )
 }
 
+
+const customizationDestinations = [
+  {
+    slug: 'kashmir',
+    city: 'Kashmir',
+    tagline: 'Paradise in bloom, pine valleys & houseboats',
+    image: 'https://images.unsplash.com/photo-1595815771614-ade9d652a65d?auto=format&fit=crop&w=1200&q=85',
+    locations: ['Dal Lake Houseboat', 'Gulmarg Backcountry', 'Pahalgam Pine Valley', 'Sonamarg Thajiwas Glacier'],
+    highlights: ['Private Shikara cruise at twilight', 'Chauffeured sedan throughout', 'Warm Kahwa tasting sessions'],
+    startingPrice: 32500,
+  },
+  {
+    slug: 'kerala',
+    city: 'Kerala',
+    tagline: 'Misty tea estates, backwaters & spice trails',
+    image: 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?auto=format&fit=crop&w=1200&q=85',
+    locations: ['Munnar Tea Country', 'Alleppey Backwaters', 'Marari Secret Beach', 'Wayanad Rainforests'],
+    highlights: ['Exclusive private luxury houseboat', 'Ayurvedic wellness sessions', 'Spice plantation trail with local botanist'],
+    startingPrice: 28900,
+  },
+  {
+    slug: 'rajasthan',
+    city: 'Rajasthan',
+    tagline: 'Golden dunes, royal havelis & starry skies',
+    image: 'https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&w=1200&q=85',
+    locations: ['Udaipur Lake Pichola', 'Jaisalmer Sam Dunes', 'Jaipur Royal Palaces', 'Jodhpur Blue Fort'],
+    highlights: ['Luxury desert tent with bonfire & stargazing', 'Curated palace suite upgrade options', 'Chauffeured Toyota Innova Crysta'],
+    startingPrice: 26800,
+  },
+  {
+    slug: 'ladakh',
+    city: 'Ladakh',
+    tagline: 'High mountain passes, azure lakes & silence',
+    image: 'https://images.unsplash.com/photo-1506197603052-3cc9c3a201bd?auto=format&fit=crop&w=1200&q=85',
+    locations: ['Nubra Valley Sand Dunes', 'Pangong Tso Alpine Lake', 'Khardung La (17,982 ft)', 'Hemis & Thiksey Monasteries'],
+    highlights: ['High-clearance 4x4 with emergency oxygen kit', 'Double-humped camel safari at Hunder', 'Night sky astrophotography guide'],
+    startingPrice: 42000,
+  },
+  {
+    slug: 'goa',
+    city: 'Goa',
+    tagline: 'Portuguese heritage villas & secluded shores',
+    image: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&w=1200&q=85',
+    locations: ['South Goa Heritage Villas', 'Dudhsagar Waterfalls', 'Cola Beach Lagoon', 'Chapora Sunset River Cruise'],
+    highlights: ['Private villa with plunge pool', 'Secret beach hopping in open-top jeep', 'Catamaran sunset sail with snacks'],
+    startingPrice: 22500,
+  },
+  {
+    slug: 'andaman',
+    city: 'Andaman',
+    tagline: 'Turquoise waters, coral atolls & white sands',
+    image: 'https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?auto=format&fit=crop&w=1200&q=85',
+    locations: ['Havelock Radhanagar Beach', 'Elephant Beach Coral Reef', 'Neil Natural Bridge', 'Baratang Mangrove Caves'],
+    highlights: ['High-speed Makruzz catamaran transfers', 'PADI-certified scuba dive session', 'Beachfront luxury cabana'],
+    startingPrice: 34500,
+  },
+]
+
+const adventureFeatures = [
+  {
+    title: 'High-Altitude Mountain Passes',
+    location: 'Khardung La & Chang La, Ladakh (17,982 ft)',
+    desc: 'Breathtaking 4x4 mountain drives and bike convoys with backup vehicle, first-aid & oxygen.',
+  },
+  {
+    title: 'White-Water River Rafting',
+    location: 'Indus & Zanskar Rapids / Ganges, Rishikesh',
+    desc: 'Grade III & IV white-water runs navigated with certified rescue river masters.',
+  },
+  {
+    title: 'Thar Desert Dune Glamping & Quad Biking',
+    location: 'Sam Sand Dunes, Jaisalmer',
+    desc: 'High-powered dune bashing, quad biking and luxury swiss tents under starry skies.',
+  },
+  {
+    title: 'Coral Reef Snorkeling & Scuba Diving',
+    location: 'Havelock Island & Elephant Beach, Andaman',
+    desc: 'Pristine underwater coral gardens and sea turtle lagoons with certified PADI divemasters.',
+  },
+]
+
 export function HomePage({
   navigate,
   saved,
@@ -611,231 +692,337 @@ export function HomePage({
         </div>
       </section>
 
-      {/* Crazy Specials Section */}
-      <section className="specials-section shell section">
-        <div className="section-heading">
-          <div>
-            <span className="kicker">{headers.specials?.kicker || 'Limited seasonal departures'}</span>
-            <h2>{headers.specials?.title || 'Crazy Specials & Offers'}</h2>
-          </div>
-          <button onClick={() => navigate('offers')} className="section-link">
-            See all offers <Icon name="arrow" size={17} />
-          </button>
-        </div>
-        <div className="specials-grid">
-          <article
-            className="special-card special-japan"
-            style={{
-              backgroundImage: `linear-gradient(90deg, rgba(22,38,34,.82), rgba(22,38,34,.08)), url(${special1.image || kashmirImage})`,
-            }}
-          >
-            <span>{special1.badge}</span>
-            <h3>{special1.title}</h3>
-            <p>{special1.description}</p>
-            {special1.priceNum ? <strong>From {formatPrice(special1.priceNum, currency)}</strong> : null}
-            <button onClick={() => navigate(special1.actionRoute as RouteName)}>
-              {special1.actionLabel || 'See the journey'} <Icon name="arrow" size={16} />
-            </button>
-          </article>
-
-          <article
-            className="special-card special-spiritual"
-            style={{
-              backgroundImage: `linear-gradient(0deg, rgba(6,39,35,.88), rgba(6,39,35,.12)), url(${special2.image || socialHimachal})`,
-            }}
-          >
-            <span>{special2.badge}</span>
-            <h3>{special2.title}</h3>
-            <p>{special2.description}</p>
-            {special2.priceNum ? <strong>From {formatPrice(special2.priceNum, currency)}</strong> : null}
-            <button onClick={() => navigate(special2.actionRoute as RouteName)}>
-              {special2.actionLabel || 'Explore the route'} <Icon name="arrow" size={16} />
-            </button>
-          </article>
-
-          <article
-            className="special-card special-small special-small-photo special-build"
-            style={{
-              backgroundImage: `linear-gradient(0deg, rgba(6,39,35,.8), rgba(6,39,35,.14)), url(${special3.image})`,
-            }}
-          >
-            <Icon name="sparkle" size={28} />
-            <h3>{special3.title}</h3>
-            <p>{special3.description}</p>
-            <button
-              onClick={() => navigate(special3.actionRoute as RouteName)}
-              aria-label={special3.actionLabel || 'Build your itinerary'}
-            >
-              <Icon name="arrow" size={18} />
-            </button>
-          </article>
-
-          <article
-            className="special-card special-small special-small-photo special-reward"
-            style={{
-              backgroundImage: `linear-gradient(0deg, rgba(6,39,35,.82), rgba(6,39,35,.12)), url(${special4.image})`,
-            }}
-          >
-            <Icon name="wallet" size={28} />
-            <h3>{special4.title}</h3>
-            <p>{special4.description}</p>
-            <button onClick={() => navigate(special4.actionRoute as RouteName)} aria-label={special4.actionLabel || 'See road trips'}>
-              <Icon name="arrow" size={18} />
-            </button>
-          </article>
-        </div>
-      </section>
-
-      {/* Customization Showcase */}
-      <section className="shell section" aria-labelledby="home-customization-heading">
-        <div className="section-heading">
-          <h2 id="home-customization-heading">We offer customization</h2>
-        </div>
-        <div className="customization-cards">
-          <article className="customization-card">
-            <CatalogPhoto src={(selectedDestination ?? offeredDestinations[0])?.image} alt="" loading="lazy" className="customization-photo" />
-            <div className="customization-content">
-              <h3>Make the destination your own</h3>
-              <p>Choose where you want to go. We’ll tailor the route, stays and pace to how you like to travel.</p>
-              <div className="customization-actions">
-                {offeredDestinations.length > 0 && (
-                  <select aria-label="Destination to customize" value={selectedDestination?.slug ?? ''} onChange={(event) => setCustomDestination(event.target.value)}>
-                    <option value="">Choose a destination</option>
-                    {offeredDestinations.map(({ slug, city }) => <option value={slug} key={slug}>{city}</option>)}
-                  </select>
-                )}
-                <button type="button" className="customization-button" onClick={() => navigate(selectedDestination ? `custom-trip/${encodeURIComponent(selectedDestination.slug)}` : 'custom-trip')}>
-                  Customize my trip <Icon name="arrow" size={16} />
-                </button>
-              </div>
-            </div>
-          </article>
-          <article className="customization-card">
-            <CatalogPhoto src={adventurePackages[0]?.image} alt="" loading="lazy" className="customization-photo" />
-            <div className="customization-content">
-              <h3>Find your next adventure</h3>
-              <p>{adventurePackages.length > 0
-                ? 'Explore our adventure itineraries and ask us to tailor the experiences for your group.'
-                : 'Tell us what you’d like to try and we’ll help you build a trip around it.'}</p>
-              <div className="customization-actions">
-                {adventurePackages.length > 0 ? adventurePackages.map((trip) => (
-                  <button key={trip.id} type="button" className="customization-button" onClick={() => navigate(`package/${trip.id}`)}>
-                    {trip.title} <Icon name="arrow" size={16} />
-                  </button>
-                )) : (
-                  <button type="button" className="customization-button" onClick={() => navigate('custom-trip')}>
-                    Plan an adventure <Icon name="arrow" size={16} />
-                  </button>
-                )}
-              </div>
-            </div>
-          </article>
-        </div>
-      </section>
-
-      {/* Journeys With Soul (Packages Showcase) */}
-      <section className="journeys">
-        <div className="shell section">
-          <div className="section-heading light">
+      {/* We Offer Customization Showcase & Efficiency Hub */}
+      <section className="customization-section" aria-labelledby="home-customization-heading">
+        <div className="shell">
+          <div className="section-heading mb-10">
             <div>
-              <span className="kicker">{headers.soul?.kicker || 'Made to linger'}</span>
-              <h2>{headers.soul?.title || 'Journeys with a little more soul'}</h2>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#0b4941]/10 text-[#0b4941] text-xs font-bold tracking-wider uppercase mb-2">
+                <Icon name="sparkle" size={13} />
+                <span>Handcrafted to Your Pace</span>
+              </div>
+              <h2 id="home-customization-heading" className="font-serif text-3xl md:text-4xl lg:text-[42px] text-[#072f2b] tracking-tight font-normal">
+                We offer customization
+              </h2>
+              <p className="text-gray-600 text-sm mt-2 max-w-2xl leading-relaxed">
+                Why take a rigid group tour when you can craft an itinerary tailored to your exact pace, rhythm, and style?
+                Direct vehicle coordination, handpicked boutique stays, and dedicated 24/7 personal trip design.
+              </p>
             </div>
-            <button onClick={() => navigate('packages')} className="text-link">
-              View all {displayPackages.length} journeys <Icon name="arrow" size={17} />
+            <button
+              type="button"
+              onClick={() => navigate('custom-trip')}
+              className="section-link"
+            >
+              Start custom planner <Icon name="arrow" size={17} />
             </button>
           </div>
-          <div className="package-grid">
-            {homePackages.map((trip) => (
-              <article className="package-card" key={trip.id}>
-                <div className="package-image">
-                  <CatalogPhoto src={trip.image} alt={trip.place} />
-                  <span>{trip.duration}</span>
+
+          <div className="customization-grid">
+            {/* Card 1: Tailored Locations for Each Destination We Offer */}
+            <article className="customization-card-modern">
+              <div className="customization-media-wrap">
+                <CatalogPhoto
+                  src={activeCustomDest.image}
+                  alt={activeCustomDest.city}
+                  loading="lazy"
+                />
+                <div className="customization-media-scrim" />
+                <span className="customization-media-badge">
+                  <Icon name="compass" size={12} />
+                  <span>Custom Locations For Every Region</span>
+                </span>
+                <div className="customization-media-overlay-content">
+                  <h3>{activeCustomDest.city} Custom Itineraries</h3>
+                  <p>{activeCustomDest.tagline}</p>
                 </div>
-                <div className="package-body">
-                  <p>{trip.place}</p>
-                  <h3>{trip.title}</h3>
-                  <div className="package-meta">
-                    <span>{trip.theme}</span>
-                    {trip.reviewCount > 0 && trip.rating > 0 && <span>{trip.rating} ★ ({trip.reviewCount})</span>}
-                  </div>
-                  <div className="package-price">
-                    <span>
-                      from <strong>{formatPrice(trip.priceNum, currency)}</strong> / person
-                    </span>
-                    <button
-                      onClick={() => navigate(`package/${trip.id}` as RouteName)}
-                      aria-label={`View ${trip.title}`}
-                    >
-                      <Icon name="arrow" />
-                    </button>
+              </div>
+
+              <div className="customization-body-modern">
+                {/* Destination Selector Pills */}
+                <div className="mb-2">
+                  <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider block mb-2">
+                    Select a destination to explore custom spots:
+                  </span>
+                  <div className="customization-pill-row">
+                    {customizationDestinations.map((dest) => (
+                      <button
+                        key={dest.slug}
+                        type="button"
+                        className={`customization-pill ${activeCustomDestSlug === dest.slug ? 'active' : ''}`}
+                        onClick={() => setActiveCustomDestSlug(dest.slug)}
+                        aria-pressed={activeCustomDestSlug === dest.slug}
+                      >
+                        {dest.city}
+                      </button>
+                    ))}
                   </div>
                 </div>
-              </article>
-            ))}
+
+                {/* Custom locations offered in this destination */}
+                <div className="mb-4">
+                  <span className="text-[11px] font-bold text-[#072f2b] uppercase tracking-wider block mb-1.5">
+                    Curated Locations & Secret Stops in {activeCustomDest.city}:
+                  </span>
+                  <div className="customization-location-tags">
+                    {activeCustomDest.locations.map((loc, idx) => (
+                      <span key={idx} className="customization-location-tag">
+                        📍 {loc}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Key customization perks */}
+                <div className="customization-perks-list">
+                  {activeCustomDest.highlights.map((item, idx) => (
+                    <div key={idx} className="customization-perk-item">
+                      <Icon name="check" size={14} />
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                  <div className="customization-perk-item">
+                    <Icon name="check" size={14} />
+                    <span>Private AC Chauffeur & Sanitized Cab with zero forced stops</span>
+                  </div>
+                </div>
+
+                {/* Footer Actions */}
+                <div className="customization-footer-actions">
+                  <div>
+                    <span className="block text-[11px] text-gray-500 font-medium">Starting from</span>
+                    <strong className="text-lg font-bold text-[#072f2b]">
+                      {formatPrice(activeCustomDest.startingPrice, currency)}
+                    </strong>
+                    <span className="text-[11px] text-gray-500"> / person</span>
+                  </div>
+                  <button
+                    type="button"
+                    className="customization-btn-primary"
+                    onClick={() => navigate(`custom-trip/${encodeURIComponent(activeCustomDest.slug)}`)}
+                  >
+                    <span>Customize {activeCustomDest.city}</span>
+                    <Icon name="arrow" size={15} />
+                  </button>
+                </div>
+              </div>
+            </article>
+
+            {/* Card 2: Adventure Locations for Selected Packages */}
+            <article className="customization-card-modern">
+              <div className="customization-media-wrap">
+                <CatalogPhoto
+                  src="https://images.unsplash.com/photo-1506197603052-3cc9c3a201bd?auto=format&fit=crop&w=1200&q=85"
+                  alt="Adventure mountain pass"
+                  loading="lazy"
+                />
+                <div className="customization-media-scrim" />
+                <span className="customization-media-badge">
+                  <Icon name="sparkle" size={12} />
+                  <span>Curated Thrills & High Passes</span>
+                </span>
+                <div className="customization-media-overlay-content">
+                  <h3>Adventure Locations for Selected Packages</h3>
+                  <p>Himalayan passes, river rapids, desert safaris & deep reefs tailored to your thrill level.</p>
+                </div>
+              </div>
+
+              <div className="customization-body-modern">
+                {/* Adventure Location Highlights */}
+                <div className="space-y-3 mb-4">
+                  {adventureFeatures.map((adv, idx) => (
+                    <div key={idx} className="p-2.5 rounded-xl bg-[#f8faf9] border border-[#e4eee8] hover:border-[#b8d6c8] transition-colors">
+                      <div className="flex items-baseline justify-between gap-2">
+                        <h4 className="text-xs font-bold text-[#072f2b]">{adv.title}</h4>
+                        <span className="text-[10px] font-semibold text-[#ef4934] shrink-0 font-mono">📍 {adv.location}</span>
+                      </div>
+                      <p className="text-[11px] text-gray-600 mt-0.5 leading-snug">{adv.desc}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Selected Adventure Packages */}
+                <div className="mb-4">
+                  <span className="text-[11px] font-bold text-[#072f2b] uppercase tracking-wider block mb-2">
+                    Popular Adventure Packages:
+                  </span>
+                  <div className="flex flex-wrap gap-2">
+                    {rankedPackages
+                      .filter((p) => p.theme === 'Adventure' || p.id.includes('andaman') || p.id.includes('sikkim') || p.id.includes('kashmir'))
+                      .slice(0, 3)
+                      .map((pkg) => (
+                        <button
+                          key={pkg.id}
+                          type="button"
+                          onClick={() => navigate(`package/${pkg.id}`)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#c8ded4] bg-white text-xs font-semibold text-[#0b4941] hover:bg-[#eaf4ef] transition-colors"
+                        >
+                          <span>{pkg.title}</span>
+                          <span className="text-[10px] text-gray-500 font-mono">({formatPrice(pkg.priceNum, currency)})</span>
+                          <Icon name="arrow" size={12} />
+                        </button>
+                      ))}
+                  </div>
+                </div>
+
+                {/* Footer Actions */}
+                <div className="customization-footer-actions">
+                  <button
+                    type="button"
+                    className="customization-btn-secondary"
+                    onClick={() => navigate('packages')}
+                  >
+                    <span>View all packages</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="customization-btn-primary"
+                    onClick={() => navigate('custom-trip')}
+                  >
+                    <span>Plan Custom Adventure</span>
+                    <Icon name="arrow" size={15} />
+                  </button>
+                </div>
+              </div>
+            </article>
+          </div>
+
+          {/* Efficiency & Trust Showcase Bar */}
+          <div className="customization-trust-bar">
+            <div className="customization-trust-item">
+              <div className="customization-trust-icon">
+                <Icon name="sparkle" size={20} />
+              </div>
+              <div className="customization-trust-text">
+                <h4>24h Custom Blueprint</h4>
+                <p>Personalized day-by-day route with vetted hotels sent to WhatsApp within 24 hours.</p>
+              </div>
+            </div>
+
+            <div className="customization-trust-item">
+              <div className="customization-trust-icon">
+                <Icon name="refresh" size={20} />
+              </div>
+              <div className="customization-trust-text">
+                <h4>Unlimited Free Revisions</h4>
+                <p>Change hotels, add safari days, or tweak destinations until it perfectly matches your dream pace.</p>
+              </div>
+            </div>
+
+            <div className="customization-trust-item">
+              <div className="customization-trust-icon">
+                <Icon name="wallet" size={20} />
+              </div>
+              <div className="customization-trust-text">
+                <h4>Direct B2B Pricing</h4>
+                <p>Contracted luxury rates with direct vehicle & hotel coordination. Zero hidden commission markups.</p>
+              </div>
+            </div>
+
+            <div className="customization-trust-item">
+              <div className="customization-trust-icon">
+                <Icon name="phone" size={20} />
+              </div>
+              <div className="customization-trust-text">
+                <h4>24/7 Dedicated Concierge</h4>
+                <p>Your personal trip specialist stays on call via WhatsApp from departure until your safe flight home.</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Social Moments Stories & Instagram Reels Video Section */}
-      {store.reels.length > 0 && <section className="social-section" id="instagram-reels">
-        <div className="shell social-layout">
-          <div className="social-intro">
-            <span className="kicker">Follow @crazytourstravels</span>
-            <h2>Small moments.<br />Real customer stories.</h2>
-            <p>
-              Live notes and customer video reviews from travelers across Kashmir, Kerala, Rajasthan, Ladakh, and beyond.
-              Watch them run simultaneously or click any reel to experience full sound and reviews.
-            </p>
-            <div className="mt-4 flex flex-wrap items-center gap-3">
-              <a
-                href="https://www.instagram.com/crazytourstravels/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-gradient-to-r from-[#f09433] via-[#dc2743] to-[#bc1888] text-white text-xs font-bold shadow-md hover:opacity-95 transition-all"
-              >
-                <Icon name="instagram" size={15} />
-                <span>Follow on Instagram</span>
-              </a>
-              {(reelNavigation.previous || reelNavigation.next) && (
-                <div className="social-reel-controls">
-                  <button
-                    type="button"
-                    onClick={() => scrollSocial(-1)}
-                    disabled={!reelNavigation.previous}
-                    aria-label="Previous reel"
-                    aria-controls="instagram-reel-track"
-                  >
-                    <Icon name="chevron" size={18} className="rotate-180" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => scrollSocial(1)}
-                    disabled={!reelNavigation.next}
-                    aria-label="Next reel"
-                    aria-controls="instagram-reel-track"
-                  >
-                    <Icon name="chevron" size={18} />
-                  </button>
-                </div>
-              )}
+      {displayReels.length > 0 && (
+        <section className="social-section" id="instagram-reels">
+          <div className="shell social-layout">
+            <div className="social-intro">
+              <span className="kicker">Follow @crazytourstravels</span>
+              <h2>Small moments.<br />Real customer stories.</h2>
+              <p>
+                Live notes and customer video reviews from travelers across Kashmir, Kerala, Rajasthan, Ladakh, and beyond.
+                Watch them run simultaneously or click any reel to experience full sound and reviews.
+              </p>
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                <a
+                  href="https://www.instagram.com/crazytourstravels/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-gradient-to-r from-[#f09433] via-[#dc2743] to-[#bc1888] text-white text-xs font-bold shadow-md hover:opacity-95 transition-all"
+                >
+                  <Icon name="instagram" size={15} />
+                  <span>Follow on Instagram</span>
+                </a>
+                {(reelNavigation.previous || reelNavigation.next) && (
+                  <div className="social-reel-controls">
+                    <button
+                      type="button"
+                      onClick={() => scrollSocial(-1)}
+                      disabled={!reelNavigation.previous}
+                      aria-label="Previous reel"
+                      aria-controls="instagram-reel-track"
+                    >
+                      <Icon name="chevron" size={18} className="rotate-180" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => scrollSocial(1)}
+                      disabled={!reelNavigation.next}
+                      aria-label="Next reel"
+                      aria-controls="instagram-reel-track"
+                    >
+                      <Icon name="chevron" size={18} />
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
 
-          <div id="instagram-reel-track" className="social-track" ref={socialTrackRef}>
-            {store.reels.map(
-              (reel, index) => (
+            <div id="instagram-reel-track" className="social-track" ref={socialTrackRef}>
+              {displayReels.map((reel, index) => (
                 <ReelVideoCard
                   key={reel.id || index}
                   reel={reel}
                   index={index}
                   onOpen={(r, idx) => onOpenStory(r, idx)}
                 />
-              )
-            )}
+              ))}
+            </div>
           </div>
-        </div>
-      </section>}
+        </section>
+      )}
+
+      {displayPackages.length > 0 && (
+        <>
+          <section className="shell section" aria-labelledby="home-packages-heading">
+            <div className="section-heading">
+              <h2 id="home-packages-heading">Holiday packages</h2>
+              <button type="button" onClick={() => navigate('packages')} className="section-link">
+                View all packages <Icon name="arrow" size={17} />
+              </button>
+            </div>
+            <div className="package-grid package-browse" tabIndex={0} role="group" aria-label="Browse holiday package cards">
+              {displayPackages.map((trip) => (
+                <HomePackageCard key={trip.id} trip={trip} currency={currency} navigate={navigate} />
+              ))}
+            </div>
+          </section>
+
+          <section className="journeys" aria-labelledby="home-recommended-heading">
+            <div className="shell section">
+              <div className="section-heading light">
+                <h2 id="home-recommended-heading">Recommended packages</h2>
+              </div>
+              <div className="package-grid">
+                {recommendedPackages.map((trip) => (
+                  <HomePackageCard key={trip.id} trip={trip} currency={currency} navigate={navigate} />
+                ))}
+              </div>
+            </div>
+          </section>
+        </>
+      )}
+
       <section className="board-section">
         <div className="shell section">
           <div className="section-heading">
