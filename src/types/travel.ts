@@ -108,6 +108,8 @@ export interface DestinationItem {
   season: string
   duration: string
   tagline: string
+  videoUrl?: string
+  posterUrl?: string
   description: string
   highlights: string[]
   gallery: string[]

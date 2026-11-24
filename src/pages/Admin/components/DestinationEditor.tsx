@@ -70,6 +70,7 @@ export function DestinationEditor({
       season: textValue(form, 'season'),
       duration: requiredText(form, 'duration', 'Suggested trip length'),
       tagline: textValue(form, 'tagline'),
+      videoUrl: textValue(form, 'videoUrl'),
       description: destination
         ? textValue(form, 'description')
         : requiredText(form, 'description', 'Destination overview'),
@@ -167,6 +168,13 @@ export function DestinationEditor({
           name="tagline"
           defaultValue={destination?.tagline}
           placeholder="A short line for the destination card"
+        />
+        <Field
+          label="Hero Video URL (optional MP4 or WebM)"
+          name="videoUrl"
+          defaultValue={destination?.videoUrl}
+          placeholder="e.g. /Video/optimized/destination_kerala.mp4 or https://..."
+          hint="If provided, a cinematic rolling video will play at the top of this destination's page."
         />
         <TextArea
           label="Destination overview"

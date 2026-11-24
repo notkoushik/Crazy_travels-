@@ -1,5 +1,7 @@
 import React from 'react'
 import { CatalogPhotoCarousel } from '../components/CatalogPhotoCarousel'
+import { getDestinationVideo } from '../data/destinationVideos'
+import { useState } from 'react'
 import { Currency, DestinationItem, RouteName } from '../types/travel'
 import { Icon } from '../components/Icon'
 import { GoogleVerifiedBadge, isGoogleMapsLink } from '../components/GoogleVerifiedBadge'
@@ -22,6 +24,16 @@ export function DestinationPage({
   onToggleSave,
   currency,
 }: DestinationPageProps) {
+  const [isVideoMuted, setIsVideoMuted] = useState(true)
+  const destVideo = destination.videoUrl
+    ? {
+        videoUrl: destination.videoUrl,
+        posterUrl: destination.posterUrl || destination.image,
+        title: destination.city,
+        tagline: destination.tagline,
+        locationBadge: destination.state || destination.country || 'Verified Destination',
+      }
+    : getDestinationVideo(destination.slug || destination.city)
   const season = destination.bestTimeToVisit || destination.peakSeason || destination.season
   const travelDetails = [
     ['Nearest airport', destination.nearestAirport, 'flight'],
@@ -58,48 +70,114 @@ export function DestinationPage({
         <span className="text-gray-900 font-semibold">{destination.city}</span>
       </div>
 
-      {/* Hero Banner */}
-      <CatalogPhotoCarousel
-        key={destination.slug}
-        title={destination.city}
-        cover={destination.image}
-        gallery={destination.gallery}
-        className="shell-wide mb-6"
-        frameClassName="destination-detail-hero"
-      >
-        <div className="destination-detail-shade" />
-
-        {/* Top Right Save & Rating */}
-        <div className="absolute top-6 right-6 flex items-center gap-3 z-20">
-          <GoogleVerifiedBadge
-            rating={destination.googleRating}
-            reviewsCount={destination.googleReviewsCount}
-            mapsUrl={destination.googleMapsUrl}
-            size="md"
-            className="shadow-lg"
+      {/* Cinematic Destination Hero Banner with Live Video */}
+      {destVideo ? (
+        <div className="shell-wide mb-6 relative rounded-3xl overflow-hidden destination-detail-hero min-h-[460px] md:min-h-[540px] shadow-xl group">
+          <video
+            src={destVideo.videoUrl}
+            poster={destVideo.posterUrl || destination.image}
+            autoPlay
+            loop
+            muted={isVideoMuted}
+            playsInline
+            className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
           />
-          <button
-            onClick={onToggleSave}
-            className={`p-3 rounded-full backdrop-blur-md transition-colors shadow-lg ${
-              saved ? 'bg-[#ef4934] text-white' : 'bg-white/90 hover:bg-white text-gray-800'
-            }`}
-            aria-label="Save destination"
-          >
-            <Icon name="heart" size={20} className={saved ? 'fill-white' : ''} />
-          </button>
-        </div>
+          <div className="destination-detail-shade absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/30 pointer-events-none" />
 
-        <div className="destination-detail-title">
-          <span className="eyebrow">{destination.country || destination.state} · Curated Destination Guide</span>
-          <h1>{destination.city}</h1>
-          <p>{destination.tagline}</p>
+          {/* Top Bar: Live Video Tag, Audio Control, Rating & Save */}
+          <div className="absolute top-6 inset-x-6 flex items-center justify-between z-20 pointer-events-auto">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/55 backdrop-blur-md text-amber-300 text-xs font-bold border border-white/20 shadow-md">
+              <Icon name="sparkle" size={13} className="text-amber-400" />
+              <span>Live Journey Video Preview</span>
+            </span>
+
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setIsVideoMuted(!isVideoMuted)}
+                className="p-3 rounded-full bg-black/60 hover:bg-black/90 text-white backdrop-blur-md transition-transform hover:scale-110 shadow-lg border border-white/20"
+                aria-label={isVideoMuted ? 'Unmute video audio' : 'Mute video audio'}
+                title={isVideoMuted ? 'Unmute audio' : 'Mute audio'}
+              >
+                <Icon name={isVideoMuted ? 'volumeX' : 'volume'} size={18} />
+              </button>
+
+              <GoogleVerifiedBadge
+                rating={destination.googleRating}
+                reviewsCount={destination.googleReviewsCount}
+                mapsUrl={destination.googleMapsUrl}
+                size="md"
+                className="shadow-lg"
+              />
+
+              <button
+                onClick={onToggleSave}
+                className={`p-3 rounded-full backdrop-blur-md transition-colors shadow-lg ${
+                  saved ? 'bg-[#ef4934] text-white' : 'bg-white/90 hover:bg-white text-gray-800'
+                }`}
+                aria-label="Save destination"
+              >
+                <Icon name="heart" size={20} className={saved ? 'fill-white' : ''} />
+              </button>
+            </div>
+          </div>
+
+          {/* Bottom Title & Tagline */}
+          <div className="destination-detail-title z-20">
+            <span className="eyebrow">{destVideo.locationBadge || destination.country || destination.state} · Handcrafted Journey</span>
+            <h1>{destination.city}</h1>
+            <p>{destination.tagline || destVideo.tagline}</p>
+          </div>
+
+          <div className="destination-hero-meta z-20">
+            {(destination.duration || destination.recommendedStayDays) && <span>{destination.duration || destination.recommendedStayDays}</span>}
+            {(destination.season || destination.peakSeason) && <span>{destination.season || destination.peakSeason}</span>}
+            <span>From {formatPrice(destination.priceNum, currency)}</span>
+          </div>
         </div>
-        <div className="destination-hero-meta">
-          {(destination.duration || destination.recommendedStayDays) && <span>{destination.duration || destination.recommendedStayDays}</span>}
-          {(destination.season || destination.peakSeason) && <span>{destination.season || destination.peakSeason}</span>}
-          <span>From {formatPrice(destination.priceNum, currency)}</span>
-        </div>
-      </CatalogPhotoCarousel>
+      ) : (
+        <CatalogPhotoCarousel
+          key={destination.slug}
+          title={destination.city}
+          cover={destination.image}
+          gallery={destination.gallery}
+          className="shell-wide mb-6"
+          frameClassName="destination-detail-hero"
+        >
+          <div className="destination-detail-shade" />
+
+          {/* Top Right Save & Rating */}
+          <div className="absolute top-6 right-6 flex items-center gap-3 z-20">
+            <GoogleVerifiedBadge
+              rating={destination.googleRating}
+              reviewsCount={destination.googleReviewsCount}
+              mapsUrl={destination.googleMapsUrl}
+              size="md"
+              className="shadow-lg"
+            />
+            <button
+              onClick={onToggleSave}
+              className={`p-3 rounded-full backdrop-blur-md transition-colors shadow-lg ${
+                saved ? 'bg-[#ef4934] text-white' : 'bg-white/90 hover:bg-white text-gray-800'
+              }`}
+              aria-label="Save destination"
+            >
+              <Icon name="heart" size={20} className={saved ? 'fill-white' : ''} />
+            </button>
+          </div>
+
+          <div className="destination-detail-title">
+            <span className="eyebrow">{destination.country || destination.state} · Curated Destination Guide</span>
+            <h1>{destination.city}</h1>
+            <p>{destination.tagline}</p>
+          </div>
+          <div className="destination-hero-meta">
+            {(destination.duration || destination.recommendedStayDays) && <span>{destination.duration || destination.recommendedStayDays}</span>}
+            {(destination.season || destination.peakSeason) && <span>{destination.season || destination.peakSeason}</span>}
+            <span>From {formatPrice(destination.priceNum, currency)}</span>
+          </div>
+        </CatalogPhotoCarousel>
+      )}
 
       {/* Sub Navigation Bar */}
       <nav className="destination-subnav mb-10 sticky top-0 z-30 shadow-xs bg-white/95 backdrop-blur-md border-b border-gray-100">

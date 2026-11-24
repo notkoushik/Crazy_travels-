@@ -1604,3 +1604,276 @@ footer { padding-top: 115px; background: var(--forest-dark); color: #c5d6d2; }
   display: inline-block;
   animation: kekaWordSlide 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
+
+/* ==========================================================================
+   Cinematic Video Hero & Telugu Trust Showcase (Inspired by Europe 2027 layout)
+   ========================================================================== */
+.hero-cinematic-banner {
+  position: relative;
+  width: 100%;
+  border-radius: 28px;
+  overflow: hidden;
+  box-shadow: 0 25px 60px rgba(7, 47, 43, 0.18);
+  margin-bottom: 24px;
+  min-height: 580px;
+}
+.hero-video-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  transition: transform 1.2s ease-out;
+}
+.hero-video-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(6, 39, 35, 0.96) 0%,
+    rgba(6, 39, 35, 0.90) 45%,
+    rgba(6, 39, 35, 0.70) 75%,
+    rgba(6, 39, 35, 0.50) 100%
+  );
+  z-index: 1;
+}
+@media (max-width: 900px) {
+  .hero-video-scrim {
+    background: linear-gradient(
+      180deg,
+      rgba(6, 39, 35, 0.97) 0%,
+      rgba(6, 39, 35, 0.92) 55%,
+      rgba(6, 39, 35, 0.85) 100%
+    );
+  }
+}
+.hero-cinematic-content {
+  position: relative;
+  z-index: 2;
+  padding: clamp(24px, 3.8vw, 52px);
+  color: white;
+}
+.hero-main-layout {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 36px;
+  align-items: center;
+  margin-bottom: 28px;
+}
+@media (max-width: 1024px) {
+  .hero-main-layout {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+}
+.hero-left-col {
+  display: flex;
+  flex-direction: column;
+}
+.hero-telugu-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 30px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #ffd0c7;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin-bottom: 14px;
+  width: fit-content;
+}
+.hero-main-title {
+  font-family: var(--travel-heading-font);
+  font-size: clamp(38px, 4.8vw, 68px);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+  margin-bottom: 8px;
+  text-shadow: 0 4px 18px rgba(0, 0, 0, 0.4);
+}
+.hero-main-title span {
+  color: #ffd0c7;
+  font-family: inherit;
+}
+.hero-tagline {
+  font-size: clamp(14px, 1.6vw, 18px);
+  font-weight: 600;
+  color: #f7a895;
+  margin-bottom: 14px;
+  letter-spacing: 0.02em;
+}
+.hero-desc {
+  font-size: 14px;
+  line-height: 1.65;
+  color: #e5f0ec;
+  max-width: 580px;
+  margin-bottom: 22px;
+}
+.hero-perk-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.hero-perk-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 12px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+/* 4 Trust Badges 2x2 Grid (Inspired by Europe 2027 Cards) */
+.hero-badges-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+@media (max-width: 540px) {
+  .hero-badges-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.hero-badge-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 16px 18px;
+  color: var(--ink);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  min-height: 155px;
+}
+.hero-badge-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.3);
+}
+.hero-badge-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.hero-badge-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+}
+.hero-badge-card h4 {
+  font-size: 15px;
+  font-weight: 750;
+  color: var(--forest-dark);
+  line-height: 1.2;
+  margin-bottom: 4px;
+}
+.hero-badge-card p {
+  font-size: 11.5px;
+  color: #556b64;
+  line-height: 1.4;
+  margin-bottom: 10px;
+}
+.hero-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  width: fit-content;
+}
+
+/* Lower Offer & Trust Strip */
+.hero-promo-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  border-radius: 16px;
+  padding: 14px 22px;
+  color: var(--forest-dark);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  margin-bottom: 22px;
+}
+.hero-promo-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.hero-bank-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: #004c8f;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+.hero-promo-text {
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--forest-dark);
+}
+.hero-promo-text strong {
+  color: #d83b27;
+}
+
+/* Hero Integrated Search */
+.hero-integrated-search {
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  border-radius: 36px;
+  padding: 6px 8px 6px 20px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.25);
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+}
+.hero-integrated-search input {
+  flex: 1;
+  outline: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--forest-dark);
+  background: transparent;
+}
+.hero-integrated-search button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 12px 24px;
+  border-radius: 30px;
+  background: #ef4934;
+  color: white;
+  font-size: 13px;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+.hero-integrated-search button:hover {
+  background: #df3a25;
+  transform: scale(1.02);
+}

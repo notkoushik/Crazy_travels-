@@ -24,3 +24,9 @@ logs/
 
 .vercel
 .env*
+
+# Raw video processing inputs and temporary snapshots
+public/Video/*.mp4
+public/Video/thumbnails/
+!public/Video/optimized/
+!public/Video/optimized/**
