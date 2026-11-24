@@ -402,9 +402,9 @@ export function HomePage({
 
   return (
     <main>
-      {/* Cinematic Hero Video Banner & Telugu Trust Showcase (Inspired by Europe 2027) */}
+      {/* Clean Scenic Hero Viewport & Brand Showcase (Inspired by Reference Mockup) */}
       <div className="shell-wide mb-8">
-        <section className="hero-cinematic-banner" aria-label="Crazy Tours Telugu Travel Showcase">
+        <section className="hero-window-banner" aria-label="Crazy Tours Travel Showcase">
           {/* Ambient Video Background */}
           <video
             src={heroVideoConfig.videoUrl}
@@ -415,276 +415,147 @@ export function HomePage({
             playsInline
             className="hero-video-bg"
           />
-          <div className="hero-video-scrim" />
+          <div className="hero-window-scrim" />
+          <div className="hero-window-frame" />
 
-          {/* Sound Toggle Button */}
-          <button
-            type="button"
-            onClick={() => setIsHeroMuted(!isHeroMuted)}
-            className="absolute top-6 right-6 z-20 p-3 rounded-full bg-black/50 hover:bg-black/80 text-white backdrop-blur-md border border-white/20 shadow-lg transition-transform hover:scale-105"
-            aria-label={isHeroMuted ? 'Unmute ambient sound' : 'Mute sound'}
-            title={isHeroMuted ? 'Unmute audio' : 'Mute audio'}
-          >
-            <Icon name={isHeroMuted ? 'volumeX' : 'volume'} size={18} />
-          </button>
+          <div className="hero-window-content">
+            {/* Top row: Sound toggle */}
+            <div className="hero-top-row">
+              <div />
+              <button
+                type="button"
+                onClick={() => setIsHeroMuted(!isHeroMuted)}
+                className="hero-sound-toggle"
+                aria-label={isHeroMuted ? 'Unmute ambient sound' : 'Mute sound'}
+                title={isHeroMuted ? 'Unmute audio' : 'Mute audio'}
+              >
+                <Icon name={isHeroMuted ? 'volumeX' : 'volume'} size={18} />
+              </button>
+            </div>
 
-          <div className="hero-cinematic-content">
-            <div className="hero-main-layout">
-              {/* Left Column: Telugu Pride & Crazy Tours Brand */}
-              <div className="hero-left-col">
-                <div className="hero-telugu-pill">
-                  <Icon name="sparkle" size={13} className="text-[#ffd0c7]" />
-                  <span>తెలుగు యాత్రికుల మొదటి ఎంపిక · 100% Verified Safe</span>
+            {/* Left Column: Pure English Brand Information (Right side empty for landscape view) */}
+            <div className="hero-info-panel">
+              <p className="hero-eyebrow">TRAVEL WITH A LOCAL TOUCH</p>
+
+              <h1 className="hero-title">Crazy Tours</h1>
+
+              <div className="hero-subtitle-wrap">
+                <p className="hero-subtitle">Handcrafted Journeys Across India &amp; Beyond</p>
+                <svg className="hero-accent-stroke" viewBox="0 0 160 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M2 5.5C45 2 120 1.8 158 5.5" stroke="#ef4934" strokeWidth="2.8" strokeLinecap="round" />
+                </svg>
+              </div>
+
+              {/* 4 Feature Badges in a single horizontal strip */}
+              <div className="hero-features-strip">
+                <div className="hero-feature-item">
+                  <Icon name="user" size={16} className="hero-feature-icon" />
+                  <span>Telugu-speaking Tour Captains</span>
                 </div>
-
-                <h1 className="hero-main-title">
-                  CRAZY TOURS <span>2026</span>
-                </h1>
-                <p className="hero-tagline">
-                  — Handcrafted Journeys with Telugu Hospitality & Warm Care —
-                </p>
-
-                <p className="hero-desc">
-                  <strong>మరపురాని ప్రయాణాలు, సంపూర్ణ భద్రత.</strong> Over 24,000+ Telugu travelers across Hyderabad, Vijayawada, Vizag, Tirupati & Warangal trust Crazy Tours Travels. We design seamless private & group holidays for honeymoon couples, chilling bachelors, and safe family getaways.
-                </p>
-
-                {/* Telugu Trust Perks */}
-                <div className="hero-perk-row">
-                  <div className="hero-perk-pill">
-                    <Icon name="user" size={14} className="text-emerald-400" />
-                    <span>Telugu-speaking Tour Captains</span>
-                  </div>
-                  <div className="hero-perk-pill">
-                    <Icon name="heart" size={14} className="text-rose-400" />
-                    <span>South Indian & Andhra Meals Available</span>
-                  </div>
-                  <div className="hero-perk-pill">
-                    <Icon name="shield" size={14} className="text-amber-400" />
-                    <span>24/7 Verified Safe Chauffeurs</span>
-                  </div>
+                <div className="hero-feature-divider" />
+                <div className="hero-feature-item">
+                  <svg className="hero-feature-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 17H6a2 2 0 0 1-2-2 8 8 0 0 1 16 0 2 2 0 0 1-2 2Z"/>
+                    <path d="M12 5V3"/>
+                    <path d="M4 21h16"/>
+                  </svg>
+                  <span>South Indian &amp; Andhra Meals</span>
                 </div>
-
-                {/* Primary CTA buttons */}
-                <div className="flex flex-wrap items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => navigate('packages')}
-                    className="px-6 py-3.5 rounded-full bg-[#ef4934] hover:bg-[#df3a25] text-white font-bold text-sm inline-flex items-center gap-2 shadow-lg hover:shadow-xl transition-all"
-                  >
-                    <span>Explore Holidays 2026</span>
-                    <Icon name="arrow" size={16} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => navigate('custom-trip')}
-                    className="px-6 py-3.5 rounded-full bg-white/15 hover:bg-white/25 text-white font-bold text-sm backdrop-blur-md border border-white/30 inline-flex items-center gap-2 transition-all"
-                  >
-                    <span>Plan Custom Trip</span>
-                    <Icon name="sparkle" size={15} />
-                  </button>
+                <div className="hero-feature-divider" />
+                <div className="hero-feature-item">
+                  <Icon name="shield" size={16} className="hero-feature-icon" />
+                  <span>Verified &amp; Safe Travel</span>
+                </div>
+                <div className="hero-feature-divider" />
+                <div className="hero-feature-item">
+                  <Icon name="calendar" size={16} className="hero-feature-icon" />
+                  <span>24/7 Trip Support</span>
                 </div>
               </div>
 
-              {/* Right Column: 4 White Floating Trust Badges (2x2 Grid) */}
-              <div className="hero-badges-grid">
-                {/* Badge 1: Honeymoon & Couples */}
-                <article
-                  className="hero-badge-card cursor-pointer"
+              {/* Two CTA Buttons */}
+              <div className="hero-actions-row">
+                <button
+                  type="button"
                   onClick={() => navigate('packages')}
+                  className="hero-btn-explore"
                 >
-                  <div>
-                    <div className="hero-badge-top">
-                      <div className="hero-badge-icon bg-rose-100 text-rose-600">
-                        <Icon name="heart" size={19} className="fill-rose-500" />
-                      </div>
-                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-rose-600 font-mono">
-                        ROMANTIC PERKS
-                      </span>
-                    </div>
-                    <h4>Honeymoon & Couples</h4>
-                    <p>Private houseboats, flower bed decor, candlelight dinners & complete privacy.</p>
-                  </div>
-                  <div className="hero-badge-pill bg-rose-50 text-rose-700 border border-rose-200">
-                    <span>Up to ₹15,000 Off / Couple</span>
-                  </div>
-                </article>
-
-                {/* Badge 2: Bachelors & Friends Chill */}
-                <article
-                  className="hero-badge-card cursor-pointer"
-                  onClick={() => navigate('packages')}
-                >
-                  <div>
-                    <div className="hero-badge-top">
-                      <div className="hero-badge-icon bg-amber-100 text-amber-700">
-                        <Icon name="compass" size={19} />
-                      </div>
-                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-600 font-mono">
-                        ADVENTURE SQUAD
-                      </span>
-                    </div>
-                    <h4>Bachelors & Chill Trips</h4>
-                    <p>Ladakh high pass bike trails, river rafting, desert glamping & DJ bonfires.</p>
-                  </div>
-                  <div className="hero-badge-pill bg-amber-50 text-amber-800 border border-amber-200">
-                    <span>Group Discount for 4+</span>
-                  </div>
-                </article>
-
-                {/* Badge 3: Family Safe & Secure */}
-                <article
-                  className="hero-badge-card cursor-pointer"
-                  onClick={() => navigate('packages')}
-                >
-                  <div>
-                    <div className="hero-badge-top">
-                      <div className="hero-badge-icon bg-emerald-100 text-emerald-700">
-                        <Icon name="shield" size={19} />
-                      </div>
-                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-600 font-mono">
-                        100% SAFE
-                      </span>
-                    </div>
-                    <h4>Safe Family Journeys</h4>
-                    <p>Kid & senior citizen-friendly pacing, 4-star verified stays, 24/7 emergency care.</p>
-                  </div>
-                  <div className="hero-badge-pill bg-emerald-50 text-emerald-800 border border-emerald-200">
-                    <span>Free Kids Inclusions</span>
-                  </div>
-                </article>
-
-                {/* Badge 4: Zero Stress & Low-Cost EMI */}
-                <article
-                  className="hero-badge-card cursor-pointer"
+                  <span>Explore Holidays</span>
+                  <Icon name="arrow" size={16} />
+                </button>
+                <button
+                  type="button"
                   onClick={() => navigate('custom-trip')}
+                  className="hero-btn-custom"
                 >
-                  <div>
-                    <div className="hero-badge-top">
-                      <div className="hero-badge-icon bg-sky-100 text-sky-700">
-                        <Icon name="wallet" size={19} />
-                      </div>
-                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-sky-600 font-mono">
-                        EASY PAYMENT
-                      </span>
-                    </div>
-                    <h4>Low-Cost EMI & Trust</h4>
-                    <p>Zero hidden fees. 100% free date rescheduling. Easy monthly installments.</p>
-                  </div>
-                  <div className="hero-badge-pill bg-sky-50 text-sky-800 border border-sky-200">
-                    <span>No-Cost EMI Options</span>
-                  </div>
-                </article>
+                  <span>Plan Custom Trip</span>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="4" y1="21" x2="4" y2="14"/>
+                    <line x1="4" y1="10" x2="4" y2="3"/>
+                    <line x1="12" y1="21" x2="12" y2="12"/>
+                    <line x1="12" y1="8" x2="12" y2="3"/>
+                    <line x1="20" y1="21" x2="20" y2="16"/>
+                    <line x1="20" y1="12" x2="20" y2="3"/>
+                    <line x1="1" y1="14" x2="7" y2="14"/>
+                    <line x1="9" y1="8" x2="15" y2="8"/>
+                    <line x1="17" y1="16" x2="23" y2="16"/>
+                  </svg>
+                </button>
               </div>
             </div>
 
-            {/* Lower Promo / Bank Strip (Inspired by Europe 2027 reference) */}
-            <div className="hero-promo-strip">
-              <div className="hero-promo-left">
-                <span className="hero-bank-badge">
-                  <span>HDFC & ICICI</span>
-                  <span className="opacity-80">|</span>
-                  <span>EASY EMI</span>
-                </span>
-                <span className="hero-promo-text">
-                  Instant ₹5,000 Early Bird Savings with <strong>No-Cost EMI on All Major Cards</strong>
-                </span>
+            {/* Bottom Integrated Search Pill (Inspired by Reference Mockup) */}
+            <form className="hero-bottom-search-bar" onSubmit={handleSearch}>
+              <div className="hero-search-segment">
+                <Icon name="pin" size={18} className="hero-search-icon" />
+                <input
+                  type="text"
+                  className="hero-search-input"
+                  value={searchDestination}
+                  onChange={(e) => setSearchDestination(e.target.value)}
+                  placeholder="Where do you want to go?"
+                  aria-label="Destination"
+                />
               </div>
-              <div className="flex items-center gap-4 text-xs font-bold text-gray-600">
-                <span className="flex items-center gap-1.5 text-emerald-700">
-                  <Icon name="check" size={14} /> Free Rescheduling
-                </span>
-                <span className="flex items-center gap-1.5 text-emerald-700">
-                  <Icon name="check" size={14} /> 24/7 Telugu & English Care
-                </span>
-              </div>
-            </div>
 
-            {/* Integrated Centered Search Bar */}
-            <form className="hero-integrated-search" onSubmit={handleSearch}>
-              <Icon name="search" size={20} className="text-gray-400 mr-2.5 shrink-0" />
-              <input
-                type="text"
-                value={searchDestination}
-                onChange={(e) => setSearchDestination(e.target.value)}
-                placeholder="Search Kashmir, Kerala, Ladakh, Honeymoon, Family..."
-                aria-label="Search destination or theme"
-              />
-              <button type="submit">
-                <span>Search</span>
-                <Icon name="arrow" size={15} />
+              <div className="hero-search-divider" />
+
+              <div className="hero-search-segment">
+                <Icon name="calendar" size={18} className="hero-search-icon" />
+                <input
+                  type="text"
+                  className="hero-search-input"
+                  value={searchDate}
+                  onChange={(e) => setSearchDate(e.target.value)}
+                  placeholder="Travel Dates"
+                  aria-label="Travel dates"
+                />
+              </div>
+
+              <div className="hero-search-divider" />
+
+              <div className="hero-search-segment">
+                <Icon name="user" size={18} className="hero-search-icon" />
+                <select
+                  className="hero-search-select"
+                  value={searchTravellers}
+                  onChange={(e) => setSearchTravellers(e.target.value)}
+                  aria-label="Travelers count"
+                >
+                  <option value="2 adults">2 adults</option>
+                  <option value="1 adult">1 adult</option>
+                  <option value="Family of 4">Family of 4</option>
+                  <option value="Group of 6+">Group of 6+</option>
+                </select>
+              </div>
+
+              <button type="submit" className="hero-search-submit" aria-label="Search journeys">
+                <Icon name="search" size={18} />
               </button>
             </form>
           </div>
         </section>
       </div>
-
-      {/* Floating Dynamic Search Widget */}
-      <section className="search-wrap shell">
-        <div className="search-panel">
-          <div className="service-tabs" role="tablist" aria-label="Booking type">
-            {[
-              { name: 'Holidays', icon: 'compass' as const },
-              { name: 'Stays', icon: 'hotel' as const },
-              { name: 'Road trips', icon: 'car' as const },
-            ].map((service) => (
-              <button
-                key={service.name}
-                role="tab"
-                aria-selected={activeService === service.name}
-                onClick={() => setActiveService(service.name)}
-                className={activeService === service.name ? 'active' : ''}
-              >
-                <Icon name={service.icon} size={19} /> {service.name}
-              </button>
-            ))}
-          </div>
-
-          <form className="search-form" onSubmit={handleSearch}>
-            <label>
-              <span>Where to?</span>
-              <span className="input-row">
-                <Icon name="pin" size={19} />
-                <input
-                  value={searchDestination}
-                  onChange={(e) => setSearchDestination(e.target.value)}
-                  placeholder="Kashmir, Kerala, Rajasthan..."
-                />
-              </span>
-            </label>
-            <label>
-              <span>When?</span>
-              <span className="input-row">
-                <Icon name="calendar" size={19} />
-                <input
-                  type="text"
-                  value={searchDate}
-                  onChange={(e) => setSearchDate(e.target.value)}
-                  placeholder="Travel dates"
-                />
-              </span>
-            </label>
-            <label>
-              <span>Travellers</span>
-              <span className="input-row">
-                <Icon name="user" size={19} />
-                <select
-                  value={searchTravellers}
-                  onChange={(e) => setSearchTravellers(e.target.value)}
-                >
-                  <option>1 adult</option>
-                  <option>2 adults</option>
-                  <option>Family of 4</option>
-                  <option>Group of 6+</option>
-                </select>
-              </span>
-            </label>
-            <button className="search-button" type="submit">
-              <Icon name="search" size={20} />
-              <span>Explore</span>
-            </button>
-          </form>
-        </div>
-      </section>
 
       {/* Trust Strip */}
       <section className="trust-strip shell">

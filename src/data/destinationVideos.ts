@@ -7,12 +7,11 @@ export interface DestinationVideoInfo {
 }
 
 export const heroVideoConfig = {
-  videoUrl: '/Video/optimized/hero_soul_travel.mp4',
-  posterUrl: '/Video/optimized/hero_soul_travel_poster.jpg',
-  title: 'CRAZY TOURS 2026',
-  teluguHeadline: 'తెలుగు యాత్రికుల మొదటి ఎంపిక',
-  teluguSubheadline: 'Trusted by 24,000+ Telugu Travelers Across Andhra & Telangana',
-  featuresNote: 'Europe, Kashmir, Kerala, Ladakh & Beyond — Expertly Handcrafted with Telugu Hospitality',
+  videoUrl: '/Video/optimized/destination_slow_travel.mp4',
+  posterUrl: '/Video/optimized/destination_slow_travel_poster.jpg',
+  eyebrow: 'TRAVEL WITH A LOCAL TOUCH',
+  title: 'Crazy Tours',
+  subtitle: 'Handcrafted Journeys Across India & Beyond',
 }
 
 export const destinationVideos: Record<string, DestinationVideoInfo> = {
