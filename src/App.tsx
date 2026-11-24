@@ -213,8 +213,9 @@ export default function App() {
       )
     }
 
-    if (route === 'custom-trip') {
-      return <CustomTripPage navigate={navigate} onToast={showToast} />
+    if (route === 'custom-trip' || route.startsWith('custom-trip/')) {
+      return <CustomTripPage key={route} navigate={navigate} onToast={showToast} catalogDestinations={catalogDestinations}
+        destinationSlug={route === 'custom-trip' ? undefined : route.slice('custom-trip/'.length)} />
     }
 
     if (route === 'about') {
