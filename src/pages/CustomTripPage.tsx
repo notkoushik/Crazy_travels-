@@ -17,7 +17,18 @@ export function CustomTripPage({ navigate, onToast, catalogDestinations, destina
   useEffect(() => {
     if (requestedCity) setDestinations([requestedCity])
   }, [requestedCity])
-  const [style, setStyle] = useState('Romantic / Honeymoon')
+  const [style, setStyle] = useState(() => {
+    try {
+      const preset = window.sessionStorage.getItem('ct_custom_style')
+      if (preset) {
+        window.sessionStorage.removeItem('ct_custom_style')
+        return preset
+      }
+    } catch {
+      // Ignore storage access errors in restricted modes
+    }
+    return 'Romantic / Honeymoon'
+  })
   const [duration, setDuration] = useState('7 - 9 Days')
   const [month, setMonth] = useState('April 2026')
   const [stayType, setStayType] = useState('Boutique Heritage Havelis & Resorts')
@@ -189,10 +200,10 @@ export function CustomTripPage({ navigate, onToast, catalogDestinations, destina
                           {[
                             'Romantic / Honeymoon',
                             'Family with Kids',
-                            'Slow Heritage & Culture',
+                            'Friends & Bachelors Group',
                             'Adventure & Mountain Trails',
+                            'Slow Heritage & Culture',
                             'Luxury Wellness & Spa',
-                            'Road Trip & Photography',
                           ].map((st) => (
                             <button
                               key={st}
