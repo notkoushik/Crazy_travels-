@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { CatalogPhoto } from '../components/CatalogPhoto'
 import { CatalogPhotoCarousel } from '../components/CatalogPhotoCarousel'
 import {
   CategoryVideoReviews,
@@ -81,10 +82,10 @@ export function DestinationPage({
     destination.highlights.length > 0 || !!destination.keyAttractions?.length
   const sections = [
     ['packages', 'Packages', true],
-    ['overview', 'Overview', true],
+    ['category-video-reviews', 'Video reviews', selectedCategory !== null],
+    ['overview', `About ${destination.city}`, true],
     ['culture', 'Culture & cuisine', hasCulture],
     ['experiences', 'Signature moments', hasExperiences],
-    ['category-video-reviews', 'Video reviews', selectedCategory !== null],
   ] as const
 
   return (
@@ -261,32 +262,137 @@ export function DestinationPage({
         onCategoryChange={setSelectedCategory}
       />
 
-      {/* Overview Section */}
-      <section className="shell destination-intro mb-16 scroll-mt-40" id="overview">
-        <div>
-          <span className="kicker">Why we love it</span>
-          <h2>{destination.description}</h2>
-        </div>
-        <div className="space-y-4 text-sm text-gray-700 leading-relaxed">
-          <p>
-            Explore the highlights of {destination.city} and ask our team to help plan a trip around
-            what interests you.
-          </p>
-          <p>
-            Every detail can be shaped around your preferences, from the character of your stay to
-            how active you want each day to feel.
-          </p>
-          <div className="pt-2 text-xs text-gray-500 space-y-1">
-            {season && (
-              <p>
-                <strong>Best time to visit</strong> {season}
-              </p>
-            )}
-            {destination.idealFor && (
-              <p>
-                <strong>Ideal for</strong> {destination.idealFor}
-              </p>
-            )}
+      {/* Category-Matched Traveler Video Reviews directly below the packages */}
+      {selectedCategory !== null && (
+        <CategoryVideoReviews
+          category={selectedCategory}
+          reels={displayReels}
+          onOpenReel={(reel, index, filteredReels) =>
+            onOpenStory?.(reel, index, filteredReels)
+          }
+          subtitle={`Real ${selectedCategory.toLowerCase()} traveler stories in ${destination.city} & Himachal. Tap any reel to play in full screen.`}
+        />
+      )}
+
+      {/* About the Destination Section */}
+      <section className="shell my-14 scroll-mt-40" id="overview">
+        <div className="overflow-hidden rounded-3xl border border-[#072f2b]/10 bg-white p-6 shadow-sm sm:p-10">
+          <div className="grid gap-8 lg:grid-cols-12 lg:items-center">
+            <div className="space-y-6 lg:col-span-7">
+              <div className="space-y-3">
+                <span className="inline-flex items-center gap-2 rounded-full bg-[#ef4934]/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-[#b83222]">
+                  <Icon name="pin" size={12} className="text-[#ef4934]" />
+                  <span>
+                    About {destination.city} · {destination.state || destination.country || 'Himachal Pradesh'}
+                  </span>
+                </span>
+                <h2 className="font-serif text-3xl font-semibold leading-[1.16] tracking-tight text-[#072f2b] sm:text-4xl">
+                  {destination.tagline || `Discover ${destination.city}`}
+                </h2>
+                <p className="text-[15px] leading-relaxed text-slate-600">
+                  {destination.description}
+                </p>
+              </div>
+
+              <div className="grid gap-3.5 sm:grid-cols-2">
+                {season && (
+                  <div className="rounded-2xl border border-slate-100 bg-[#fbfaf7] p-4">
+                    <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-[#0b4941]">
+                      <Icon name="calendar" size={14} className="text-[#ef4934]" />
+                      <span>Best time to visit</span>
+                    </div>
+                    <p className="mt-1.5 text-sm font-medium leading-snug text-slate-800">{season}</p>
+                  </div>
+                )}
+
+                {(destination.idealFor || destination.recommendedStayDays || destination.duration) && (
+                  <div className="rounded-2xl border border-slate-100 bg-[#fbfaf7] p-4">
+                    <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-[#0b4941]">
+                      <Icon name="user" size={14} className="text-[#ef4934]" />
+                      <span>Ideal pace &amp; travelers</span>
+                    </div>
+                    <p className="mt-1.5 text-sm font-medium leading-snug text-slate-800">
+                      {[destination.recommendedStayDays || destination.duration, destination.idealFor]
+                        .filter(Boolean)
+                        .join(' · ')}
+                    </p>
+                  </div>
+                )}
+
+                {(destination.nearestAirport || destination.nearestRailway) && (
+                  <div className="rounded-2xl border border-slate-100 bg-[#fbfaf7] p-4">
+                    <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-[#0b4941]">
+                      <Icon name="car" size={14} className="text-[#ef4934]" />
+                      <span>Connectivity &amp; arrival</span>
+                    </div>
+                    <p className="mt-1.5 text-sm font-medium leading-snug text-slate-800">
+                      {destination.nearestAirport || destination.nearestRailway}
+                    </p>
+                    {destination.nearestAirport && destination.nearestRailway && (
+                      <p className="mt-1 text-xs text-slate-500">Rail: {destination.nearestRailway}</p>
+                    )}
+                  </div>
+                )}
+
+                {(destination.avgTemp || destination.networkCoverage) && (
+                  <div className="rounded-2xl border border-slate-100 bg-[#fbfaf7] p-4">
+                    <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-[#0b4941]">
+                      <Icon name="compass" size={14} className="text-[#ef4934]" />
+                      <span>Climate &amp; mobile network</span>
+                    </div>
+                    {destination.avgTemp && (
+                      <p className="mt-1.5 text-sm font-medium text-slate-800">
+                        Typical temperatures: {destination.avgTemp}
+                      </p>
+                    )}
+                    {destination.networkCoverage && (
+                      <p className="mt-1 text-xs leading-relaxed text-slate-500">
+                        {destination.networkCoverage}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-4 lg:col-span-5">
+              <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-900 shadow-md">
+                <div className="aspect-[4/3] w-full overflow-hidden">
+                  <CatalogPhoto
+                    src={destination.gallery?.[1] || destination.gallery?.[0] || destination.image}
+                    alt={`${destination.city} mountain landscape`}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/45 to-transparent p-5 text-white">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#ffd0c7]">
+                    Curated in every circuit
+                  </p>
+                  <p className="mt-1 font-serif text-xl font-medium">
+                    Personal cab, handpicked stays &amp; 24/7 Telugu concierge
+                  </p>
+                </div>
+              </div>
+
+              {!!destination.keyAttractions?.length && (
+                <div className="rounded-2xl border border-[#072f2b]/10 bg-[#fbfaf7] p-4">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-[#0b4941]">
+                    Must-visit places in {destination.city}
+                  </p>
+                  <div className="mt-2.5 flex flex-wrap gap-2">
+                    {destination.keyAttractions.map((spot) => (
+                      <span
+                        key={spot.name}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-[#072f2b]/15 bg-white px-3 py-1 text-xs font-medium text-[#072f2b]"
+                      >
+                        <span className="h-1.5 w-1.5 rounded-full bg-[#ef4934]" />
+                        {spot.name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </section>
@@ -365,18 +471,6 @@ export function DestinationPage({
             />
           </div>
         </section>
-      )}
-
-      {/* Category-Matched Traveler Video Reviews (revealed once a category is selected) */}
-      {selectedCategory !== null && (
-        <CategoryVideoReviews
-          category={selectedCategory}
-          reels={displayReels}
-          onOpenReel={(reel, index, filteredReels) =>
-            onOpenStory?.(reel, index, filteredReels)
-          }
-          subtitle={`Real ${selectedCategory.toLowerCase()} traveler stories in ${destination.city} & Himachal. Tap any reel to play in full screen.`}
-        />
       )}
 
       {/* Final CTA */}
