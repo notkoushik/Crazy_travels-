@@ -13,7 +13,7 @@ import {
   StayItem,
   StoryItem,
 } from '../types/travel'
-import socialHimachal from '../assets/wayfare-social-himachal.png'
+import socialHimachal from '../assets/wayfare-social-himachal.webp'
 
 export const CURRENCY_RATES: Record<Currency, CurrencyConfig> = {
   INR: { code: 'INR', symbol: '₹', rate: 1 },

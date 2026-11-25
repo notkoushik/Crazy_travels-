@@ -16,7 +16,7 @@ import {
   instagramReels,
   reviews,
 } from '../data/travelData'
-import socialHimachal from '../assets/wayfare-social-himachal.png'
+import socialHimachal from '../assets/wayfare-social-himachal.webp'
 
 interface HomePageProps {
   navigate: (route: RouteName) => void

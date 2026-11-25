@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { RouteName, StoryItem } from '../types/travel'
 import { Icon } from '../components/Icon'
 import { useDynamicStore } from '../services/dataStore'
-import kashmirImage from '../assets/wayfare-kashmir.png'
+import kashmirImage from '../assets/wayfare-kashmir.webp'
 
 interface StoriesPageProps {
   navigate: (route: RouteName) => void

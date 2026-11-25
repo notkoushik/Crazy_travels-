@@ -29,8 +29,11 @@ import { HelpPage } from './pages/HelpPage'
 import { ManageBookingPage } from './pages/ManageBookingPage'
 import { TripRequestPage, type TripRequestIntent } from './pages/TripRequestPage'
 import { LegalPage } from './pages/LegalPage'
-import { AdminPage } from './pages/AdminPage'
 import { useDynamicStore } from './services/dataStore'
+
+const AdminPage = React.lazy(() =>
+  import('./pages/AdminPage').then((module) => ({ default: module.AdminPage }))
+)
 
 function normalizeRoute(raw: string): RouteName {
   const cleaned = raw.replace(/^#\/?/, '').trim()
@@ -282,7 +285,18 @@ export default function App() {
   if (route === 'admin' || route.startsWith('admin/')) {
     return (
       <div className="admin-shell min-h-screen bg-slate-50 text-slate-900 font-sans">
-        <AdminPage route={route} navigate={navigate} onToast={showToast} />
+        <React.Suspense
+          fallback={
+            <div className="flex h-screen w-screen items-center justify-center bg-slate-50">
+              <div className="flex flex-col items-center gap-3 text-slate-500">
+                <div className="size-8 animate-spin rounded-full border-2 border-slate-300 border-t-slate-800" />
+                <span className="text-xs font-semibold uppercase tracking-wider">Loading Operations Console…</span>
+              </div>
+            </div>
+          }
+        >
+          <AdminPage route={route} navigate={navigate} onToast={showToast} />
+        </React.Suspense>
         {toastMessage && (
           <div className="global-toast animate-bounce-in flex items-center gap-3">
             <span>{toastMessage}</span>
