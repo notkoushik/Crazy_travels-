@@ -319,12 +319,33 @@ function parseJsonField(value, fallback) {
 let destinationsSchemaReady
 const ensureDestinationsSchema = () => {
   destinationsSchemaReady ??= pool
-    .query('ALTER TABLE destinations ADD COLUMN IF NOT EXISTS adventure_enabled BOOLEAN DEFAULT FALSE')
+    .query(`
+      ALTER TABLE destinations
+        ADD COLUMN IF NOT EXISTS adventure_enabled BOOLEAN DEFAULT FALSE,
+        ADD COLUMN IF NOT EXISTS customization_options JSONB DEFAULT '[]'::jsonb
+    `)
     .catch((error) => {
       destinationsSchemaReady = undefined
       throw error
     })
   return destinationsSchemaReady
+}
+
+function normalizeCustomizationOptions(options) {
+  if (!Array.isArray(options)) return []
+  return options
+    .filter((item) => item && typeof item === 'object' && item.id && item.name)
+    .map((item) => ({
+      id: String(item.id).trim(),
+      name: String(item.name).trim(),
+      ...(item.subtitle ? { subtitle: String(item.subtitle) } : {}),
+      extraDays: Number(item.extraDays) || 0,
+      extraNights: Number(item.extraNights) || 0,
+      ...(item.priceDelta != null ? { priceDelta: Number(item.priceDelta) || 0 } : {}),
+      highlights: Array.isArray(item.highlights) ? item.highlights.map(String) : [],
+      ...(Array.isArray(item.allowedDurations) ? { allowedDurations: item.allowedDurations.map(String) } : {}),
+      ...(item.image ? { image: String(item.image) } : {}),
+    }))
 }
 
 app.get('/api/destinations', async (req, res) => {
@@ -352,6 +373,7 @@ app.get('/api/destinations', async (req, res) => {
       idealFor: r.ideal_for,
       isTrending: r.is_trending,
       adventureEnabled: Boolean(r.adventure_enabled),
+      customizationOptions: normalizeCustomizationOptions(parseJsonField(r.customization_options, [])),
       displayOrder: r.display_order,
       // Google Ratings & Verified Social Proof (100% Free)
       googleRating: r.google_rating == null ? undefined : Number(r.google_rating),
@@ -385,6 +407,7 @@ app.post('/api/destinations', requireAdminAuth, async (req, res) => {
     const gallery = JSON.stringify(d.gallery || [])
     const mustTryFood = JSON.stringify(d.mustTryFood || [])
     const keyAttractions = JSON.stringify(d.keyAttractions || [])
+    const customizationOptions = JSON.stringify(normalizeCustomizationOptions(d.customizationOptions))
     const slug = d.slug || d.city.toLowerCase().replace(/\s+/g, '-')
     const priceNum = Number(d.priceNum) || 0
 
@@ -392,7 +415,7 @@ app.post('/api/destinations', requireAdminAuth, async (req, res) => {
       pool.query(
         `INSERT INTO destinations (
           slug, city, country, state, region, price, price_num, image, season, duration, tagline, description,
-          highlights, gallery, best_time_to_visit, ideal_for, is_trending, adventure_enabled, display_order,
+          highlights, gallery, best_time_to_visit, ideal_for, is_trending, adventure_enabled, customization_options, display_order,
           google_rating, google_reviews_count, google_maps_url,
           nearest_airport, nearest_railway, recommended_stay_days, peak_season, avg_temp,
           permit_required, permit_details, clothing_advice, cultural_notes,
@@ -400,11 +423,11 @@ app.post('/api/destinations', requireAdminAuth, async (req, res) => {
         )
         VALUES (
           $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12,
-          $13, $14, $15, $16, $17, $18, $19,
-          $20, $21, $22,
-          $23, $24, $25, $26, $27,
-          $28, $29, $30, $31,
-          $32, $33, $34
+          $13, $14, $15, $16, $17, $18, $19, $20,
+          $21, $22, $23,
+          $24, $25, $26, $27, $28,
+          $29, $30, $31, $32,
+          $33, $34, $35
         )
         ON CONFLICT (slug) DO UPDATE SET
           city = EXCLUDED.city,
@@ -424,6 +447,7 @@ app.post('/api/destinations', requireAdminAuth, async (req, res) => {
           ideal_for = EXCLUDED.ideal_for,
           is_trending = EXCLUDED.is_trending,
           adventure_enabled = EXCLUDED.adventure_enabled,
+          customization_options = EXCLUDED.customization_options,
           display_order = EXCLUDED.display_order,
           google_rating = EXCLUDED.google_rating,
           google_reviews_count = EXCLUDED.google_reviews_count,
@@ -445,7 +469,7 @@ app.post('/api/destinations', requireAdminAuth, async (req, res) => {
           d.price || `₹${priceNum.toLocaleString('en-IN')}`, priceNum, d.image, d.season || '',
           d.duration || '', d.tagline || '', d.description || '',
           highlights, gallery, d.bestTimeToVisit || '', d.idealFor || '',
-          d.isTrending ?? true, Boolean(d.adventureEnabled), d.displayOrder || 0,
+          d.isTrending ?? true, Boolean(d.adventureEnabled), customizationOptions, d.displayOrder || 0,
           d.googleRating ?? null, d.googleReviewsCount ?? null, d.googleMapsUrl || null,
           d.nearestAirport || '', d.nearestRailway || '', d.recommendedStayDays || '',
           d.peakSeason || d.season || '', d.avgTemp || '',
@@ -1091,33 +1115,80 @@ app.delete('/api/offers/:id', requireAdminAuth, async (req, res) => {
 // ========================================================
 // 8.5 INSTAGRAM REELS & CUSTOMER VIDEO REVIEWS
 // ========================================================
+const ALLOWED_REEL_CATEGORIES = new Set(['Couple', 'Family', 'Bachelors', 'Adventure'])
+
+let reelsSchemaReady
+const ensureReelsSchema = () => {
+  reelsSchemaReady ??= pool
+    .query('ALTER TABLE instagram_reels ADD COLUMN IF NOT EXISTS category VARCHAR(60)')
+    .catch((error) => {
+      reelsSchemaReady = undefined
+      throw error
+    })
+  return reelsSchemaReady
+}
+
+function normalizeReelCategory(value) {
+  if (value === undefined || value === null || value === '') return null
+  if (typeof value !== 'string') return undefined
+  const trimmed = value.trim()
+  if (!trimmed) return null
+  return ALLOWED_REEL_CATEGORIES.has(trimmed) ? trimmed : undefined
+}
+
+function formatReelRow(r) {
+  return {
+    id: r.id,
+    title: r.title,
+    place: r.place,
+    customerName: r.customer_name,
+    rating: Number(r.rating) || 5.0,
+    reviewQuote: r.review_quote,
+    videoUrl: r.video_url,
+    posterUrl: r.poster_url,
+    instagramUrl: r.instagram_url || '',
+    duration: r.duration || '0:45',
+    displayOrder: Number(r.display_order) || 0,
+    category: r.category || undefined,
+  }
+}
+
 app.get('/api/reels', async (req, res) => {
   try {
+    await ensureReelsSchema().catch(() => {})
     const { rows } = await pool.query('SELECT * FROM instagram_reels ORDER BY display_order ASC, id ASC')
-    const formatted = rows.map((r) => ({
-      id: r.id,
-      title: r.title,
-      place: r.place,
-      customerName: r.customer_name,
-      rating: Number(r.rating) || 5.0,
-      reviewQuote: r.review_quote,
-      videoUrl: r.video_url,
-      posterUrl: r.poster_url,
-      instagramUrl: r.instagram_url || '',
-      duration: r.duration || '0:45',
-      displayOrder: Number(r.display_order) || 0,
-    }))
-    res.json(formatted)
+    res.json(rows.map(formatReelRow))
   } catch (err) {
     console.error('Could not load reels:', err.message)
     res.status(503).json({ error: 'Could not load reels.' })
   }
 })
 
-app.patch('/api/reels/:id', requireAdminAuth, async (req, res) => {
+async function updateReelHandler(req, res) {
   try {
-    const { id } = req.params
-    const { instagramUrl, reviewQuote, customerName, rating, title, place, displayOrder } = req.body
+    await ensureReelsSchema().catch(() => {})
+    const id = req.params.id || req.body?.id
+    if (!id) {
+      return res.status(400).json({ error: 'Reel ID is required.' })
+    }
+    const {
+      instagramUrl,
+      reviewQuote,
+      customerName,
+      rating,
+      title,
+      place,
+      displayOrder,
+      videoUrl,
+      posterUrl,
+      duration,
+      category,
+    } = req.body || {}
+
+    const normalizedCategory = category !== undefined ? normalizeReelCategory(category) : undefined
+    if (category !== undefined && normalizedCategory === undefined) {
+      return res.status(400).json({ error: 'Category must be Couple, Family, Bachelors, or Adventure.' })
+    }
 
     const existing = await pool.query('SELECT * FROM instagram_reels WHERE id = $1', [id])
     if (existing.rows.length === 0) {
@@ -1125,60 +1196,75 @@ app.patch('/api/reels/:id', requireAdminAuth, async (req, res) => {
     }
 
     const current = existing.rows[0]
-    const updated = await pool.query(
-      `UPDATE instagram_reels
-       SET instagram_url = $1,
-           review_quote = $2,
-           customer_name = $3,
-           rating = $4,
-           title = $5,
-           place = $6,
-           display_order = $7
-       WHERE id = $8
-       RETURNING *`,
-      [
-        instagramUrl !== undefined ? instagramUrl : current.instagram_url,
-        reviewQuote !== undefined ? reviewQuote : current.review_quote,
-        customerName !== undefined ? customerName : current.customer_name,
-        rating !== undefined ? rating : current.rating,
-        title !== undefined ? title : current.title,
-        place !== undefined ? place : current.place,
-        displayOrder !== undefined ? displayOrder : current.display_order,
-        id,
-      ]
-    )
+    const runUpdate = () =>
+      pool.query(
+        `UPDATE instagram_reels
+         SET instagram_url = $1,
+             review_quote = $2,
+             customer_name = $3,
+             rating = $4,
+             title = $5,
+             place = $6,
+             display_order = $7,
+             video_url = $8,
+             poster_url = $9,
+             duration = $10,
+             category = $11
+         WHERE id = $12
+         RETURNING *`,
+        [
+          instagramUrl !== undefined ? instagramUrl : current.instagram_url,
+          reviewQuote !== undefined ? reviewQuote : current.review_quote,
+          customerName !== undefined ? customerName : current.customer_name,
+          rating !== undefined ? rating : current.rating,
+          title !== undefined ? title : current.title,
+          place !== undefined ? place : current.place,
+          displayOrder !== undefined ? displayOrder : current.display_order,
+          videoUrl !== undefined ? videoUrl : current.video_url,
+          posterUrl !== undefined ? posterUrl : current.poster_url,
+          duration !== undefined ? duration : current.duration,
+          category !== undefined ? normalizedCategory : current.category,
+          id,
+        ]
+      )
 
-    const r = updated.rows[0]
+    let updated
+    try {
+      updated = await runUpdate()
+    } catch (error) {
+      if (error.code !== '42703') throw error
+      reelsSchemaReady = undefined
+      await ensureReelsSchema()
+      updated = await runUpdate()
+    }
+
     res.json({
       success: true,
-      reel: {
-        id: r.id,
-        title: r.title,
-        place: r.place,
-        customerName: r.customer_name,
-        rating: Number(r.rating) || 5.0,
-        reviewQuote: r.review_quote,
-        videoUrl: r.video_url,
-        posterUrl: r.poster_url,
-        instagramUrl: r.instagram_url || '',
-        duration: r.duration || '0:45',
-        displayOrder: Number(r.display_order) || 0,
-      },
+      reel: formatReelRow(updated.rows[0]),
     })
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
-})
+}
 
-app.post('/api/reels', requireAdminAuth, async (req, res) => {
+app.patch('/api/reels/:id', requireAdminAuth, updateReelHandler)
+app.put('/api/reels/:id', requireAdminAuth, updateReelHandler)
+
+async function upsertReelHandler(req, res) {
   try {
     const r = req.body ?? {}
     const id = r.id || `reel-${Date.now()}`
     const rating = Number(r.rating)
+    const displayOrder = r.displayOrder === undefined ? 0 : Number(r.displayOrder)
+    const duration = r.duration || '0:45'
+    const normalizedCategory = normalizeReelCategory(r.category)
+    if (r.category !== undefined && normalizedCategory === undefined) {
+      return res.status(400).json({ error: 'Category must be Couple, Family, Bachelors, or Adventure.' })
+    }
     const isMediaUrl = (value) => typeof value === 'string' && /^(?:https?:\/\/|\/(?!\/))\S+$/i.test(value)
     if (!sanitizeText(r.title) || !sanitizeText(r.place) || !sanitizeText(r.customerName) || !sanitizeText(r.reviewQuote) ||
       !Number.isFinite(rating) || rating < 1 || rating > 5 || !isMediaUrl(r.videoUrl) || !isMediaUrl(r.posterUrl) ||
-      !/^\d{1,3}:[0-5]\d$/.test(r.duration) || !Number.isSafeInteger(r.displayOrder) || r.displayOrder < 0 || r.displayOrder > 2147483647) {
+      !/^\d{1,3}:[0-5]\d$/.test(duration) || !Number.isSafeInteger(displayOrder) || displayOrder < 0 || displayOrder > 2147483647) {
       return res.status(400).json({ error: 'Provide the reel details, video, cover, duration, and display order.' })
     }
     if (r.videoUrl.startsWith('/api/reel-videos/')) {
@@ -1187,39 +1273,55 @@ app.post('/api/reels', requireAdminAuth, async (req, res) => {
         return res.status(400).json({ error: 'Finish uploading the reel video before saving.' })
       }
     }
-    await pool.query(
-      `INSERT INTO instagram_reels (id, title, place, customer_name, rating, review_quote, video_url, poster_url, instagram_url, duration, display_order)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-       ON CONFLICT (id) DO UPDATE SET
-         title = EXCLUDED.title,
-         place = EXCLUDED.place,
-         customer_name = EXCLUDED.customer_name,
-         rating = EXCLUDED.rating,
-         review_quote = EXCLUDED.review_quote,
-         video_url = EXCLUDED.video_url,
-         poster_url = EXCLUDED.poster_url,
-         instagram_url = EXCLUDED.instagram_url,
-         duration = EXCLUDED.duration,
-         display_order = EXCLUDED.display_order`,
-      [
-        id,
-        r.title,
-        r.place,
-        r.customerName,
-        rating,
-        r.reviewQuote,
-        r.videoUrl,
-        r.posterUrl,
-        r.instagramUrl || '',
-        r.duration || '0:45',
-        r.displayOrder || 0,
-      ]
-    )
+
+    const save = () =>
+      pool.query(
+        `INSERT INTO instagram_reels (id, title, place, customer_name, rating, review_quote, video_url, poster_url, instagram_url, duration, display_order, category)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+         ON CONFLICT (id) DO UPDATE SET
+           title = EXCLUDED.title,
+           place = EXCLUDED.place,
+           customer_name = EXCLUDED.customer_name,
+           rating = EXCLUDED.rating,
+           review_quote = EXCLUDED.review_quote,
+           video_url = EXCLUDED.video_url,
+           poster_url = EXCLUDED.poster_url,
+           instagram_url = EXCLUDED.instagram_url,
+           duration = EXCLUDED.duration,
+           display_order = EXCLUDED.display_order,
+           category = EXCLUDED.category`,
+        [
+          id,
+          r.title,
+          r.place,
+          r.customerName,
+          rating,
+          r.reviewQuote,
+          r.videoUrl,
+          r.posterUrl,
+          r.instagramUrl || '',
+          duration,
+          displayOrder,
+          normalizedCategory ?? null,
+        ]
+      )
+
+    try {
+      await save()
+    } catch (error) {
+      if (error.code !== '42703') throw error
+      reelsSchemaReady = undefined
+      await ensureReelsSchema()
+      await save()
+    }
     res.json({ success: true, id })
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
-})
+}
+
+app.post('/api/reels', requireAdminAuth, upsertReelHandler)
+app.put('/api/reels', requireAdminAuth, upsertReelHandler)
 
 app.delete('/api/reels/:id', requireAdminAuth, async (req, res) => {
   await pool.query('DELETE FROM instagram_reels WHERE id = $1', [req.params.id])

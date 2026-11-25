@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import {
+  DestinationCustomizationStop,
   DestinationItem,
+  PackageCategory,
   PackageItem,
   StayItem,
   RoadTripItem,
@@ -99,58 +101,58 @@ export const defaultStorefrontConfig: StorefrontConfig = {
     {
       id: 'special-1',
       slotIndex: 1,
-      badge: 'April departures · Limited season',
-      title: 'Kashmir in full bloom',
-      description: '6 days of tulip gardens, houseboat evenings and mountain air.',
-      priceNum: 36800,
-      image: 'https://images.unsplash.com/photo-1595815771614-ade9d652a65d?auto=format&fit=crop&w=1200&q=88',
-      actionRoute: 'destination/srinagar',
+      badge: '3D/2N · 4D/3N · 5D/4N departures',
+      title: 'Manali, Solang & Atal Tunnel',
+      description: 'Snow points, Hidimba Temple, Mall Road and Kullu Valley with private cab & 24/7 Telugu support.',
+      priceNum: 6999,
+      image: '/Video/optimized/destination_himachal_poster.jpg',
+      actionRoute: 'destination/manali',
       actionLabel: 'See the journey',
     },
     {
       id: 'special-2',
       slotIndex: 2,
-      badge: 'September departures',
-      title: 'High roads of Ladakh',
-      description: 'Monasteries, mountain passes and nights beneath a spectacular sky.',
-      priceNum: 42000,
-      image: 'https://images.unsplash.com/photo-1506197603052-3cc9c3a201bd?auto=format&fit=crop&w=800&q=88',
-      actionRoute: 'road-trips',
-      actionLabel: 'Explore the route',
+      badge: 'Parvati riverside stays',
+      title: 'Kasol & Manikaran Hot Springs',
+      description: 'Riverside camps, Kasol cafés, and Manikaran Sahib paired seamlessly with Manali.',
+      priceNum: 8499,
+      image: '/Video/optimized/destination_kinnaur_poster.jpg',
+      actionRoute: 'destination/kasol',
+      actionLabel: 'Explore Kasol',
     },
     {
       id: 'special-3',
       slotIndex: 3,
-      badge: 'Monsoon in Kerala',
-      title: 'Monsoon in Kerala',
-      description: 'Tea-country mist, restorative stays and slow backwater days.',
-      priceNum: 28500,
-      image: 'https://images.unsplash.com/photo-1593693411515-c20261bcad6e?auto=format&fit=crop&w=700&q=85',
-      actionRoute: 'destination/munnar',
-      actionLabel: 'Build your itinerary',
+      badge: 'Delhi to Delhi private cab',
+      title: 'Shimla, Kufri & Manali Circuit',
+      description: 'The Ridge, Christ Church, Jakhu Temple, Pandoh Dam and Solang snow peaks in one trip.',
+      priceNum: 10999,
+      image: '/Video/optimized/destination_adventure_poster.jpg',
+      actionRoute: 'destination/shimla',
+      actionLabel: 'Explore Shimla',
     },
     {
       id: 'special-4',
       slotIndex: 4,
-      badge: 'Rajasthan by road',
-      title: 'Rajasthan by road',
-      description: 'Palace stays, craft towns and golden desert evenings.',
-      priceNum: 31000,
-      image: 'https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&w=700&q=85',
-      actionRoute: 'road-trips',
-      actionLabel: 'See road trips',
+      badge: 'All 18 Himachal itineraries',
+      title: 'Compare Couple, Family & Squad Plans',
+      description: 'Browse all 3D/2N, 4D/3N & 5D/4N packages and customize add-on stops directly on your route.',
+      priceNum: 6999,
+      image: '/Video/optimized/destination_kedarnath_poster.jpg',
+      actionRoute: 'packages',
+      actionLabel: 'View all packages',
     },
   ],
   boardFeature: {
     id: 'main-board-feature',
     kicker: 'Selected with local experts',
     sectionTitle: 'Travel boards recommend',
-    partnerBadge: 'In partnership with local storytellers',
-    headline: 'Hampi, beyond the monuments',
-    description: 'Riverside walks, ancient stories and boulder-lit sunsets—discover Karnataka at a gentler pace.',
-    image: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&w=1600&q=88',
-    actionRoute: 'destination/hampi',
-    actionLabel: 'Explore Hampi',
+    partnerBadge: 'Himachal Signature Circuit',
+    headline: 'Manali, Kasol & Shimla — built around your pace',
+    description: 'Start from any verified 3D/2N, 4D/3N, or 5D/4N route and add stops like Dharamshala, Dalhousie, Tosh, or Amritsar right on your itinerary.',
+    image: '/Video/optimized/destination_himachal_poster.jpg',
+    actionRoute: 'destination/manali',
+    actionLabel: 'Explore Manali',
   },
   brandPillars: [
     {
@@ -159,7 +161,7 @@ export const defaultStorefrontConfig: StorefrontConfig = {
       title: 'Human expertise',
       description: 'Real travel designers who listen before they plan. No auto-generated templates.',
       displayOrder: 1,
-      stageImage: 'https://images.unsplash.com/photo-1521336575822-6da63fb45455?auto=format&fit=crop&w=1500&q=85',
+      stageImage: '/Video/optimized/destination_himachal_poster.jpg',
     },
     {
       id: 'pillar-2',
@@ -167,31 +169,31 @@ export const defaultStorefrontConfig: StorefrontConfig = {
       title: 'Built around you',
       description: 'Your pace, preferences and non-negotiables come first.',
       displayOrder: 2,
-      stageImage: 'https://images.unsplash.com/photo-1521336575822-6da63fb45455?auto=format&fit=crop&w=1500&q=85',
+      stageImage: '/Video/optimized/destination_kinnaur_poster.jpg',
     },
     {
       id: 'pillar-3',
       stepNumber: '03',
       title: 'Here when needed',
-      description: 'Reliable 24/7 on-trip concierge support from first departure to your return home.',
+      description: 'Reliable 24/7 on-trip Telugu concierge support from first departure to your return home.',
       displayOrder: 3,
-      stageImage: 'https://images.unsplash.com/photo-1521336575822-6da63fb45455?auto=format&fit=crop&w=1500&q=85',
+      stageImage: '/Video/optimized/destination_adventure_poster.jpg',
     },
     {
       id: 'pillar-4',
       stepNumber: '04',
       title: 'Clear and considered',
-      description: 'Certified heritage properties and transparent trip pricing with zero hidden fees.',
+      description: 'Verified mountain properties and transparent tiered pricing with zero hidden fees.',
       displayOrder: 4,
-      stageImage: 'https://images.unsplash.com/photo-1521336575822-6da63fb45455?auto=format&fit=crop&w=1500&q=85',
+      stageImage: '/Video/optimized/destination_kedarnath_poster.jpg',
     },
   ],
   trustStats: {
     id: 'main-trust-stats',
     stat1Value: '18',
-    stat1Label: 'years exploring',
-    stat2Value: '28',
-    stat2Label: 'states explored',
+    stat1Label: 'curated PDF packages',
+    stat2Value: '3',
+    stat2Label: 'Himachal hubs',
     stat3Value: '24k',
     stat3Label: 'journeys planned',
     stat4Value: '4.9',
@@ -199,29 +201,29 @@ export const defaultStorefrontConfig: StorefrontConfig = {
   },
   sectionHeaders: {
     trending: {
-      kicker: 'India, beautifully explored',
+      kicker: 'Himachal, thoughtfully planned',
       title: 'Trending destinations',
-      subtitle: 'Six remarkable places curated for immersive discovery. Each one designed as a deep journey, not a tourist checklist.',
+      subtitle: 'Explore Manali, Kasol, and Shimla—each backed by verified Couple, Family, and Bachelors itineraries.',
     },
     specials: {
-      kicker: 'Limited seasonal departures',
+      kicker: 'Seasonal & off-season departures',
       title: 'Crazy Specials & Offers',
-      subtitle: 'Handcrafted seasonal breaks with exclusive benefits and private local hosts.',
+      subtitle: 'Handcrafted Himachal breaks with transparent Standard, Standard Plus, and Premium stays.',
     },
     soul: {
       kicker: 'Made to linger',
       title: 'Journeys with a little more soul',
-      subtitle: 'Signature departures celebrating unhurried discovery and living heritage.',
+      subtitle: 'Signature Himachal departures celebrating scenic valleys, mountain stays, and local hospitality.',
     },
     board: {
       kicker: 'Selected with local experts',
       title: 'Travel boards recommend',
-      subtitle: 'Curated stories and architectural journeys handpicked by regional explorers.',
+      subtitle: 'Curated Himachal circuits and customizable valley stops handpicked by our specialists.',
     },
     stays: {
       kicker: 'Stay somewhere memorable',
       title: 'Explore boutique hotel stays',
-      subtitle: 'Heritage havelis, luxury houseboats, and serene plantation estates.',
+      subtitle: 'Cedar mountain resorts, Parvati riverside camps, and hillside retreats.',
     },
     pillars: {
       kicker: 'Why travel with Crazy Tours Travel',
@@ -231,7 +233,7 @@ export const defaultStorefrontConfig: StorefrontConfig = {
     stats: {
       kicker: 'The Crazy Tours Travel difference',
       title: 'Why travellers return to us',
-      subtitle: 'Decades of authentic travel design across India.',
+      subtitle: 'Trusted mountain travel design with 24/7 Telugu concierge care.',
     },
   },
 }
@@ -268,6 +270,22 @@ export interface DynamicStoreState {
   lastSyncedAt: string | null
 }
 
+const VALID_REEL_CATEGORIES = new Set<PackageCategory>(['Couple', 'Family', 'Bachelors', 'Adventure'])
+
+function normalizeCustomizationStop(stop: DestinationCustomizationStop): DestinationCustomizationStop {
+  return {
+    id: String(stop.id || '').trim() || `stop-${Math.random().toString(36).slice(2, 8)}`,
+    name: String(stop.name || '').trim(),
+    subtitle: stop.subtitle ? String(stop.subtitle) : undefined,
+    extraDays: Number(stop.extraDays) || 0,
+    extraNights: Number(stop.extraNights) || 0,
+    priceDelta: stop.priceDelta !== undefined && stop.priceDelta !== null ? Number(stop.priceDelta) : undefined,
+    highlights: Array.isArray(stop.highlights) ? stop.highlights.map(String).filter(Boolean) : [],
+    allowedDurations: Array.isArray(stop.allowedDurations) ? stop.allowedDurations.map(String).filter(Boolean) : undefined,
+    image: stop.image ? String(stop.image) : undefined,
+  }
+}
+
 function normalizeDestination(d: DestinationItem): DestinationItem {
   return {
     ...d,
@@ -276,6 +294,19 @@ function normalizeDestination(d: DestinationItem): DestinationItem {
     gallery: Array.isArray(d.gallery) ? d.gallery : [],
     mustTryFood: Array.isArray(d.mustTryFood) ? d.mustTryFood : [],
     keyAttractions: Array.isArray(d.keyAttractions) ? d.keyAttractions : [],
+    customizationOptions: Array.isArray(d.customizationOptions)
+      ? d.customizationOptions.map(normalizeCustomizationStop).filter((stop) => Boolean(stop.name))
+      : [],
+  }
+}
+
+function normalizeReel(r: InstagramReelItem): InstagramReelItem {
+  const category = r.category && VALID_REEL_CATEGORIES.has(r.category) ? r.category : undefined
+  return {
+    ...r,
+    category,
+    rating: Number(r.rating) || 5,
+    displayOrder: Number(r.displayOrder) || 0,
   }
 }
 
@@ -305,7 +336,7 @@ const emptyInitialState: DynamicStoreState = {
   stories: defaultStories,
   offers: defaultOffers,
   heroSlides: defaultHeroSlides,
-  reels: defaultReels,
+  reels: defaultReels.map(normalizeReel),
   reviews: defaultReviews,
   storefront: defaultStorefrontConfig,
   bookings: [],
@@ -316,7 +347,7 @@ const emptyInitialState: DynamicStoreState = {
     confirmedBookings: 0,
     totalInquiries: 0,
     newInquiries: 0,
-    activeDestinations: 6,
+    activeDestinations: nationalDestinations.length,
     activeTravelers: 38,
     monthlyGrowth: 28.4,
   },
@@ -396,10 +427,12 @@ export const dataStore = {
       ])
 
       if (request !== catalogRequest) return currentStore
+      const nextDestinations = destinationsRes ? destinationsRes.map(normalizeDestination) : currentStore.destinations
+      const nextPackages = packagesRes ? packagesRes.map(normalizePackage) : currentStore.packages
       currentStore = {
         ...currentStore,
-        destinations: destinationsRes ? destinationsRes.map(normalizeDestination) : currentStore.destinations,
-        packages: packagesRes ? packagesRes.map(normalizePackage) : currentStore.packages,
+        destinations: nextDestinations,
+        packages: nextPackages,
         destinationsLoaded: currentStore.destinationsLoaded || destinationsRes !== null,
         packagesLoaded: currentStore.packagesLoaded || packagesRes !== null,
         stays: staysRes ?? currentStore.stays,
@@ -407,9 +440,13 @@ export const dataStore = {
         stories: storiesRes ?? currentStore.stories,
         offers: offersRes ?? currentStore.offers,
         heroSlides: heroSlidesRes ?? currentStore.heroSlides,
-        reels: reelsRes ?? currentStore.reels,
+        reels: reelsRes ? reelsRes.map(normalizeReel) : currentStore.reels,
         reviews: reviewsRes ?? currentStore.reviews,
         storefront: storefrontRes?.specials ? storefrontRes : currentStore.storefront,
+        stats: {
+          ...currentStore.stats,
+          activeDestinations: nextDestinations.length,
+        },
         isLoading: false,
         isDatabaseConnected: [destinationsRes, packagesRes, staysRes, roadTripsRes, storiesRes, offersRes, heroSlidesRes, reelsRes, storefrontRes].some((collection) => collection !== null),
         lastSyncedAt: new Date().toISOString(),
@@ -788,13 +825,14 @@ export const dataStore = {
       if (!res.ok) throw new Error('Failed to update Instagram reel')
       const data = await res.json()
       if (data.reel) {
+        const normalizedReel = normalizeReel(data.reel)
         currentStore = {
           ...currentStore,
-          reels: currentStore.reels.map((r) => (r.id === id ? data.reel : r)),
+          reels: currentStore.reels.map((r) => (r.id === id ? normalizedReel : r)),
         }
         notifyListeners()
       }
-      return data.reel
+      return data.reel ? normalizeReel(data.reel) : data.reel
     } catch (err) {
       console.error('Error in updateReel:', err)
       throw err
@@ -803,10 +841,11 @@ export const dataStore = {
 
   saveReel: async (reel: InstagramReelItem) => {
     try {
+      const payload = normalizeReel(reel)
       const res = await fetch('/api/reels', {
         method: 'POST',
         headers: getAdminHeaders(),
-        body: JSON.stringify(reel),
+        body: JSON.stringify(payload),
       })
       if (!res.ok) {
         const failure = await res.json().catch(() => ({}))

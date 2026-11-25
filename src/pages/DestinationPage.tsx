@@ -1,39 +1,65 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { CatalogPhotoCarousel } from '../components/CatalogPhotoCarousel'
-import { PackageCategoryCards } from '../components/PackageCategoryCards'
+import {
+  CategoryVideoReviews,
+  PackageCategoryCards,
+} from '../components/PackageCategoryCards'
 import { getDestinationVideo } from '../data/destinationVideos'
-import { Currency, DestinationItem, PackageCategory, PackageItem, RouteName } from '../types/travel'
+import {
+  Currency,
+  DestinationItem,
+  InstagramReelItem,
+  PackageCategory,
+  PackageItem,
+  RouteName,
+} from '../types/travel'
 import { Icon } from '../components/Icon'
 import { GoogleVerifiedBadge, isGoogleMapsLink } from '../components/GoogleVerifiedBadge'
-import { allPackages, formatPrice } from '../data/travelData'
+import { allPackages, formatPrice, instagramReels } from '../data/travelData'
+import { useDynamicStore } from '../services/dataStore'
 
 interface DestinationPageProps {
   destination: DestinationItem
   packages?: PackageItem[]
+  reels?: InstagramReelItem[]
   navigate: (route: RouteName) => void
   onBook: (title: string, price: number) => void
+  onOpenStory?: (
+    story: InstagramReelItem,
+    index?: number,
+    filteredReels?: InstagramReelItem[],
+  ) => void
   saved: boolean
   onToggleSave: () => void
   currency: Currency
 }
 
-const CATEGORY_TO_CUSTOM_STYLE: Record<PackageCategory, string> = {
-  Couple: 'Romantic / Honeymoon',
-  Family: 'Family with Kids',
-  Bachelors: 'Friends & Bachelors Group',
-  Adventure: 'Adventure & Mountain Trails',
-}
-
 export function DestinationPage({
   destination,
   packages = allPackages,
+  reels,
   navigate,
   onBook,
+  onOpenStory,
   saved,
   onToggleSave,
   currency,
 }: DestinationPageProps) {
+  const store = useDynamicStore()
   const [isVideoMuted, setIsVideoMuted] = useState(true)
+  const [selectedCategory, setSelectedCategory] = useState<PackageCategory | null>(null)
+
+  useEffect(() => {
+    setSelectedCategory(null)
+  }, [destination.slug])
+
+  const displayReels =
+    reels && reels.length > 0
+      ? reels
+      : store.reels.length > 0
+        ? store.reels
+        : instagramReels
+
   const destVideo = destination.videoUrl
     ? {
         videoUrl: destination.videoUrl,
@@ -44,26 +70,22 @@ export function DestinationPage({
       }
     : getDestinationVideo(destination.slug || destination.city)
   const season = destination.bestTimeToVisit || destination.peakSeason || destination.season
-  const hasCulture = destination.clothingAdvice || destination.culturalNotes || destination.mustTryFood?.length
-  const hasGoogleReviews = !!(destination.googleRating && destination.googleReviewsCount && isGoogleMapsLink(destination.googleMapsUrl))
-  const hasExperiences = destination.highlights.length > 0 || !!destination.keyAttractions?.length
+  const hasCulture =
+    destination.clothingAdvice || destination.culturalNotes || destination.mustTryFood?.length
+  const hasGoogleReviews = !!(
+    destination.googleRating &&
+    destination.googleReviewsCount &&
+    isGoogleMapsLink(destination.googleMapsUrl)
+  )
+  const hasExperiences =
+    destination.highlights.length > 0 || !!destination.keyAttractions?.length
   const sections = [
     ['packages', 'Packages', true],
     ['overview', 'Overview', true],
     ['culture', 'Culture & cuisine', hasCulture],
     ['experiences', 'Signature moments', hasExperiences],
+    ['category-video-reviews', 'Video reviews', selectedCategory !== null],
   ] as const
-
-  const handlePlanCustom = (category?: PackageCategory) => {
-    if (category) {
-      try {
-        window.sessionStorage.setItem('ct_custom_style', CATEGORY_TO_CUSTOM_STYLE[category])
-      } catch {
-        // Ignore storage restrictions
-      }
-    }
-    navigate(`custom-trip/${destination.slug}`)
-  }
 
   return (
     <main className="destination-page bg-[#fbfaf7] pb-24 font-inter">
@@ -134,14 +156,20 @@ export function DestinationPage({
 
           {/* Bottom Title & Tagline */}
           <div className="destination-detail-title z-20">
-            <span className="eyebrow">{destVideo.locationBadge || destination.country || destination.state} · Handcrafted Journey</span>
+            <span className="eyebrow">
+              {destVideo.locationBadge || destination.country || destination.state} · Handcrafted Journey
+            </span>
             <h1>{destination.city}</h1>
             <p>{destination.tagline || destVideo.tagline}</p>
           </div>
 
           <div className="destination-hero-meta z-20">
-            {(destination.duration || destination.recommendedStayDays) && <span>{destination.duration || destination.recommendedStayDays}</span>}
-            {(destination.season || destination.peakSeason) && <span>{destination.season || destination.peakSeason}</span>}
+            {(destination.duration || destination.recommendedStayDays) && (
+              <span>{destination.duration || destination.recommendedStayDays}</span>
+            )}
+            {(destination.season || destination.peakSeason) && (
+              <span>{destination.season || destination.peakSeason}</span>
+            )}
             <span>From {formatPrice(destination.priceNum, currency)}</span>
           </div>
         </div>
@@ -177,13 +205,19 @@ export function DestinationPage({
           </div>
 
           <div className="destination-detail-title">
-            <span className="eyebrow">{destination.country || destination.state} · Curated Destination Guide</span>
+            <span className="eyebrow">
+              {destination.country || destination.state} · Curated Destination Guide
+            </span>
             <h1>{destination.city}</h1>
             <p>{destination.tagline}</p>
           </div>
           <div className="destination-hero-meta">
-            {(destination.duration || destination.recommendedStayDays) && <span>{destination.duration || destination.recommendedStayDays}</span>}
-            {(destination.season || destination.peakSeason) && <span>{destination.season || destination.peakSeason}</span>}
+            {(destination.duration || destination.recommendedStayDays) && (
+              <span>{destination.duration || destination.recommendedStayDays}</span>
+            )}
+            {(destination.season || destination.peakSeason) && (
+              <span>{destination.season || destination.peakSeason}</span>
+            )}
             <span>From {formatPrice(destination.priceNum, currency)}</span>
           </div>
         </CatalogPhotoCarousel>
@@ -193,12 +227,21 @@ export function DestinationPage({
       <nav className="destination-subnav mb-10 sticky top-0 z-30 shadow-xs bg-white/95 backdrop-blur-md border-b border-gray-100">
         <div className="shell flex items-center justify-between">
           <div className="flex items-center gap-6 text-xs font-semibold overflow-x-auto">
-            {sections.filter(([, , visible]) => visible).map(([id, label]) => (
-              <a key={id} href={`#${id}`} onClick={(event) => {
-                event.preventDefault()
-                document.getElementById(id)?.scrollIntoView({ block: 'start' })
-              }} className="whitespace-nowrap hover:text-[#ef4934]">{label}</a>
-            ))}
+            {sections
+              .filter(([, , visible]) => visible)
+              .map(([id, label]) => (
+                <a
+                  key={id}
+                  href={`#${id}`}
+                  onClick={(event) => {
+                    event.preventDefault()
+                    document.getElementById(id)?.scrollIntoView({ block: 'start' })
+                  }}
+                  className="whitespace-nowrap hover:text-[#ef4934]"
+                >
+                  {label}
+                </a>
+              ))}
           </div>
           <button
             onClick={() => onBook(`Plan ${destination.city} Journey`, destination.priceNum)}
@@ -215,7 +258,7 @@ export function DestinationPage({
         packages={packages}
         currency={currency}
         onOpenPackage={(packageId) => navigate(`package/${packageId}`)}
-        onPlanCustom={handlePlanCustom}
+        onCategoryChange={setSelectedCategory}
       />
 
       {/* Overview Section */}
@@ -226,39 +269,55 @@ export function DestinationPage({
         </div>
         <div className="space-y-4 text-sm text-gray-700 leading-relaxed">
           <p>
-            Explore the highlights of {destination.city} and ask our team to help plan a trip around what interests you.
+            Explore the highlights of {destination.city} and ask our team to help plan a trip around
+            what interests you.
           </p>
           <p>
-            Every detail can be shaped around your preferences, from the character of your stay to how active you want each day to feel.
+            Every detail can be shaped around your preferences, from the character of your stay to
+            how active you want each day to feel.
           </p>
           <div className="pt-2 text-xs text-gray-500 space-y-1">
-            {season && <p><strong>Best time to visit</strong> {season}</p>}
-            {destination.idealFor && <p><strong>Ideal for</strong> {destination.idealFor}</p>}
+            {season && (
+              <p>
+                <strong>Best time to visit</strong> {season}
+              </p>
+            )}
+            {destination.idealFor && (
+              <p>
+                <strong>Ideal for</strong> {destination.idealFor}
+              </p>
+            )}
           </div>
         </div>
       </section>
 
       {!!hasCulture && (
         <section className="shell mb-16 scroll-mt-40" id="culture">
-          <h2 className="mb-6 font-serif text-3xl text-[#072f2b]">Culture & cuisine</h2>
+          <h2 className="mb-6 font-serif text-3xl text-[#072f2b]">Culture &amp; cuisine</h2>
           <div className="grid gap-5 md:grid-cols-3">
             {destination.clothingAdvice && (
               <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
                 <h3 className="font-semibold text-gray-900">Clothing advice</h3>
-                <p className="mt-2 whitespace-pre-line text-sm text-gray-700">{destination.clothingAdvice}</p>
+                <p className="mt-2 whitespace-pre-line text-sm text-gray-700">
+                  {destination.clothingAdvice}
+                </p>
               </div>
             )}
             {destination.culturalNotes && (
               <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
                 <h3 className="font-semibold text-gray-900">Cultural notes</h3>
-                <p className="mt-2 whitespace-pre-line text-sm text-gray-700">{destination.culturalNotes}</p>
+                <p className="mt-2 whitespace-pre-line text-sm text-gray-700">
+                  {destination.culturalNotes}
+                </p>
               </div>
             )}
             {!!destination.mustTryFood?.length && (
               <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
                 <h3 className="font-semibold text-gray-900">Food to try</h3>
                 <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-gray-700">
-                  {destination.mustTryFood.map((dish, index) => <li key={index}>{dish}</li>)}
+                  {destination.mustTryFood.map((dish, index) => (
+                    <li key={index}>{dish}</li>
+                  ))}
                 </ul>
               </div>
             )}
@@ -267,36 +326,57 @@ export function DestinationPage({
       )}
 
       {/* Signature Experiences */}
-      {hasExperiences && <section className="destination-experiences shell mb-16 scroll-mt-40" id="experiences">
-        <div className="destination-experience-lead">
-          <span className="kicker">Signature moments</span>
-          <h2>The experiences you’ll remember</h2>
-        </div>
-        <div className="experience-grid">
-          {destination.highlights.map((highlight, index) => (
-            <article key={`${highlight}-${index}`}>
-              <Icon name="compass" size={20} className="mt-1 shrink-0 text-[#0b4941]" />
-              <div>
-                <h3>{highlight}</h3>
-              </div>
-            </article>
-          ))}
-          {destination.keyAttractions?.map(({ name, type }, index) => (
-            <article key={`${name}-${index}`}>
-              <Icon name="pin" size={20} className="mt-1 shrink-0 text-[#0b4941]" />
-              <div><h3>{name}</h3>{type && <p>{type}</p>}</div>
-            </article>
-          ))}
-        </div>
-      </section>}
+      {hasExperiences && (
+        <section className="destination-experiences shell mb-16 scroll-mt-40" id="experiences">
+          <div className="destination-experience-lead">
+            <span className="kicker">Signature moments</span>
+            <h2>The experiences you’ll remember</h2>
+          </div>
+          <div className="experience-grid">
+            {destination.highlights.map((highlight, index) => (
+              <article key={`${highlight}-${index}`}>
+                <Icon name="compass" size={20} className="mt-1 shrink-0 text-[#0b4941]" />
+                <div>
+                  <h3>{highlight}</h3>
+                </div>
+              </article>
+            ))}
+            {destination.keyAttractions?.map(({ name, type }, index) => (
+              <article key={`${name}-${index}`}>
+                <Icon name="pin" size={20} className="mt-1 shrink-0 text-[#0b4941]" />
+                <div>
+                  <h3>{name}</h3>
+                  {type && <p>{type}</p>}
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
 
       {hasGoogleReviews && (
         <section className="shell mb-16">
           <div className="flex flex-wrap items-center justify-between gap-4 rounded-3xl bg-slate-900 p-6 text-white md:p-8">
             <h2 className="font-serif text-2xl text-white">Reviews on Google Maps</h2>
-            <GoogleVerifiedBadge rating={destination.googleRating} reviewsCount={destination.googleReviewsCount} mapsUrl={destination.googleMapsUrl} />
+            <GoogleVerifiedBadge
+              rating={destination.googleRating}
+              reviewsCount={destination.googleReviewsCount}
+              mapsUrl={destination.googleMapsUrl}
+            />
           </div>
         </section>
+      )}
+
+      {/* Category-Matched Traveler Video Reviews (revealed once a category is selected) */}
+      {selectedCategory !== null && (
+        <CategoryVideoReviews
+          category={selectedCategory}
+          reels={displayReels}
+          onOpenReel={(reel, index, filteredReels) =>
+            onOpenStory?.(reel, index, filteredReels)
+          }
+          subtitle={`Real ${selectedCategory.toLowerCase()} traveler stories in ${destination.city} & Himachal. Tap any reel to play in full screen.`}
+        />
       )}
 
       {/* Final CTA */}
@@ -305,7 +385,8 @@ export function DestinationPage({
           <span className="kicker">Your journey starts here</span>
           <h2>Let’s make {destination.city} yours.</h2>
           <p>
-            Share what you love, how you travel, and when you want to go. We’ll take care of the rest.
+            Share what you love, how you travel, and when you want to go. We’ll take care of the
+            rest.
           </p>
           <button
             onClick={() => onBook(`Plan My ${destination.city} Trip`, destination.priceNum)}

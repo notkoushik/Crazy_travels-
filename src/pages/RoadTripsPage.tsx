@@ -43,8 +43,8 @@ export function RoadTripsPage({ navigate, onBook, currency }: RoadTripsPageProps
             <span className="kicker">Epic drives across India</span>
             <h2>Signature road expeditions</h2>
           </div>
-          <button onClick={() => navigate('custom-trip')} className="section-link">
-            Plan a custom route <Icon name="arrow" size={17} />
+          <button onClick={() => navigate('destination/manali')} className="section-link">
+            Explore &amp; customize routes <Icon name="arrow" size={17} />
           </button>
         </div>
 

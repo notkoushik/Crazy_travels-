@@ -65,6 +65,20 @@ export function DestinationsTab({
                       Adventure Ready
                     </span>
                   )}
+                  {(() => {
+                    const stopCount = dest.customizationOptions?.length ?? 0
+                    return (
+                      <span
+                        className={`px-1.5 py-0.5 rounded text-[9px] font-semibold border ${
+                          stopCount > 0
+                            ? 'bg-emerald-50 text-emerald-800 border-emerald-200/80'
+                            : 'bg-slate-50 text-slate-500 border-slate-200/70'
+                        }`}
+                      >
+                        {stopCount} {stopCount === 1 ? 'Add-On Stop' : 'Add-On Stops'}
+                      </span>
+                    )
+                  })()}
                 </div>
                 <h3 className="text-lg font-bold text-slate-900 mt-1 truncate font-inter-tight">
                   {dest.city}

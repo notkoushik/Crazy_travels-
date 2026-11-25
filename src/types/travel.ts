@@ -126,6 +126,18 @@ export interface PackageItem {
   googleMapsUrl?: string
 }
 
+export interface DestinationCustomizationStop {
+  id: string
+  name: string
+  subtitle?: string
+  extraDays: number
+  extraNights: number
+  priceDelta?: number
+  highlights: string[]
+  allowedDurations?: string[]
+  image?: string
+}
+
 export interface KeyAttraction {
   name: string
   type: string
@@ -153,6 +165,7 @@ export interface DestinationItem {
   isTrending?: boolean
   adventureEnabled?: boolean
   displayOrder?: number
+  customizationOptions?: DestinationCustomizationStop[]
   // Google Ratings & Verified Social Proof (100% Free)
   googleRating?: number
   googleReviewsCount?: number
@@ -238,6 +251,7 @@ export interface InstagramReelItem {
   instagramUrl?: string
   duration: string
   displayOrder: number
+  category?: PackageCategory
 }
 
 export interface ReviewItem {
@@ -278,8 +292,6 @@ export type RouteName =
   | 'road-trips'
   | 'stories'
   | 'offers'
-  | 'custom-trip'
-  | `custom-trip/${string}`
   | 'about'
   | 'contact'
   | 'help'

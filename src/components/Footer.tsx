@@ -109,18 +109,18 @@ export function Footer({ navigate, onToast }: FooterProps) {
                 </button>
               </li>
               <li>
-                <button onClick={() => navigate('destination/srinagar')} className="hover:text-white transition-colors">
-                  Kashmir Spring Journeys
+                <button onClick={() => navigate('destination/manali')} className="hover:text-white transition-colors">
+                  Manali &amp; Kullu Valley
                 </button>
               </li>
               <li>
-                <button onClick={() => navigate('destination/udaipur')} className="hover:text-white transition-colors">
-                  Royal Rajasthan Circuit
+                <button onClick={() => navigate('destination/kasol')} className="hover:text-white transition-colors">
+                  Kasol &amp; Parvati Valley
                 </button>
               </li>
               <li>
-                <button onClick={() => navigate('destination/andaman')} className="hover:text-white transition-colors">
-                  Andaman Coral Escapes
+                <button onClick={() => navigate('destination/shimla')} className="hover:text-white transition-colors">
+                  Shimla &amp; Kufri Escapes
                 </button>
               </li>
             </ul>
@@ -131,8 +131,8 @@ export function Footer({ navigate, onToast }: FooterProps) {
             <h4 className="footer-nav-heading text-white">Plan &amp; design</h4>
             <ul className="footer-nav-links space-y-2">
               <li>
-                <button onClick={() => navigate('custom-trip')} className="text-[#ffd0c7] font-semibold hover:text-white transition-colors">
-                  ✦ Custom Trip Designer
+                <button onClick={() => navigate('destination/manali')} className="text-[#ffd0c7] font-semibold hover:text-white transition-colors">
+                  ✦ Customize Manali &amp; Himachal
                 </button>
               </li>
               <li>

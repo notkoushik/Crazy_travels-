@@ -27,13 +27,16 @@ export function StoryViewerModal({
   const videoRef = useRef<HTMLVideoElement | null>(null)
 
   useEffect(() => {
-    setInternalIndex(currentIndex)
-  }, [currentIndex])
+    if (isOpen) {
+      setInternalIndex(currentIndex)
+    }
+  }, [currentIndex, isOpen])
 
   const activeReels = reels && reels.length > 0 ? reels : []
   const hasReels = activeReels.length > 0
+  const safeIndex = hasReels ? Math.min(Math.max(0, internalIndex), activeReels.length - 1) : 0
   const activeReel: InstagramReelItem | null = hasReels
-    ? activeReels[internalIndex] || activeReels[0]
+    ? activeReels[safeIndex] || activeReels[0]
     : story && story.videoUrl
       ? (story as InstagramReelItem)
       : null
@@ -176,14 +179,14 @@ export function StoryViewerModal({
                 >
                   <div
                     className={`h-full transition-all duration-150 rounded-full ${
-                      i < internalIndex
+                      i < safeIndex
                         ? 'w-full bg-white'
-                        : i === internalIndex
+                        : i === safeIndex
                           ? 'bg-amber-400'
                           : 'w-0'
                     }`}
                     style={
-                      i === internalIndex
+                      i === safeIndex
                         ? { width: `${progress}%` }
                         : undefined
                     }
@@ -287,7 +290,7 @@ export function StoryViewerModal({
           )}
 
           {/* Navigation Chevron Overlays */}
-          {hasReels && internalIndex > 0 && (
+          {hasReels && safeIndex > 0 && (
             <button
               onClick={(e) => {
                 e.stopPropagation()
@@ -300,7 +303,7 @@ export function StoryViewerModal({
             </button>
           )}
 
-          {hasReels && internalIndex < activeReels.length - 1 && (
+          {hasReels && safeIndex < activeReels.length - 1 && (
             <button
               onClick={(e) => {
                 e.stopPropagation()
@@ -326,7 +329,7 @@ export function StoryViewerModal({
                 <span className="text-[11px] font-bold text-white ml-1">5.0</span>
               </div>
               <span className="text-[10px] font-medium tracking-wide uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                Verified Traveler
+                {activeReel?.category ? `${activeReel.category} Traveler` : 'Verified Traveler'}
               </span>
             </div>
 

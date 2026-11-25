@@ -38,6 +38,7 @@ CREATE TABLE IF NOT EXISTS destinations (
   ideal_for TEXT,
   is_trending BOOLEAN DEFAULT TRUE,
   adventure_enabled BOOLEAN DEFAULT FALSE,
+  customization_options JSONB DEFAULT '[]'::jsonb,
   display_order INTEGER DEFAULT 0,
   google_maps_url TEXT,
   google_rating NUMERIC(2,1),
@@ -69,7 +70,6 @@ CREATE TABLE IF NOT EXISTS packages (
   days_count INTEGER NOT NULL DEFAULT 5,
   nights_count INTEGER,
   category VARCHAR(60),
-  destination_slug VARCHAR(120),
   route_summary TEXT,
   summary TEXT,
   brochure_pdf_url TEXT,
@@ -227,6 +227,7 @@ CREATE TABLE IF NOT EXISTS instagram_reels (
   instagram_url TEXT,
   duration VARCHAR(30) DEFAULT '0:45',
   display_order INTEGER DEFAULT 0,
+  category VARCHAR(60),
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -250,6 +251,7 @@ ALTER TABLE reel_video_parts ENABLE ROW LEVEL SECURITY;
 
 -- Safe idempotent column migrations for existing databases
 ALTER TABLE destinations ADD COLUMN IF NOT EXISTS adventure_enabled BOOLEAN DEFAULT FALSE;
+ALTER TABLE destinations ADD COLUMN IF NOT EXISTS customization_options JSONB DEFAULT '[]'::jsonb;
 ALTER TABLE packages ADD COLUMN IF NOT EXISTS slug VARCHAR(120);
 ALTER TABLE packages ADD COLUMN IF NOT EXISTS nights_count INTEGER;
 ALTER TABLE packages ADD COLUMN IF NOT EXISTS category VARCHAR(60);
@@ -260,6 +262,7 @@ ALTER TABLE packages ADD COLUMN IF NOT EXISTS brochure_pdf_url TEXT;
 ALTER TABLE packages ADD COLUMN IF NOT EXISTS pricing_tiers JSONB;
 ALTER TABLE packages ADD COLUMN IF NOT EXISTS things_to_carry JSONB DEFAULT '[]'::jsonb;
 ALTER TABLE packages ADD COLUMN IF NOT EXISTS cancellation_policy JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE instagram_reels ADD COLUMN IF NOT EXISTS category VARCHAR(60);
 
 -- Indexes for lightning fast lookups
 CREATE INDEX IF NOT EXISTS idx_destinations_trending ON destinations(is_trending, display_order);
@@ -268,4 +271,5 @@ CREATE INDEX IF NOT EXISTS idx_packages_destination_category ON packages(destina
 CREATE INDEX IF NOT EXISTS idx_bookings_status ON bookings(status, submitted_at DESC);
 CREATE INDEX IF NOT EXISTS idx_inquiries_status ON inquiries(status, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_reels_order ON instagram_reels(display_order ASC);
+CREATE INDEX IF NOT EXISTS idx_reels_category ON instagram_reels(category, display_order ASC);
 CREATE INDEX IF NOT EXISTS idx_catalog_images_created ON catalog_images(created_at DESC);

@@ -103,9 +103,11 @@ export function PackagesPage({
             />
           </div>
 
-          {/* Category Filters */}
+          {/* Category Filters (hide categories with 0 packages) */}
           <div className="flex flex-wrap items-center gap-1.5 w-full md:w-auto">
-            {CATEGORY_FILTERS.map((cat) => (
+            {CATEGORY_FILTERS.filter(
+              (cat) => cat === 'All' || catalog.some((pkg) => getPackageCategory(pkg) === cat),
+            ).map((cat) => (
               <button
                 key={cat}
                 type="button"

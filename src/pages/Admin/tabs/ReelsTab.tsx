@@ -1,17 +1,37 @@
-﻿import { useEffect, useRef, useState, type FormEvent } from 'react'
+﻿import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { Icon } from '../../../components/Icon'
 import { CatalogPhoto } from '../../../components/CatalogPhoto'
 import { ImageDropzone, validateCoverPhoto } from '../../../components/ImageDropzone'
 import { getAdminAuthHeaders } from '../../../services/dataStore'
-import type { InstagramReelItem } from '../../../types/travel'
+import type { InstagramReelItem, PackageCategory } from '../../../types/travel'
+import type { PackageCategoryFilter } from '../types'
 import {
   Field,
   NumberField,
+  SelectField,
   TextArea,
   requiredNumber,
   requiredText,
   textValue,
 } from '../components/InventoryEditor'
+
+const reelCategories: readonly PackageCategory[] = ['Couple', 'Family', 'Bachelors', 'Adventure']
+type ReelCategoryFilter = PackageCategoryFilter | 'Uncategorized'
+const filterTabs: readonly ReelCategoryFilter[] = [
+  'All',
+  'Couple',
+  'Family',
+  'Bachelors',
+  'Adventure',
+  'Uncategorized',
+]
+
+const categoryBadgeStyles: Record<PackageCategory, string> = {
+  Couple: 'bg-rose-50 text-rose-700 border-rose-200',
+  Family: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+  Bachelors: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+  Adventure: 'bg-amber-50 text-amber-800 border-amber-200',
+}
 
 interface ReelsTabProps {
   reels: InstagramReelItem[]
@@ -65,9 +85,37 @@ export function ReelsTab({ reels, onSaveReel, onDeleteReel, onToast }: ReelsTabP
   const [uploadingCover, setUploadingCover] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [categoryFilter, setCategoryFilter] = useState<ReelCategoryFilter>('All')
   const draftUpload = useRef<string | undefined>(undefined)
   const mounted = useRef(true)
   const busy = saving || uploading !== undefined || uploadingCover
+
+  const categoryCounts = useMemo(() => {
+    const counts: Record<ReelCategoryFilter, number> = {
+      All: reels.length,
+      Couple: 0,
+      Family: 0,
+      Bachelors: 0,
+      Adventure: 0,
+      Uncategorized: 0,
+    }
+    for (const reel of reels) {
+      if (reel.category && reelCategories.includes(reel.category)) {
+        counts[reel.category] += 1
+      } else {
+        counts.Uncategorized += 1
+      }
+    }
+    return counts
+  }, [reels])
+
+  const filteredReels = useMemo(() => {
+    if (categoryFilter === 'All') return reels
+    if (categoryFilter === 'Uncategorized') {
+      return reels.filter((reel) => !reel.category || !reelCategories.includes(reel.category))
+    }
+    return reels.filter((reel) => reel.category === categoryFilter)
+  }, [reels, categoryFilter])
 
   useEffect(() => {
     mounted.current = true
@@ -150,11 +198,16 @@ export function ReelsTab({ reels, onSaveReel, onDeleteReel, onToast }: ReelsTabP
         throw new Error('Upload a video or provide a direct video URL.')
       const durationValue = duration.trim()
       if (!/^\d{1,3}:[0-5]\d$/.test(durationValue)) throw new Error('Enter a duration such as 1:20.')
+      const rawCategory = textValue(form, 'category')
+      const category = reelCategories.includes(rawCategory as PackageCategory)
+        ? (rawCategory as PackageCategory)
+        : undefined
       await onSaveReel({
         id: editor.id,
         title: requiredText(form, 'title', 'Title'),
         place: requiredText(form, 'place', 'Destination'),
         customerName: requiredText(form, 'customerName', 'Customer name'),
+        category,
         reviewQuote: requiredText(form, 'quote', 'Review quote'),
         rating: requiredNumber(form, 'rating', 'Rating', 1, 5),
         displayOrder: requiredNumber(form, 'displayOrder', 'Display order', 0),
@@ -196,7 +249,9 @@ export function ReelsTab({ reels, onSaveReel, onDeleteReel, onToast }: ReelsTabP
       <header className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 pb-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-950">Customer reels</h1>
-          <p className="mt-1 text-sm text-slate-600">Manage videos and reviews shown on the homepage.</p>
+          <p className="mt-1 text-sm text-slate-600">
+            Manage Instagram video reviews shown on the homepage and destination category views.
+          </p>
         </div>
         <button
           type="button"
@@ -207,6 +262,30 @@ export function ReelsTab({ reels, onSaveReel, onDeleteReel, onToast }: ReelsTabP
           <Icon name="plus" size={16} /> Add reel
         </button>
       </header>
+      <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Filter reels by category">
+        {filterTabs
+          .filter((tab) => tab !== 'Uncategorized' || categoryCounts.Uncategorized > 0)
+          .map((tab) => {
+            const active = categoryFilter === tab
+            return (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => setCategoryFilter(tab)}
+                className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                  active
+                    ? 'border-slate-900 bg-slate-900 text-white'
+                    : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                {tab}{' '}
+                <span className={active ? 'text-slate-300' : 'text-slate-400'}>
+                  ({categoryCounts[tab]})
+                </span>
+              </button>
+            )
+          })}
+      </div>
       {editor && (
         <form
           key={editor.id}
@@ -231,6 +310,18 @@ export function ReelsTab({ reels, onSaveReel, onDeleteReel, onToast }: ReelsTabP
                 defaultValue={editor.record?.place}
                 maxLength={120}
                 required
+              />
+              <SelectField
+                label="Category"
+                name="category"
+                value={
+                  editor.record?.category ??
+                  (categoryFilter !== 'All' && categoryFilter !== 'Uncategorized'
+                    ? categoryFilter
+                    : '')
+                }
+                options={reelCategories}
+                placeholder="Select category (optional)"
               />
               <Field
                 label="Customer name"
@@ -348,13 +439,25 @@ export function ReelsTab({ reels, onSaveReel, onDeleteReel, onToast }: ReelsTabP
           </div>
         </form>
       )}
-      {!reels.length && (
+      {!reels.length ? (
         <p className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-600">
           No reels are published.
         </p>
-      )}
+      ) : !filteredReels.length ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-600">
+          <span>No reels in the {categoryFilter} category yet.</span>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => openEditor()}
+            className="font-semibold text-emerald-900 hover:underline"
+          >
+            Add {categoryFilter === 'Uncategorized' ? '' : `${categoryFilter} `}reel
+          </button>
+        </div>
+      ) : null}
       <div className="grid gap-3 lg:grid-cols-2">
-        {reels.map((reel) => (
+        {filteredReels.map((reel) => (
           <article
             key={reel.id}
             className="flex min-w-0 gap-4 rounded-xl border border-slate-200 bg-white p-3"
@@ -365,7 +468,20 @@ export function ReelsTab({ reels, onSaveReel, onDeleteReel, onToast }: ReelsTabP
               className="h-24 w-16 shrink-0 rounded-md object-cover"
             />
             <div className="min-w-0 flex-1">
-              <h2 className="font-semibold text-slate-900">{reel.title}</h2>
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="font-semibold text-slate-900">{reel.title}</h2>
+                {reel.category ? (
+                  <span
+                    className={`rounded-md border px-1.5 py-0.5 text-[10px] font-semibold ${categoryBadgeStyles[reel.category]}`}
+                  >
+                    {reel.category}
+                  </span>
+                ) : (
+                  <span className="rounded-md border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[10px] font-semibold text-slate-500">
+                    Uncategorized
+                  </span>
+                )}
+              </div>
               <p className="mt-1 text-sm text-slate-600">
                 {reel.customerName} · {reel.place} · {reel.duration}
               </p>

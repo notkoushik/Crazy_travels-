@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { Currency, RouteName } from './types/travel'
-import { allPackages, heroSlides, nationalDestinations } from './data/travelData'
+import { Currency, InstagramReelItem, RouteName } from './types/travel'
+import { allPackages, heroSlides, instagramReels, nationalDestinations } from './data/travelData'
 import { Header } from './components/Header'
 import { Footer } from './components/Footer'
 import { Icon } from './components/Icon'
@@ -23,7 +23,6 @@ import { StaysPage } from './pages/StaysPage'
 import { RoadTripsPage } from './pages/RoadTripsPage'
 import { StoriesPage } from './pages/StoriesPage'
 import { OffersPage } from './pages/OffersPage'
-import { CustomTripPage } from './pages/CustomTripPage'
 import { AboutPage } from './pages/AboutPage'
 import { ContactPage } from './pages/ContactPage'
 import { HelpPage } from './pages/HelpPage'
@@ -33,14 +32,24 @@ import { LegalPage } from './pages/LegalPage'
 import { AdminPage } from './pages/AdminPage'
 import { useDynamicStore } from './services/dataStore'
 
+function normalizeRoute(raw: string): RouteName {
+  const cleaned = raw.replace(/^#\/?/, '').trim()
+  if (!cleaned) return 'home'
+  if (cleaned === 'custom-trip' || cleaned.startsWith('custom-trip/')) {
+    const rawSlug = cleaned.slice('custom-trip/'.length).split('?')[0].toLowerCase().trim()
+    const targetSlug = !rawSlug || rawSlug === 'himachal' ? 'manali' : rawSlug
+    return `destination/${targetSlug}`
+  }
+  if (cleaned === 'destination/himachal') {
+    return 'destination/manali'
+  }
+  return cleaned as RouteName
+}
+
 export default function App() {
   const store = useDynamicStore()
 
-  const getInitialRoute = (): RouteName => {
-    const raw = window.location.hash.replace(/^#\/?/, '')
-    if (!raw) return 'home'
-    return raw as RouteName
-  }
+  const getInitialRoute = (): RouteName => normalizeRoute(window.location.hash)
 
   const [route, setRoute] = useState<RouteName>(getInitialRoute)
   const [introStage, setIntroStage] = useState<'pending' | 'revealing' | 'done'>(
@@ -50,7 +59,7 @@ export default function App() {
   const finishIntro = useCallback(() => setIntroStage('done'), [])
   const showIntro = route === 'home' && introStage !== 'done'
   const introPlaying = showIntro && introStage === 'pending'
-  const [saved, setSaved] = useState<string[]>(['Udaipur', 'kashmir-tulips'])
+  const [saved, setSaved] = useState<string[]>([])
   const [currency, setCurrency] = useState<Currency>('INR')
   const [user, setUser] = useState<{ name: string; email: string } | null>(null)
   const [toastMessage, setToastMessage] = useState<string>('')
@@ -63,10 +72,13 @@ export default function App() {
   const [storyViewerOpen, setStoryViewerOpen] = useState(false)
   const [activeStory, setActiveStory] = useState<any>(null)
   const [activeReelIndex, setActiveReelIndex] = useState(0)
+  const [activeStoryReels, setActiveStoryReels] = useState<InstagramReelItem[] | null>(null)
   const catalogPackages = store.packagesLoaded || store.isLoading ? store.packages : allPackages
   const catalogDestinations = store.destinationsLoaded || store.isLoading ? store.destinations : nationalDestinations
+  const catalogReels = store.reels.length > 0 ? store.reels : instagramReels
   const packageId = route.startsWith('package/') ? route.slice(8) : undefined
-  const destinationId = route.startsWith('destination/') ? route.slice(12) : undefined
+  const rawDestinationId = route.startsWith('destination/') ? route.slice(12) : undefined
+  const destinationId = rawDestinationId === 'himachal' ? 'manali' : rawDestinationId
   const routePackage = catalogPackages.find(({ id }) => id === packageId)
   const routeDestination = catalogDestinations.find(({ slug }) => slug === destinationId)
   const tripRequest: TripRequestIntent | undefined = route === 'trip-request' ? window.history.state?.tripRequest : undefined
@@ -80,8 +92,7 @@ export default function App() {
   // Sync hash changes
   useEffect(() => {
     const sync = () => {
-      const raw = window.location.hash.replace(/^#\/?/, '')
-      setRoute((raw || 'home') as RouteName)
+      setRoute(normalizeRoute(window.location.hash))
       window.scrollTo({ top: 0, behavior: 'smooth' })
     }
     window.addEventListener('hashchange', sync)
@@ -126,10 +137,17 @@ export default function App() {
     openRequestRoute('trip-request', { tripRequest: request })
   }
 
-  const handleOpenStory = (story: any, index?: number) => {
+  const handleOpenStory = (
+    story: any,
+    index?: number,
+    customReels?: InstagramReelItem[],
+  ) => {
     setActiveStory(story)
+    setActiveStoryReels(customReels ?? null)
     if (typeof index === 'number') {
       setActiveReelIndex(index)
+    } else {
+      setActiveReelIndex(0)
     }
     setStoryViewerOpen(true)
   }
@@ -171,8 +189,10 @@ export default function App() {
           packageItem={pkg}
           allPackages={catalogPackages}
           destinations={catalogDestinations}
+          reels={catalogReels}
           navigate={navigate}
           onBook={handleOpenBooking}
+          onOpenStory={handleOpenStory}
           saved={saved.includes(pkg.id)}
           onToggleSave={() => toggleSaved(pkg.id)}
           currency={currency}
@@ -187,8 +207,10 @@ export default function App() {
         <DestinationPage
           destination={dest}
           packages={catalogPackages}
+          reels={catalogReels}
           navigate={navigate}
           onBook={handleOpenBooking}
+          onOpenStory={handleOpenStory}
           saved={saved.includes(dest.city)}
           onToggleSave={() => toggleSaved(dest.city)}
           currency={currency}
@@ -216,12 +238,6 @@ export default function App() {
           onBook={handleOpenBooking}
         />
       )
-    }
-
-    if (route === 'custom-trip' || route.startsWith('custom-trip/')) {
-      const [slug, query] = route.slice('custom-trip/'.length).split('?')
-      return <CustomTripPage key={route} navigate={navigate} onToast={showToast} catalogDestinations={catalogDestinations}
-        destinationSlug={slug} group={new URLSearchParams(query).get('group')} />
     }
 
     if (route === 'about') {
@@ -368,9 +384,12 @@ export default function App() {
       {/* Social Story Player Modal */}
       <StoryViewerModal
         isOpen={storyViewerOpen}
-        onClose={() => setStoryViewerOpen(false)}
+        onClose={() => {
+          setStoryViewerOpen(false)
+          setActiveStoryReels(null)
+        }}
         story={activeStory}
-        reels={store.reels}
+        reels={activeStoryReels ?? catalogReels}
         currentIndex={activeReelIndex}
         onChangeIndex={setActiveReelIndex}
       />

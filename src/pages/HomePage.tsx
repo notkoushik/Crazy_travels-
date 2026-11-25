@@ -16,7 +16,6 @@ import {
   instagramReels,
   reviews,
 } from '../data/travelData'
-import kashmirImage from '../assets/wayfare-kashmir.png'
 import socialHimachal from '../assets/wayfare-social-himachal.png'
 
 interface HomePageProps {
@@ -238,13 +237,11 @@ export function HomePage({
   const recommendedPackages = rankedPackages.slice(0, 3)
   const [isHeroMuted, setIsHeroMuted] = useState(true)
 
-  const openCustomStylePlanner = (travelStyle: string) => {
-    try {
-      window.sessionStorage.setItem('ct_custom_style', travelStyle)
-    } catch {
-      // Ignore storage access errors in restricted modes
-    }
-    navigate('custom-trip')
+  const openDestinationPackages = () => {
+    navigate('destination/manali')
+    window.setTimeout(() => {
+      document.getElementById('packages')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 80)
   }
 
   const customizationGroupCards: readonly CustomizationGroupCardData[] = [
@@ -483,10 +480,10 @@ export function HomePage({
                 </button>
                 <button
                   type="button"
-                  onClick={() => navigate('custom-trip')}
+                  onClick={openDestinationPackages}
                   className="hero-btn-custom"
                 >
-                  <span>Plan Custom Trip</span>
+                  <span>Customize Your Trip</span>
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="4" y1="21" x2="4" y2="14"/>
                     <line x1="4" y1="10" x2="4" y2="3"/>
@@ -737,7 +734,7 @@ export function HomePage({
             <button
               type="button"
               className="customization-cta-pill"
-              onClick={() => navigate('custom-trip')}
+              onClick={openDestinationPackages}
             >
               <span>Customize Your Trip</span>
               <Icon name="arrow" size={16} />
@@ -751,7 +748,7 @@ export function HomePage({
                 card={card}
                 variant="tall"
                 staggerOffsetMs={idx * 1100}
-                onSelect={openCustomStylePlanner}
+                onSelect={openDestinationPackages}
               />
             ))}
             <div className="customization-stack">
@@ -761,7 +758,7 @@ export function HomePage({
                   card={card}
                   variant="compact"
                   staggerOffsetMs={(idx + 2) * 1100}
-                  onSelect={openCustomStylePlanner}
+                  onSelect={openDestinationPackages}
                 />
               ))}
             </div>
@@ -777,7 +774,7 @@ export function HomePage({
               <span className="kicker">Follow @crazytourstravels</span>
               <h2>Small moments.<br />Real customer stories.</h2>
               <p>
-                Live notes and customer video reviews from travelers across Kashmir, Kerala, Rajasthan, Ladakh, and beyond.
+                Live notes and customer video reviews from travelers across Manali, Kasol, Shimla, and Himachal.
                 Watch them run simultaneously or click any reel to experience full sound and reviews.
               </p>
               <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -1007,8 +1004,8 @@ export function HomePage({
             Tell our travel designers what moves you. We’ll shape a one-of-a-kind itinerary around your pace,
             tastes and budget with private chauffeured cars and certified boutique stays.
           </p>
-          <button onClick={() => navigate('custom-trip')}>
-            Plan something original <Icon name="arrow" size={18} />
+          <button onClick={openDestinationPackages}>
+            Plan &amp; customize a trip <Icon name="arrow" size={18} />
           </button>
         </div>
       </section>
