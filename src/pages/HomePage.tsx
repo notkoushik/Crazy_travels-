@@ -1,5 +1,6 @@
 import React, { type CSSProperties, FormEvent, useEffect, useRef, useState } from 'react'
 import { CatalogPhoto } from '../components/CatalogPhoto'
+import { CustomizationGroupCard, type CustomizationGroupCardData } from '../components/CustomizationGroupCard'
 import { heroVideoConfig } from '../data/destinationVideos'
 import { Currency, DestinationItem, InstagramReelItem, PackageItem, RouteName } from '../types/travel'
 import { Icon } from '../components/Icon'
@@ -246,13 +247,18 @@ export function HomePage({
     navigate('custom-trip')
   }
 
-  const customizationGroupCards = [
+  const customizationGroupCards: readonly CustomizationGroupCardData[] = [
     {
       id: 'romantic',
       badge: 'ROMANTIC ESCAPES',
       title: 'Romantic Escapes',
       subtitle: 'Handpicked destinations for two.',
-      image: '/catalog-photos/group-romantic.jpg',
+      images: [
+        '/catalog-photos/groups/couple.jpg',
+        '/catalog-photos/groups/Couple_3.jpg',
+        '/catalog-photos/groups/Couple_4.jpg',
+        '/catalog-photos/groups/Couple_2.jpg',
+      ],
       travelStyle: 'Romantic / Honeymoon',
       icon: (
         <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 text-[#e2553f] shrink-0" fill="currentColor" aria-hidden="true">
@@ -265,7 +271,11 @@ export function HomePage({
       badge: 'FAMILY HOLIDAYS',
       title: 'Family Holidays',
       subtitle: 'Comfort and memories for every age.',
-      image: '/catalog-photos/group-family.jpg',
+      images: [
+        '/catalog-photos/groups/Family_2.jpg',
+        '/catalog-photos/groups/Family.jpg',
+        '/catalog-photos/groups/Family_4.jpg',
+      ],
       travelStyle: 'Family with Kids',
       icon: (
         <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 text-[#b85032] shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -281,7 +291,13 @@ export function HomePage({
       badge: "BACHELORS' TRIPS",
       title: 'Bachelors’ Trips',
       subtitle: 'Scenic escapes for friends.',
-      image: '/catalog-photos/group-bachelors.jpg',
+      images: [
+        '/catalog-photos/groups/Friends_3.jpg',
+        '/catalog-photos/groups/Frineds.jpg',
+        '/catalog-photos/groups/Friends_4.jpg',
+        '/catalog-photos/groups/frineds_2.jpg',
+        '/catalog-photos/groups/Friends_5.jpg',
+      ],
       travelStyle: 'Friends & Bachelors Group',
       icon: (
         <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 text-[#b85032] shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -297,7 +313,12 @@ export function HomePage({
       badge: 'ADVENTURE PICKS',
       title: 'Adventure Picks',
       subtitle: 'Thrilling destinations and high passes.',
-      image: '/catalog-photos/group-adventure.jpg',
+      images: [
+        '/catalog-photos/tsomgo-lake.jpg',
+        '/Video/optimized/destination_ladakh_poster.jpg',
+        '/Video/optimized/destination_adventure_poster.jpg',
+        '/Video/optimized/destination_ladakh_pass_poster.jpg',
+      ],
       travelStyle: 'Adventure & Mountain Trails',
       icon: (
         <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 text-[#b85032] shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -305,32 +326,7 @@ export function HomePage({
         </svg>
       ),
     },
-  ] as const
-
-  const renderGroupCard = (card: (typeof customizationGroupCards)[number], variant: 'tall' | 'compact') => (
-    <button
-      key={card.id}
-      type="button"
-      className={`custom-group-card ${variant}`}
-      onClick={() => openCustomStylePlanner(card.travelStyle)}
-    >
-      <CatalogPhoto src={card.image} alt={card.title} loading="lazy" className="custom-group-photo" />
-      <div className="custom-group-scrim" aria-hidden="true" />
-      <span className="custom-group-pill">
-        {card.icon}
-        <span>{card.badge}</span>
-      </span>
-      <div className="custom-group-footer">
-        <div className="custom-group-copy">
-          <h3>{card.title}</h3>
-          <p>{card.subtitle}</p>
-        </div>
-        <span className="custom-group-arrow" aria-hidden="true">
-          <Icon name="arrow" size={16} />
-        </span>
-      </div>
-    </button>
-  )
+  ]
 
   const [selectedHeroIndex, setHeroIndex] = useState(0)
   const heroIndex = selectedHeroIndex % slides.length
@@ -749,9 +745,25 @@ export function HomePage({
           </div>
 
           <div className="customization-bento">
-            {customizationGroupCards.slice(0, 2).map((card) => renderGroupCard(card, 'tall'))}
+            {customizationGroupCards.slice(0, 2).map((card, idx) => (
+              <CustomizationGroupCard
+                key={card.id}
+                card={card}
+                variant="tall"
+                staggerOffsetMs={idx * 1100}
+                onSelect={openCustomStylePlanner}
+              />
+            ))}
             <div className="customization-stack">
-              {customizationGroupCards.slice(2, 4).map((card) => renderGroupCard(card, 'compact'))}
+              {customizationGroupCards.slice(2, 4).map((card, idx) => (
+                <CustomizationGroupCard
+                  key={card.id}
+                  card={card}
+                  variant="compact"
+                  staggerOffsetMs={(idx + 2) * 1100}
+                  onSelect={openCustomStylePlanner}
+                />
+              ))}
             </div>
           </div>
         </div>
