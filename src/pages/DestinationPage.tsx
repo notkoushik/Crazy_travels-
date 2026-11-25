@@ -1,16 +1,15 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { CatalogPhotoCarousel } from '../components/CatalogPhotoCarousel'
+import { PackageCategoryCards } from '../components/PackageCategoryCards'
 import { getDestinationVideo } from '../data/destinationVideos'
-import { useState } from 'react'
-import { Currency, DestinationItem, PackageItem, RouteName } from '../types/travel'
-import { DestinationPackages } from '../components/DestinationPackages'
+import { Currency, DestinationItem, PackageCategory, PackageItem, RouteName } from '../types/travel'
 import { Icon } from '../components/Icon'
 import { GoogleVerifiedBadge, isGoogleMapsLink } from '../components/GoogleVerifiedBadge'
-import { formatPrice } from '../data/travelData'
+import { allPackages, formatPrice } from '../data/travelData'
 
 interface DestinationPageProps {
   destination: DestinationItem
-  packages: PackageItem[]
+  packages?: PackageItem[]
   navigate: (route: RouteName) => void
   onBook: (title: string, price: number) => void
   saved: boolean
@@ -18,9 +17,16 @@ interface DestinationPageProps {
   currency: Currency
 }
 
+const CATEGORY_TO_CUSTOM_STYLE: Record<PackageCategory, string> = {
+  Couple: 'Romantic / Honeymoon',
+  Family: 'Family with Kids',
+  Bachelors: 'Friends & Bachelors Group',
+  Adventure: 'Adventure & Mountain Trails',
+}
+
 export function DestinationPage({
   destination,
-  packages,
+  packages = allPackages,
   navigate,
   onBook,
   saved,
@@ -42,11 +48,22 @@ export function DestinationPage({
   const hasGoogleReviews = !!(destination.googleRating && destination.googleReviewsCount && isGoogleMapsLink(destination.googleMapsUrl))
   const hasExperiences = destination.highlights.length > 0 || !!destination.keyAttractions?.length
   const sections = [
+    ['packages', 'Packages', true],
     ['overview', 'Overview', true],
-    ['destination-packages', 'Trip packages', true],
     ['culture', 'Culture & cuisine', hasCulture],
     ['experiences', 'Signature moments', hasExperiences],
   ] as const
+
+  const handlePlanCustom = (category?: PackageCategory) => {
+    if (category) {
+      try {
+        window.sessionStorage.setItem('ct_custom_style', CATEGORY_TO_CUSTOM_STYLE[category])
+      } catch {
+        // Ignore storage restrictions
+      }
+    }
+    navigate(`custom-trip/${destination.slug}`)
+  }
 
   return (
     <main className="destination-page bg-[#fbfaf7] pb-24 font-inter">
@@ -175,7 +192,7 @@ export function DestinationPage({
       {/* Sub Navigation Bar */}
       <nav className="destination-subnav mb-10 sticky top-0 z-30 shadow-xs bg-white/95 backdrop-blur-md border-b border-gray-100">
         <div className="shell flex items-center justify-between">
-          <div className="flex items-center gap-6 text-xs font-semibold">
+          <div className="flex items-center gap-6 text-xs font-semibold overflow-x-auto">
             {sections.filter(([, , visible]) => visible).map(([id, label]) => (
               <a key={id} href={`#${id}`} onClick={(event) => {
                 event.preventDefault()
@@ -185,12 +202,21 @@ export function DestinationPage({
           </div>
           <button
             onClick={() => onBook(`Plan ${destination.city} Journey`, destination.priceNum)}
-            className="px-6 py-2 rounded-full bg-[#ef4934] text-white text-xs font-bold hover:bg-[#df3a25] shadow-md shadow-[#ef4934]/30"
+            className="px-6 py-2 rounded-full bg-[#ef4934] text-white text-xs font-bold hover:bg-[#df3a25] shadow-md shadow-[#ef4934]/30 shrink-0"
           >
             Plan This Journey
           </button>
         </div>
       </nav>
+
+      {/* Explore Packages by Category (Couple / Family / Bachelors / conditional Adventure) */}
+      <PackageCategoryCards
+        destination={destination}
+        packages={packages}
+        currency={currency}
+        onOpenPackage={(packageId) => navigate(`package/${packageId}`)}
+        onPlanCustom={handlePlanCustom}
+      />
 
       {/* Overview Section */}
       <section className="shell destination-intro mb-16 scroll-mt-40" id="overview">
@@ -211,8 +237,6 @@ export function DestinationPage({
           </div>
         </div>
       </section>
-
-      <DestinationPackages key={destination.slug} destination={destination} packages={packages} currency={currency} />
 
       {!!hasCulture && (
         <section className="shell mb-16 scroll-mt-40" id="culture">

@@ -3,10 +3,13 @@ import {
   DestinationItem,
   InquirySubmission,
   OfferItem,
+  PackageCategory,
   PackageItem,
   RouteName,
   StayItem,
 } from '../../types/travel'
+
+export type PackageCategoryFilter = 'All' | PackageCategory
 
 export type AdminTab =
   | 'dashboard'

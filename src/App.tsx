@@ -154,6 +154,7 @@ export default function App() {
     if (route === 'packages') {
       return (
         <PackagesPage
+          packages={catalogPackages}
           navigate={navigate}
           onBook={handleOpenBooking}
           saved={saved}
@@ -168,11 +169,14 @@ export default function App() {
       return (
         <PackageDetailPage
           packageItem={pkg}
+          allPackages={catalogPackages}
+          destinations={catalogDestinations}
           navigate={navigate}
           onBook={handleOpenBooking}
           saved={saved.includes(pkg.id)}
           onToggleSave={() => toggleSaved(pkg.id)}
           currency={currency}
+          onToast={showToast}
         />
       )
     }

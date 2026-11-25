@@ -268,9 +268,36 @@ export interface DynamicStoreState {
   lastSyncedAt: string | null
 }
 
+function normalizeDestination(d: DestinationItem): DestinationItem {
+  return {
+    ...d,
+    adventureEnabled: Boolean(d.adventureEnabled),
+    highlights: Array.isArray(d.highlights) ? d.highlights : [],
+    gallery: Array.isArray(d.gallery) ? d.gallery : [],
+    mustTryFood: Array.isArray(d.mustTryFood) ? d.mustTryFood : [],
+    keyAttractions: Array.isArray(d.keyAttractions) ? d.keyAttractions : [],
+  }
+}
+
+function normalizePackage(p: PackageItem): PackageItem {
+  const daysCount = Number(p.daysCount) || 1
+  return {
+    ...p,
+    daysCount,
+    nightsCount: p.nightsCount ?? Math.max(0, daysCount - 1),
+    gallery: Array.isArray(p.gallery) ? p.gallery : [],
+    highlights: Array.isArray(p.highlights) ? p.highlights : [],
+    inclusions: Array.isArray(p.inclusions) ? p.inclusions : [],
+    exclusions: Array.isArray(p.exclusions) ? p.exclusions : [],
+    thingsToCarry: Array.isArray(p.thingsToCarry) ? p.thingsToCarry : [],
+    cancellationPolicy: Array.isArray(p.cancellationPolicy) ? p.cancellationPolicy : [],
+    itinerary: Array.isArray(p.itinerary) ? p.itinerary : [],
+  }
+}
+
 const emptyInitialState: DynamicStoreState = {
-  destinations: nationalDestinations,
-  packages: allPackages,
+  destinations: nationalDestinations.map(normalizeDestination),
+  packages: allPackages.map(normalizePackage),
   destinationsLoaded: true,
   packagesLoaded: true,
   stays: hotelStays,
@@ -371,8 +398,8 @@ export const dataStore = {
       if (request !== catalogRequest) return currentStore
       currentStore = {
         ...currentStore,
-        destinations: destinationsRes ?? currentStore.destinations,
-        packages: packagesRes ?? currentStore.packages,
+        destinations: destinationsRes ? destinationsRes.map(normalizeDestination) : currentStore.destinations,
+        packages: packagesRes ? packagesRes.map(normalizePackage) : currentStore.packages,
         destinationsLoaded: currentStore.destinationsLoaded || destinationsRes !== null,
         packagesLoaded: currentStore.packagesLoaded || packagesRes !== null,
         stays: staysRes ?? currentStore.stays,
@@ -629,12 +656,16 @@ export const dataStore = {
 
   saveDestination: async (destination: DestinationItem) => {
     try {
+      const payload = normalizeDestination(destination)
       const res = await fetch('/api/destinations', {
         method: 'POST',
         headers: getAdminHeaders(),
-        body: JSON.stringify(destination),
+        body: JSON.stringify(payload),
       })
-      if (!res.ok) throw new Error('Failed to save destination')
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}))
+        throw new Error(errData.error || errData.message || 'Failed to save destination')
+      }
       await dataStore.fetchInitialData()
     } catch (err) {
       console.error('Error in saveDestination:', err)
@@ -658,12 +689,16 @@ export const dataStore = {
 
   savePackage: async (pkg: PackageItem) => {
     try {
+      const payload = normalizePackage(pkg)
       const res = await fetch('/api/packages', {
         method: 'POST',
         headers: getAdminHeaders(),
-        body: JSON.stringify(pkg),
+        body: JSON.stringify(payload),
       })
-      if (!res.ok) throw new Error('Failed to save package')
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}))
+        throw new Error(errData.error || errData.message || 'Failed to save package')
+      }
       await dataStore.fetchInitialData()
     } catch (err) {
       console.error('Error in savePackage:', err)

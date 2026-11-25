@@ -306,8 +306,30 @@ app.post('/api/bookings/lookup', lookupLimiter, async (req, res) => {
 // ========================================================
 // 1. DESTINATIONS (Rajasthan Fort Window & Catalog)
 // ========================================================
+function parseJsonField(value, fallback) {
+  if (value == null) return fallback
+  if (typeof value !== 'string') return value
+  try {
+    return JSON.parse(value)
+  } catch {
+    return fallback
+  }
+}
+
+let destinationsSchemaReady
+const ensureDestinationsSchema = () => {
+  destinationsSchemaReady ??= pool
+    .query('ALTER TABLE destinations ADD COLUMN IF NOT EXISTS adventure_enabled BOOLEAN DEFAULT FALSE')
+    .catch((error) => {
+      destinationsSchemaReady = undefined
+      throw error
+    })
+  return destinationsSchemaReady
+}
+
 app.get('/api/destinations', async (req, res) => {
   try {
+    await ensureDestinationsSchema().catch(() => {})
     const { rows } = await pool.query(
       'SELECT * FROM destinations ORDER BY display_order ASC, city ASC'
     )
@@ -324,11 +346,12 @@ app.get('/api/destinations', async (req, res) => {
       duration: r.duration,
       tagline: r.tagline,
       description: r.description,
-      highlights: typeof r.highlights === 'string' ? JSON.parse(r.highlights) : r.highlights || [],
-      gallery: typeof r.gallery === 'string' ? JSON.parse(r.gallery) : r.gallery || [],
+      highlights: parseJsonField(r.highlights, []),
+      gallery: parseJsonField(r.gallery, []),
       bestTimeToVisit: r.best_time_to_visit,
       idealFor: r.ideal_for,
       isTrending: r.is_trending,
+      adventureEnabled: Boolean(r.adventure_enabled),
       displayOrder: r.display_order,
       // Google Ratings & Verified Social Proof (100% Free)
       googleRating: r.google_rating == null ? undefined : Number(r.google_rating),
@@ -344,8 +367,8 @@ app.get('/api/destinations', async (req, res) => {
       permitDetails: r.permit_details || '',
       clothingAdvice: r.clothing_advice || '',
       culturalNotes: r.cultural_notes || '',
-      mustTryFood: typeof r.must_try_food === 'string' ? JSON.parse(r.must_try_food) : r.must_try_food || [],
-      keyAttractions: typeof r.key_attractions === 'string' ? JSON.parse(r.key_attractions) : r.key_attractions || [],
+      mustTryFood: parseJsonField(r.must_try_food, []),
+      keyAttractions: parseJsonField(r.key_attractions, []),
       networkCoverage: r.network_coverage || '',
     }))
     res.json(formatted)
@@ -357,76 +380,88 @@ app.get('/api/destinations', async (req, res) => {
 
 app.post('/api/destinations', requireAdminAuth, async (req, res) => {
   try {
-    const d = req.body
+    const d = req.body || {}
     const highlights = JSON.stringify(d.highlights || [])
     const gallery = JSON.stringify(d.gallery || [])
     const mustTryFood = JSON.stringify(d.mustTryFood || [])
     const keyAttractions = JSON.stringify(d.keyAttractions || [])
     const slug = d.slug || d.city.toLowerCase().replace(/\s+/g, '-')
+    const priceNum = Number(d.priceNum) || 0
 
-    await pool.query(
-      `INSERT INTO destinations (
-        slug, city, country, state, region, price, price_num, image, season, duration, tagline, description,
-        highlights, gallery, best_time_to_visit, ideal_for, is_trending, display_order,
-        google_rating, google_reviews_count, google_maps_url,
-        nearest_airport, nearest_railway, recommended_stay_days, peak_season, avg_temp,
-        permit_required, permit_details, clothing_advice, cultural_notes,
-        must_try_food, key_attractions, network_coverage
+    const save = () =>
+      pool.query(
+        `INSERT INTO destinations (
+          slug, city, country, state, region, price, price_num, image, season, duration, tagline, description,
+          highlights, gallery, best_time_to_visit, ideal_for, is_trending, adventure_enabled, display_order,
+          google_rating, google_reviews_count, google_maps_url,
+          nearest_airport, nearest_railway, recommended_stay_days, peak_season, avg_temp,
+          permit_required, permit_details, clothing_advice, cultural_notes,
+          must_try_food, key_attractions, network_coverage
+        )
+        VALUES (
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12,
+          $13, $14, $15, $16, $17, $18, $19,
+          $20, $21, $22,
+          $23, $24, $25, $26, $27,
+          $28, $29, $30, $31,
+          $32, $33, $34
+        )
+        ON CONFLICT (slug) DO UPDATE SET
+          city = EXCLUDED.city,
+          country = EXCLUDED.country,
+          state = EXCLUDED.state,
+          region = EXCLUDED.region,
+          price = EXCLUDED.price,
+          price_num = EXCLUDED.price_num,
+          image = EXCLUDED.image,
+          season = EXCLUDED.season,
+          duration = EXCLUDED.duration,
+          tagline = EXCLUDED.tagline,
+          description = EXCLUDED.description,
+          highlights = EXCLUDED.highlights,
+          gallery = EXCLUDED.gallery,
+          best_time_to_visit = EXCLUDED.best_time_to_visit,
+          ideal_for = EXCLUDED.ideal_for,
+          is_trending = EXCLUDED.is_trending,
+          adventure_enabled = EXCLUDED.adventure_enabled,
+          display_order = EXCLUDED.display_order,
+          google_rating = EXCLUDED.google_rating,
+          google_reviews_count = EXCLUDED.google_reviews_count,
+          google_maps_url = EXCLUDED.google_maps_url,
+          nearest_airport = EXCLUDED.nearest_airport,
+          nearest_railway = EXCLUDED.nearest_railway,
+          recommended_stay_days = EXCLUDED.recommended_stay_days,
+          peak_season = EXCLUDED.peak_season,
+          avg_temp = EXCLUDED.avg_temp,
+          permit_required = EXCLUDED.permit_required,
+          permit_details = EXCLUDED.permit_details,
+          clothing_advice = EXCLUDED.clothing_advice,
+          cultural_notes = EXCLUDED.cultural_notes,
+          must_try_food = EXCLUDED.must_try_food,
+          key_attractions = EXCLUDED.key_attractions,
+          network_coverage = EXCLUDED.network_coverage`,
+        [
+          slug, d.city, d.country, d.state, d.region || '',
+          d.price || `₹${priceNum.toLocaleString('en-IN')}`, priceNum, d.image, d.season || '',
+          d.duration || '', d.tagline || '', d.description || '',
+          highlights, gallery, d.bestTimeToVisit || '', d.idealFor || '',
+          d.isTrending ?? true, Boolean(d.adventureEnabled), d.displayOrder || 0,
+          d.googleRating ?? null, d.googleReviewsCount ?? null, d.googleMapsUrl || null,
+          d.nearestAirport || '', d.nearestRailway || '', d.recommendedStayDays || '',
+          d.peakSeason || d.season || '', d.avgTemp || '',
+          d.permitRequired ?? false, d.permitDetails || '', d.clothingAdvice || '', d.culturalNotes || '',
+          mustTryFood, keyAttractions, d.networkCoverage || ''
+        ]
       )
-      VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12,
-        $13, $14, $15, $16, $17, $18,
-        $19, $20, $21,
-        $22, $23, $24, $25, $26,
-        $27, $28, $29, $30,
-        $31, $32, $33
-      )
-      ON CONFLICT (slug) DO UPDATE SET
-        city = EXCLUDED.city,
-        country = EXCLUDED.country,
-        state = EXCLUDED.state,
-        region = EXCLUDED.region,
-        price = EXCLUDED.price,
-        price_num = EXCLUDED.price_num,
-        image = EXCLUDED.image,
-        season = EXCLUDED.season,
-        duration = EXCLUDED.duration,
-        tagline = EXCLUDED.tagline,
-        description = EXCLUDED.description,
-        highlights = EXCLUDED.highlights,
-        gallery = EXCLUDED.gallery,
-        best_time_to_visit = EXCLUDED.best_time_to_visit,
-        ideal_for = EXCLUDED.ideal_for,
-        is_trending = EXCLUDED.is_trending,
-        display_order = EXCLUDED.display_order,
-        google_rating = EXCLUDED.google_rating,
-        google_reviews_count = EXCLUDED.google_reviews_count,
-        google_maps_url = EXCLUDED.google_maps_url,
-        nearest_airport = EXCLUDED.nearest_airport,
-        nearest_railway = EXCLUDED.nearest_railway,
-        recommended_stay_days = EXCLUDED.recommended_stay_days,
-        peak_season = EXCLUDED.peak_season,
-        avg_temp = EXCLUDED.avg_temp,
-        permit_required = EXCLUDED.permit_required,
-        permit_details = EXCLUDED.permit_details,
-        clothing_advice = EXCLUDED.clothing_advice,
-        cultural_notes = EXCLUDED.cultural_notes,
-        must_try_food = EXCLUDED.must_try_food,
-        key_attractions = EXCLUDED.key_attractions,
-        network_coverage = EXCLUDED.network_coverage`,
-      [
-        slug, d.city, d.country, d.state, d.region || '',
-        d.price || `₹${d.priceNum?.toLocaleString('en-IN')}`, d.priceNum, d.image, d.season || '',
-        d.duration || '', d.tagline || '', d.description || '',
-        highlights, gallery, d.bestTimeToVisit || '', d.idealFor || '',
-        d.isTrending ?? true, d.displayOrder || 0,
-        d.googleRating ?? null, d.googleReviewsCount ?? null, d.googleMapsUrl || null,
-        d.nearestAirport || '', d.nearestRailway || '', d.recommendedStayDays || '',
-        d.peakSeason || d.season || '', d.avgTemp || '',
-        d.permitRequired ?? false, d.permitDetails || '', d.clothingAdvice || '', d.culturalNotes || '',
-        mustTryFood, keyAttractions, d.networkCoverage || ''
-      ]
-    )
+
+    try {
+      await save()
+    } catch (error) {
+      if (error.code !== '42703') throw error
+      destinationsSchemaReady = undefined
+      await ensureDestinationsSchema()
+      await save()
+    }
     res.json({ success: true, slug })
   } catch (err) {
     console.error('Error saving destination:', err)
@@ -447,19 +482,52 @@ app.delete('/api/destinations/:slug', requireAdminAuth, async (req, res) => {
 // ========================================================
 // 2. TOUR PACKAGES & ITINERARIES
 // ========================================================
+let packagesSchemaReady
+const ensurePackagesSchema = () => {
+  packagesSchemaReady ??= pool
+    .query(`
+      ALTER TABLE packages
+        ADD COLUMN IF NOT EXISTS slug VARCHAR(120),
+        ADD COLUMN IF NOT EXISTS category VARCHAR(60),
+        ADD COLUMN IF NOT EXISTS traveller_group VARCHAR(60),
+        ADD COLUMN IF NOT EXISTS destination_slug VARCHAR(120),
+        ADD COLUMN IF NOT EXISTS nights_count INTEGER,
+        ADD COLUMN IF NOT EXISTS route_summary TEXT,
+        ADD COLUMN IF NOT EXISTS summary TEXT,
+        ADD COLUMN IF NOT EXISTS brochure_pdf_url TEXT,
+        ADD COLUMN IF NOT EXISTS pricing_tiers JSONB,
+        ADD COLUMN IF NOT EXISTS things_to_carry JSONB DEFAULT '[]'::jsonb,
+        ADD COLUMN IF NOT EXISTS cancellation_policy JSONB DEFAULT '[]'::jsonb
+    `)
+    .catch((error) => {
+      packagesSchemaReady = undefined
+      throw error
+    })
+  return packagesSchemaReady
+}
+
 app.get('/api/packages', async (req, res) => {
   try {
+    await ensurePackagesSchema().catch(() => {})
     const { rows } = await pool.query('SELECT * FROM packages ORDER BY created_at DESC')
     const formatted = rows.map((r) => ({
       id: r.id,
-      slug: r.slug,
+      slug: r.slug ?? undefined,
       title: r.title,
       place: r.place,
-      destinationSlug: r.destination_slug ?? undefined,
       travellerGroup: r.traveller_group ?? undefined,
       state: r.state,
       duration: r.duration,
       daysCount: r.days_count,
+      nightsCount: r.nights_count ?? (typeof r.days_count === 'number' && r.days_count > 0 ? r.days_count - 1 : undefined),
+      category: r.category ?? undefined,
+      destinationSlug: r.destination_slug ?? undefined,
+      routeSummary: r.route_summary ?? undefined,
+      summary: r.summary ?? undefined,
+      brochurePdfUrl: r.brochure_pdf_url ?? undefined,
+      pricingTiers: parseJsonField(r.pricing_tiers, undefined),
+      thingsToCarry: parseJsonField(r.things_to_carry, []),
+      cancellationPolicy: parseJsonField(r.cancellation_policy, []),
       price: r.price,
       priceNum: r.price_num,
       originalPrice: r.original_price,
@@ -467,12 +535,12 @@ app.get('/api/packages', async (req, res) => {
       rating: Number(r.rating ?? 0),
       reviewCount: r.review_count ?? 0,
       image: r.image,
-      gallery: typeof r.gallery === 'string' ? JSON.parse(r.gallery) : r.gallery || [],
+      gallery: parseJsonField(r.gallery, []),
       overview: r.overview,
-      highlights: typeof r.highlights === 'string' ? JSON.parse(r.highlights) : r.highlights || [],
-      inclusions: typeof r.inclusions === 'string' ? JSON.parse(r.inclusions) : r.inclusions || [],
-      exclusions: typeof r.exclusions === 'string' ? JSON.parse(r.exclusions) : r.exclusions || [],
-      itinerary: typeof r.itinerary === 'string' ? JSON.parse(r.itinerary) : r.itinerary || [],
+      highlights: parseJsonField(r.highlights, []),
+      inclusions: parseJsonField(r.inclusions, []),
+      exclusions: parseJsonField(r.exclusions, []),
+      itinerary: parseJsonField(r.itinerary, []),
       theme: r.theme,
       featured: r.featured,
       googleRating: r.google_rating == null ? undefined : Number(r.google_rating),
@@ -487,56 +555,113 @@ app.get('/api/packages', async (req, res) => {
 
 app.post('/api/packages', requireAdminAuth, async (req, res) => {
   try {
-    const p = req.body
+    const p = req.body || {}
     const id = p.id || `pkg-${Date.now()}`
+    const slug = p.slug || id
+    const daysCount = Number(p.daysCount) || 5
+    const nightsCount = p.nightsCount != null ? Number(p.nightsCount) : Math.max(0, daysCount - 1)
+    const priceNum = Number(p.priceNum) || 0
     const highlights = JSON.stringify(p.highlights || [])
     const inclusions = JSON.stringify(p.inclusions || [])
     const exclusions = JSON.stringify(p.exclusions || [])
     const itinerary = JSON.stringify(p.itinerary || [])
+    const gallery = JSON.stringify(p.gallery || [])
+    const pricingTiers = p.pricingTiers ? JSON.stringify(p.pricingTiers) : null
+    const thingsToCarry = JSON.stringify(p.thingsToCarry || [])
+    const cancellationPolicy = JSON.stringify(p.cancellationPolicy || [])
+    const theme =
+      p.theme ||
+      (p.category === 'Couple'
+        ? 'Honeymoon'
+        : p.category === 'Family'
+          ? 'Family'
+          : p.category === 'Adventure'
+            ? 'Adventure'
+            : 'Scenic')
 
-    await pool.query(
-      `INSERT INTO packages (
-        id, title, place, state, duration, days_count, price, price_num, original_price, discount,
-        rating, review_count, image, overview, highlights, inclusions, exclusions, itinerary,
-        theme, featured, google_rating, google_reviews_count, google_maps_url, gallery, destination_slug, traveller_group
+    const derivedTravellerGroup =
+      p.travellerGroup ||
+      (p.category === 'Couple'
+        ? 'Couples'
+        : p.category === 'Family'
+          ? 'Families'
+          : p.category === 'Bachelors'
+            ? 'Friends & bachelors'
+            : null)
+
+    const save = () =>
+      pool.query(
+        `INSERT INTO packages (
+          id, slug, title, place, state, duration, days_count, nights_count,
+          category, destination_slug, traveller_group, route_summary, summary, brochure_pdf_url,
+          pricing_tiers, things_to_carry, cancellation_policy,
+          price, price_num, original_price, discount,
+          rating, review_count, image, overview, highlights, inclusions, exclusions, itinerary,
+          theme, featured, google_rating, google_reviews_count, google_maps_url, gallery
+        )
+        VALUES (
+          $1, $2, $3, $4, $5, $6, $7, $8,
+          $9, $10, $11, $12, $13, $14,
+          $15, $16, $17,
+          $18, $19, $20, $21,
+          $22, $23, $24, $25, $26, $27, $28, $29,
+          $30, $31, $32, $33, $34, $35
+        )
+        ON CONFLICT (id) DO UPDATE SET
+          slug = EXCLUDED.slug,
+          title = EXCLUDED.title,
+          place = EXCLUDED.place,
+          state = EXCLUDED.state,
+          duration = EXCLUDED.duration,
+          days_count = EXCLUDED.days_count,
+          nights_count = EXCLUDED.nights_count,
+          category = EXCLUDED.category,
+          destination_slug = EXCLUDED.destination_slug,
+          traveller_group = EXCLUDED.traveller_group,
+          route_summary = EXCLUDED.route_summary,
+          summary = EXCLUDED.summary,
+          brochure_pdf_url = EXCLUDED.brochure_pdf_url,
+          pricing_tiers = EXCLUDED.pricing_tiers,
+          things_to_carry = EXCLUDED.things_to_carry,
+          cancellation_policy = EXCLUDED.cancellation_policy,
+          price = EXCLUDED.price,
+          price_num = EXCLUDED.price_num,
+          original_price = EXCLUDED.original_price,
+          discount = EXCLUDED.discount,
+          rating = EXCLUDED.rating,
+          review_count = EXCLUDED.review_count,
+          image = EXCLUDED.image,
+          overview = EXCLUDED.overview,
+          highlights = EXCLUDED.highlights,
+          inclusions = EXCLUDED.inclusions,
+          exclusions = EXCLUDED.exclusions,
+          itinerary = EXCLUDED.itinerary,
+          theme = EXCLUDED.theme,
+          featured = EXCLUDED.featured,
+          google_rating = EXCLUDED.google_rating,
+          google_reviews_count = EXCLUDED.google_reviews_count,
+          google_maps_url = EXCLUDED.google_maps_url,
+          gallery = EXCLUDED.gallery`,
+        [
+          id, slug, p.title, p.place, p.state, p.duration || `${daysCount}D/${nightsCount}N`, daysCount, nightsCount,
+          p.category || null, p.destinationSlug || null, derivedTravellerGroup, p.routeSummary || null, p.summary || null, p.brochurePdfUrl || null,
+          pricingTiers, thingsToCarry, cancellationPolicy,
+          p.price || `₹${priceNum.toLocaleString('en-IN')}`, priceNum, p.originalPrice || '', p.discount || '',
+          p.rating ?? 0, p.reviewCount ?? 0, p.image, p.overview || p.summary || '',
+          highlights, inclusions, exclusions, itinerary,
+          theme, p.featured ?? false,
+          p.googleRating ?? null, p.googleReviewsCount ?? null, p.googleMapsUrl || null, gallery
+        ]
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26)
-      ON CONFLICT (id) DO UPDATE SET
-        title = EXCLUDED.title,
-        place = EXCLUDED.place,
-        state = EXCLUDED.state,
-        duration = EXCLUDED.duration,
-        days_count = EXCLUDED.days_count,
-        price = EXCLUDED.price,
-        price_num = EXCLUDED.price_num,
-        original_price = EXCLUDED.original_price,
-        discount = EXCLUDED.discount,
-        rating = EXCLUDED.rating,
-        review_count = EXCLUDED.review_count,
-        image = EXCLUDED.image,
-        overview = EXCLUDED.overview,
-        highlights = EXCLUDED.highlights,
-        inclusions = EXCLUDED.inclusions,
-        exclusions = EXCLUDED.exclusions,
-        itinerary = EXCLUDED.itinerary,
-        theme = EXCLUDED.theme,
-        featured = EXCLUDED.featured,
-        google_rating = EXCLUDED.google_rating,
-        google_reviews_count = EXCLUDED.google_reviews_count,
-        google_maps_url = EXCLUDED.google_maps_url,
-        gallery = EXCLUDED.gallery,
-        destination_slug = EXCLUDED.destination_slug,
-        traveller_group = EXCLUDED.traveller_group`,
-      [
-        id, p.title, p.place, p.state, p.duration, p.daysCount,
-        p.price || `₹${p.priceNum?.toLocaleString('en-IN')}`, p.priceNum,
-        p.originalPrice, p.discount, p.rating ?? 0, p.reviewCount ?? 0,
-        p.image, p.overview, highlights, inclusions, exclusions, itinerary,
-        p.theme, p.featured ?? false,
-        p.googleRating ?? null, p.googleReviewsCount ?? null, p.googleMapsUrl || null,
-        JSON.stringify(p.gallery || []), p.destinationSlug || null, p.travellerGroup || null
-      ]
-    )
+
+    try {
+      await save()
+    } catch (error) {
+      if (error.code !== '42703') throw error
+      packagesSchemaReady = undefined
+      await ensurePackagesSchema()
+      await save()
+    }
     res.json({ success: true, id })
   } catch (err) {
     res.status(500).json({ error: err.message })

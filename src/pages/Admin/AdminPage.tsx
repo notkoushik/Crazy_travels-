@@ -312,6 +312,7 @@ function AdminDashboardContent({
           {activeTab === 'packages' && !editorOpen && (
             <PackagesTab
               packages={store.packages}
+              destinations={store.destinations}
               onAddNewPackage={() => navigate('admin/packages/new')}
               onEditPackage={(pkg) => navigate(`admin/packages/edit/${encodeURIComponent(pkg.id)}`)}
               onDeletePackage={handleDeletePackage}

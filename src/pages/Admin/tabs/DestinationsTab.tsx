@@ -53,13 +53,18 @@ export function DestinationsTab({
               </div>
 
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-1.5">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
                     {dest.country}
                   </span>
                   <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-slate-100 text-slate-700 border border-slate-200/60">
                     Slot #{idx + 1}
                   </span>
+                  {dest.adventureEnabled && (
+                    <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-amber-50 text-amber-800 border border-amber-200/80">
+                      Adventure Ready
+                    </span>
+                  )}
                 </div>
                 <h3 className="text-lg font-bold text-slate-900 mt-1 truncate font-inter-tight">
                   {dest.city}

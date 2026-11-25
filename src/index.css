@@ -1980,3 +1980,118 @@ footer { padding-top: 115px; background: var(--forest-dark); color: #c5d6d2; }
     height: 44px;
   }
 }
+
+/* ==========================================================================
+   Destination Category Bento, Duration Chips & Package Photo Mosaic Gallery
+   ========================================================================== */
+.dest-category-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  align-items: stretch;
+}
+.dest-category-grid-3 .custom-group-card.tall {
+  min-height: 360px;
+}
+@media (max-width: 900px) {
+  .dest-category-grid-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .dest-category-grid-3 .custom-group-card.tall {
+    min-height: 300px;
+  }
+}
+@media (max-width: 600px) {
+  .dest-category-grid-3 {
+    grid-template-columns: 1fr;
+  }
+  .dest-category-grid-3 .custom-group-card.tall {
+    min-height: 260px;
+  }
+}
+
+.dest-duration-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid #dfd6c7;
+  background: #ffffff;
+  color: #173631;
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  transition: all 0.2s ease;
+}
+.dest-duration-chip:hover {
+  border-color: #ef4934;
+  color: #ef4934;
+  background: #fff7f5;
+}
+.dest-duration-chip.is-active {
+  border-color: #072f2b;
+  background: #072f2b;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(7, 47, 43, 0.16);
+}
+
+.pkg-mosaic-grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: 12px;
+  height: 440px;
+}
+.pkg-mosaic-right {
+  display: grid;
+  grid-template-rows: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: 12px;
+  min-height: 0;
+}
+.pkg-mosaic-bottom-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  min-height: 0;
+}
+.pkg-mosaic-tile {
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  border: 1px solid #e6dfd3;
+  background: #072f2b;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+.pkg-mosaic-overlay-badge {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 13px;
+  border-radius: 999px;
+  background: rgba(7, 47, 43, 0.85);
+  backdrop-filter: blur(8px);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+}
+@media (max-width: 768px) {
+  .pkg-mosaic-grid {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+  .pkg-mosaic-lead {
+    height: 260px;
+  }
+  .pkg-mosaic-right {
+    grid-template-rows: 170px 125px;
+  }
+}

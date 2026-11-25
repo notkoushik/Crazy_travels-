@@ -42,6 +42,7 @@ export function DestinationEditor({
   const [gallery, setGallery] = useState(() => catalogPhotoUrls(image, destination?.gallery).slice(image.trim() ? 1 : 0))
   const [galleryBusy, setGalleryBusy] = useState(false)
   const [permitRequired, setPermitRequired] = useState(destination?.permitRequired ?? false)
+  const [adventureEnabled, setAdventureEnabled] = useState(destination?.adventureEnabled ?? false)
 
   const save = async (form: FormData) => {
     const city = requiredText(form, 'city', 'City or destination')
@@ -79,6 +80,7 @@ export function DestinationEditor({
       bestTimeToVisit: textValue(form, 'bestTimeToVisit'),
       idealFor: textValue(form, 'idealFor'),
       isTrending: form.has('isTrending'),
+      adventureEnabled,
       displayOrder: numberValue(form, 'displayOrder', 'Display order', 0),
       nearestAirport: textValue(form, 'nearestAirport'),
       nearestRailway: textValue(form, 'nearestRailway'),
@@ -189,15 +191,34 @@ export function DestinationEditor({
             defaultValue={destination?.displayOrder}
             hint="Lower numbers appear first."
           />
-          <label className="flex items-center gap-2 self-start py-2 text-sm text-slate-700">
-            <input
-              name="isTrending"
-              type="checkbox"
-              defaultChecked={destination?.isTrending ?? true}
-              className="size-4 accent-emerald-800"
-            />{' '}
-            Show on the homepage
-          </label>
+          <div className="space-y-2.5 self-start py-1">
+            <label className="flex items-center gap-2 text-sm text-slate-700">
+              <input
+                name="isTrending"
+                type="checkbox"
+                defaultChecked={destination?.isTrending ?? true}
+                className="size-4 accent-emerald-800"
+              />{' '}
+              Show on the homepage
+            </label>
+            <label className="flex items-start gap-2 text-sm text-slate-700">
+              <input
+                name="adventureEnabled"
+                type="checkbox"
+                checked={adventureEnabled}
+                onChange={(event) => setAdventureEnabled(event.target.checked)}
+                className="mt-0.5 size-4 accent-emerald-800"
+              />
+              <span>
+                <span className="font-medium text-slate-800">
+                  Adventure Packages Available on this Destination
+                </span>
+                <span className="block text-xs text-slate-500">
+                  Shows the Adventure category card on this destination page.
+                </span>
+              </span>
+            </label>
+          </div>
         </div>
       </EditorSection>
       <EditorSection id="destination-travel" title="Travel guidance">

@@ -63,6 +63,26 @@ export interface ItineraryDay {
   activities?: string[]
   startLocation?: string
   endLocation?: string
+  transfer?: string
+  hotelRating?: number
+  hotelLocation?: string
+  seasonalNote?: string
+}
+
+export type PackageCategory = 'Couple' | 'Family' | 'Bachelors' | 'Adventure'
+
+export interface PackagePricingTier {
+  name: 'Standard' | 'Standard Plus' | 'Premium' | string
+  offSeasonPrice: number
+  seasonPrice: number
+}
+
+export interface PackagePricingTiers {
+  perUnit: 'Per Couple' | 'Per Person' | string
+  minPax?: number
+  offSeasonDates?: string
+  seasonDates?: string
+  tiers: PackagePricingTier[]
 }
 
 export const travellerGroups = ['Couples', 'Families', 'Friends & bachelors'] as const
@@ -70,13 +90,22 @@ export type TravellerGroup = (typeof travellerGroups)[number]
 
 export interface PackageItem {
   id: string
+  slug?: string
   travellerGroup?: TravellerGroup
-  destinationSlug?: string
   title: string
   place: string
   state: string
   duration: string
   daysCount: number
+  nightsCount?: number
+  category?: PackageCategory
+  destinationSlug?: string
+  routeSummary?: string
+  summary?: string
+  brochurePdfUrl?: string
+  pricingTiers?: PackagePricingTiers
+  thingsToCarry?: string[]
+  cancellationPolicy?: string[]
   price: string
   priceNum: number
   originalPrice: string
@@ -122,6 +151,7 @@ export interface DestinationItem {
   bestTimeToVisit: string
   idealFor: string
   isTrending?: boolean
+  adventureEnabled?: boolean
   displayOrder?: number
   // Google Ratings & Verified Social Proof (100% Free)
   googleRating?: number

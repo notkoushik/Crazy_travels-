@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS destinations (
   best_time_to_visit TEXT,
   ideal_for TEXT,
   is_trending BOOLEAN DEFAULT TRUE,
+  adventure_enabled BOOLEAN DEFAULT FALSE,
   display_order INTEGER DEFAULT 0,
   google_maps_url TEXT,
   google_rating NUMERIC(2,1),
@@ -66,6 +67,15 @@ CREATE TABLE IF NOT EXISTS packages (
   state VARCHAR(120) NOT NULL,
   duration VARCHAR(120) NOT NULL,
   days_count INTEGER NOT NULL DEFAULT 5,
+  nights_count INTEGER,
+  category VARCHAR(60),
+  destination_slug VARCHAR(120),
+  route_summary TEXT,
+  summary TEXT,
+  brochure_pdf_url TEXT,
+  pricing_tiers JSONB,
+  things_to_carry JSONB DEFAULT '[]'::jsonb,
+  cancellation_policy JSONB DEFAULT '[]'::jsonb,
   price VARCHAR(60) NOT NULL,
   price_num INTEGER NOT NULL,
   original_price VARCHAR(60),
@@ -238,9 +248,23 @@ CREATE TABLE IF NOT EXISTS reel_video_parts (
 ALTER TABLE reel_videos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reel_video_parts ENABLE ROW LEVEL SECURITY;
 
+-- Safe idempotent column migrations for existing databases
+ALTER TABLE destinations ADD COLUMN IF NOT EXISTS adventure_enabled BOOLEAN DEFAULT FALSE;
+ALTER TABLE packages ADD COLUMN IF NOT EXISTS slug VARCHAR(120);
+ALTER TABLE packages ADD COLUMN IF NOT EXISTS nights_count INTEGER;
+ALTER TABLE packages ADD COLUMN IF NOT EXISTS category VARCHAR(60);
+ALTER TABLE packages ADD COLUMN IF NOT EXISTS destination_slug VARCHAR(120);
+ALTER TABLE packages ADD COLUMN IF NOT EXISTS route_summary TEXT;
+ALTER TABLE packages ADD COLUMN IF NOT EXISTS summary TEXT;
+ALTER TABLE packages ADD COLUMN IF NOT EXISTS brochure_pdf_url TEXT;
+ALTER TABLE packages ADD COLUMN IF NOT EXISTS pricing_tiers JSONB;
+ALTER TABLE packages ADD COLUMN IF NOT EXISTS things_to_carry JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE packages ADD COLUMN IF NOT EXISTS cancellation_policy JSONB DEFAULT '[]'::jsonb;
+
 -- Indexes for lightning fast lookups
 CREATE INDEX IF NOT EXISTS idx_destinations_trending ON destinations(is_trending, display_order);
 CREATE INDEX IF NOT EXISTS idx_packages_theme ON packages(theme, featured);
+CREATE INDEX IF NOT EXISTS idx_packages_destination_category ON packages(destination_slug, category);
 CREATE INDEX IF NOT EXISTS idx_bookings_status ON bookings(status, submitted_at DESC);
 CREATE INDEX IF NOT EXISTS idx_inquiries_status ON inquiries(status, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_reels_order ON instagram_reels(display_order ASC);
