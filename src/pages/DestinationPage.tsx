@@ -2,13 +2,15 @@ import React from 'react'
 import { CatalogPhotoCarousel } from '../components/CatalogPhotoCarousel'
 import { getDestinationVideo } from '../data/destinationVideos'
 import { useState } from 'react'
-import { Currency, DestinationItem, RouteName } from '../types/travel'
+import { Currency, DestinationItem, PackageItem, RouteName } from '../types/travel'
+import { DestinationPackages } from '../components/DestinationPackages'
 import { Icon } from '../components/Icon'
 import { GoogleVerifiedBadge, isGoogleMapsLink } from '../components/GoogleVerifiedBadge'
 import { formatPrice } from '../data/travelData'
 
 interface DestinationPageProps {
   destination: DestinationItem
+  packages: PackageItem[]
   navigate: (route: RouteName) => void
   onBook: (title: string, price: number) => void
   saved: boolean
@@ -18,6 +20,7 @@ interface DestinationPageProps {
 
 export function DestinationPage({
   destination,
+  packages,
   navigate,
   onBook,
   saved,
@@ -35,22 +38,12 @@ export function DestinationPage({
       }
     : getDestinationVideo(destination.slug || destination.city)
   const season = destination.bestTimeToVisit || destination.peakSeason || destination.season
-  const travelDetails = [
-    ['Nearest airport', destination.nearestAirport, 'flight'],
-    ['Nearest railway', destination.nearestRailway, 'map'],
-    ['Peak season', destination.peakSeason || destination.season, 'calendar'],
-    ['Average temperature', destination.avgTemp, 'sparkle'],
-    ['Recommended stay', destination.recommendedStayDays, 'clock'],
-    ['Network coverage', destination.networkCoverage, 'globe'],
-    ['Entry permits', destination.permitDetails || (destination.permitRequired ? 'Permit required' : ''), 'shield'],
-  ] as const
-  const hasTravelDetails = travelDetails.some(([, value]) => value)
   const hasCulture = destination.clothingAdvice || destination.culturalNotes || destination.mustTryFood?.length
   const hasGoogleReviews = !!(destination.googleRating && destination.googleReviewsCount && isGoogleMapsLink(destination.googleMapsUrl))
   const hasExperiences = destination.highlights.length > 0 || !!destination.keyAttractions?.length
   const sections = [
     ['overview', 'Overview', true],
-    ['logistics', 'Travel logistics', hasTravelDetails],
+    ['destination-packages', 'Trip packages', true],
     ['culture', 'Culture & cuisine', hasCulture],
     ['experiences', 'Signature moments', hasExperiences],
   ] as const
@@ -219,20 +212,7 @@ export function DestinationPage({
         </div>
       </section>
 
-      {hasTravelDetails && (
-        <section className="shell mb-16 scroll-mt-40" id="logistics">
-          <h2 className="mb-6 font-serif text-3xl text-[#072f2b]">Travel logistics</h2>
-          <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {travelDetails.filter(([, value]) => value).map(([label, value, icon]) => (
-              <div key={label} className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-                <Icon name={icon} size={20} className="mb-3 text-[#0b4941]" />
-                <dt className="text-sm font-semibold text-gray-900">{label}</dt>
-                <dd className="mt-1 text-sm text-gray-700">{value}</dd>
-              </div>
-            ))}
-          </dl>
-        </section>
-      )}
+      <DestinationPackages key={destination.slug} destination={destination} packages={packages} currency={currency} />
 
       {!!hasCulture && (
         <section className="shell mb-16 scroll-mt-40" id="culture">

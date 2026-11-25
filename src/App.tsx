@@ -182,6 +182,7 @@ export default function App() {
       return (
         <DestinationPage
           destination={dest}
+          packages={catalogPackages}
           navigate={navigate}
           onBook={handleOpenBooking}
           saved={saved.includes(dest.city)}
@@ -214,8 +215,9 @@ export default function App() {
     }
 
     if (route === 'custom-trip' || route.startsWith('custom-trip/')) {
+      const [slug, query] = route.slice('custom-trip/'.length).split('?')
       return <CustomTripPage key={route} navigate={navigate} onToast={showToast} catalogDestinations={catalogDestinations}
-        destinationSlug={route === 'custom-trip' ? undefined : route.slice('custom-trip/'.length)} />
+        destinationSlug={slug} group={new URLSearchParams(query).get('group')} />
     }
 
     if (route === 'about') {

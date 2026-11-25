@@ -58,6 +58,8 @@ CREATE TABLE IF NOT EXISTS destinations (
 
 CREATE TABLE IF NOT EXISTS packages (
   id VARCHAR(120) PRIMARY KEY,
+  destination_slug VARCHAR(120) REFERENCES destinations(slug) ON UPDATE CASCADE ON DELETE SET NULL,
+  traveller_group TEXT CHECK (traveller_group IN ('Couples', 'Families', 'Friends & bachelors')),
   slug VARCHAR(120),
   title VARCHAR(255) NOT NULL,
   place VARCHAR(120) NOT NULL,

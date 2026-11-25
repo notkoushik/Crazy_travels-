@@ -455,6 +455,8 @@ app.get('/api/packages', async (req, res) => {
       slug: r.slug,
       title: r.title,
       place: r.place,
+      destinationSlug: r.destination_slug ?? undefined,
+      travellerGroup: r.traveller_group ?? undefined,
       state: r.state,
       duration: r.duration,
       daysCount: r.days_count,
@@ -496,9 +498,9 @@ app.post('/api/packages', requireAdminAuth, async (req, res) => {
       `INSERT INTO packages (
         id, title, place, state, duration, days_count, price, price_num, original_price, discount,
         rating, review_count, image, overview, highlights, inclusions, exclusions, itinerary,
-        theme, featured, google_rating, google_reviews_count, google_maps_url, gallery
+        theme, featured, google_rating, google_reviews_count, google_maps_url, gallery, destination_slug, traveller_group
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26)
       ON CONFLICT (id) DO UPDATE SET
         title = EXCLUDED.title,
         place = EXCLUDED.place,
@@ -522,7 +524,9 @@ app.post('/api/packages', requireAdminAuth, async (req, res) => {
         google_rating = EXCLUDED.google_rating,
         google_reviews_count = EXCLUDED.google_reviews_count,
         google_maps_url = EXCLUDED.google_maps_url,
-        gallery = EXCLUDED.gallery`,
+        gallery = EXCLUDED.gallery,
+        destination_slug = EXCLUDED.destination_slug,
+        traveller_group = EXCLUDED.traveller_group`,
       [
         id, p.title, p.place, p.state, p.duration, p.daysCount,
         p.price || `₹${p.priceNum?.toLocaleString('en-IN')}`, p.priceNum,
@@ -530,7 +534,7 @@ app.post('/api/packages', requireAdminAuth, async (req, res) => {
         p.image, p.overview, highlights, inclusions, exclusions, itinerary,
         p.theme, p.featured ?? false,
         p.googleRating ?? null, p.googleReviewsCount ?? null, p.googleMapsUrl || null,
-        JSON.stringify(p.gallery || [])
+        JSON.stringify(p.gallery || []), p.destinationSlug || null, p.travellerGroup || null
       ]
     )
     res.json({ success: true, id })

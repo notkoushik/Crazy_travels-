@@ -76,6 +76,7 @@ async function generateRelationalSchema() {
   sqlOut += `);\n\n`
 
   sqlOut += `CREATE TABLE packages (\n`
+  sqlOut += `  traveller_group TEXT CHECK (traveller_group IN ('Couples', 'Families', 'Friends & bachelors')),\n`
   sqlOut += `  id VARCHAR(120) PRIMARY KEY,\n`
   sqlOut += `  destination_slug VARCHAR(120) REFERENCES destinations(slug) ON UPDATE CASCADE ON DELETE SET NULL,\n`
   sqlOut += `  slug VARCHAR(120),\n`
@@ -280,14 +281,16 @@ async function generateRelationalSchema() {
       for (const row of rows) {
         if (table === 'packages') {
           validPackageIds.add(row.id)
-          const place = (row.place || '').toLowerCase()
-          if (place.includes('udaipur') || place.includes('rajasthan')) row.destination_slug = 'udaipur'
-          else if (place.includes('munnar') || place.includes('kerala')) row.destination_slug = 'munnar'
-          else if (place.includes('hampi')) row.destination_slug = 'hampi'
-          else if (place.includes('srinagar') || place.includes('kashmir')) row.destination_slug = 'srinagar'
-          else if (place.includes('gangtok') || place.includes('sikkim')) row.destination_slug = 'gangtok'
-          else if (place.includes('andaman')) row.destination_slug = 'andaman'
-          else row.destination_slug = null
+          if (!Object.hasOwn(row, 'destination_slug')) {
+            const place = (row.place || '').toLowerCase()
+            if (place.includes('udaipur') || place.includes('rajasthan')) row.destination_slug = 'udaipur'
+            else if (place.includes('munnar') || place.includes('kerala')) row.destination_slug = 'munnar'
+            else if (place.includes('hampi')) row.destination_slug = 'hampi'
+            else if (place.includes('srinagar') || place.includes('kashmir')) row.destination_slug = 'srinagar'
+            else if (place.includes('gangtok') || place.includes('sikkim')) row.destination_slug = 'gangtok'
+            else if (place.includes('andaman')) row.destination_slug = 'andaman'
+            else row.destination_slug = null
+          }
 
           // Guarantee valid reference
           if (row.destination_slug && !validDestSlugs.has(row.destination_slug)) {

@@ -63,6 +63,7 @@ CREATE TABLE destinations (
 );
 
 CREATE TABLE packages (
+  traveller_group TEXT CHECK (traveller_group IN ('Couples', 'Families', 'Friends & bachelors')),
   id VARCHAR(120) PRIMARY KEY,
   destination_slug VARCHAR(120) REFERENCES destinations(slug) ON UPDATE CASCADE ON DELETE SET NULL,
   slug VARCHAR(120),

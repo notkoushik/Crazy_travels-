@@ -3,6 +3,7 @@ import React from 'react'
 export type IconName =
   | 'arrow'
   | 'bed'
+  | 'meals'
   | 'calendar'
   | 'car'
   | 'chevron'
@@ -64,8 +65,13 @@ export interface ItineraryDay {
   endLocation?: string
 }
 
+export const travellerGroups = ['Couples', 'Families', 'Friends & bachelors'] as const
+export type TravellerGroup = (typeof travellerGroups)[number]
+
 export interface PackageItem {
   id: string
+  travellerGroup?: TravellerGroup
+  destinationSlug?: string
   title: string
   place: string
   state: string

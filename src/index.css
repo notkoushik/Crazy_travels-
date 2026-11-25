@@ -1039,6 +1039,40 @@
 .newsletter input { flex: 1; min-width: 0; padding: 0 17px; outline: none; color: var(--ink); font-size: 12px; }
 
 .destination-page { background: var(--cream); }
+.destination-packages-title { margin-bottom: 24px; font: 600 clamp(1.85rem, 3vw, 2.65rem)/1.12 var(--brand-display-font); letter-spacing: -.04em; color: var(--forest-dark); }
+.destination-package-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(14px, 1.6vw, 26px); }
+.destination-package-card {
+  display: flex; flex-direction: column; min-width: 0; padding: clamp(14px, 1.25vw, 20px);
+  border: 1px solid #d5ddda; border-radius: 20px; background: white; color: #173631;
+  font-family: var(--travel-interface-font); overflow-wrap: anywhere;
+}
+.destination-package-card .destination-package-gallery { border: 0; border-radius: 10px; box-shadow: none; }
+.destination-package-gallery .catalog-carousel-bar { padding: 4px 2px; }
+.destination-group-label { position: absolute; top: 13px; left: 0; padding: 6px 14px 6px 11px; border-radius: 0 20px 20px 0; background: #0b4941; color: white; font-size: .8rem; font-weight: 700; pointer-events: none; }
+.destination-gallery-arrows { position: absolute; inset: 50% 8px auto; transform: translateY(-50%); display: flex; justify-content: space-between; pointer-events: none; }
+.destination-gallery-arrows button, .destination-gallery-play { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: white; color: #152f2d; box-shadow: 0 1px 6px #0003; pointer-events: auto; }
+.destination-gallery-arrows button:disabled { color: #83908b; cursor: default; }
+.destination-gallery-play { position: absolute; right: 9px; bottom: 9px; width: 28px; height: 28px; color: white; background: #102723d9; }
+.destination-package-tags { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; margin-block: 16px 10px; }
+.destination-package-tags > span { padding: 4px 8px; border: 1px solid #e3e9e6; border-radius: 5px; background: #f5f7f6; color: #315c51; font-size: .73rem; font-weight: 650; }
+.destination-package-tags small { display: inline-flex; align-items: center; gap: 4px; margin-left: auto; color: #465b55; font-size: .75rem; }
+.destination-package-tags small svg { color: #94610a; }
+.destination-package-card h3 { margin: 0; font: 620 clamp(1.15rem, 1.55vw, 1.4rem)/1.24 var(--brand-display-font); letter-spacing: -.025em; }
+.destination-package-card h3 a:hover { text-decoration: underline; }
+.destination-package-route { margin-block: 12px 20px; font-size: .875rem; line-height: 1.55; color: #50645d; }
+.destination-package-features { display: flex; flex-wrap: wrap; gap: 14px; margin-top: auto; padding-bottom: 16px; }
+.destination-package-features li { display: grid; justify-items: center; gap: 5px; font-size: .7rem; font-weight: 600; }
+.destination-package-features svg { color: #95532c; }
+.destination-package-rate { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 10px; padding-top: 14px; border-top: 1px dashed #c4ceca; margin-top: auto; }
+.destination-package-features + .destination-package-rate { margin-top: 0; }
+.destination-package-rate strong { display: block; font: 650 1.15rem/1.3 var(--brand-display-font); }
+.destination-package-rate small { display: block; color: #53675e; font-size: .72rem; }
+.destination-package-offer { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 3px; color: #617169; font-size: .73rem; }
+.destination-package-offer span { padding: 2px 5px; border-radius: 4px; background: #fcece5; color: #8a3825; font-weight: 700; }
+.destination-package-rate > a { display: inline-flex; align-items: center; gap: 7px; min-height: 40px; padding: 8px 14px; border-radius: 24px; background: var(--forest); color: white; font-size: .8rem; font-weight: 650; }
+.destination-package-rate > a:hover { background: var(--forest-dark); }
+@media (max-width: 940px) { .destination-package-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .destination-package-grid { grid-template-columns: minmax(0, 1fr); } }
 .catalog-carousel {
   overflow: hidden;
   border: 1px solid #e2e9e4;

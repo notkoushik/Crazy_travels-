@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { DestinationItem, RouteName } from '../types/travel'
+import { DestinationItem, RouteName, travellerGroups, type TravellerGroup } from '../types/travel'
 import { Icon } from '../components/Icon'
 import { dataStore } from '../services/dataStore'
 
@@ -8,9 +8,16 @@ interface CustomTripPageProps {
   onToast: (msg: string) => void
   catalogDestinations: DestinationItem[]
   destinationSlug?: string
+  group?: string | null
 }
 
-export function CustomTripPage({ navigate, onToast, catalogDestinations, destinationSlug }: CustomTripPageProps) {
+const groupStyles: Record<TravellerGroup, string> = {
+  Couples: 'Romantic / Honeymoon',
+  Families: 'Family with Kids',
+  'Friends & bachelors': 'Friends & Bachelors Group',
+}
+
+export function CustomTripPage({ navigate, onToast, catalogDestinations, destinationSlug, group }: CustomTripPageProps) {
   const [step, setStep] = useState(1)
   const requestedCity = catalogDestinations.find(({ slug }) => encodeURIComponent(slug) === destinationSlug)?.city
   const [destinations, setDestinations] = useState<string[]>(() => requestedCity ? [requestedCity] : [])
@@ -18,6 +25,8 @@ export function CustomTripPage({ navigate, onToast, catalogDestinations, destina
     if (requestedCity) setDestinations([requestedCity])
   }, [requestedCity])
   const [style, setStyle] = useState(() => {
+    const requestedGroup = travellerGroups.find((value) => value === group)
+    if (requestedGroup) return groupStyles[requestedGroup]
     try {
       const preset = window.sessionStorage.getItem('ct_custom_style')
       if (preset) {

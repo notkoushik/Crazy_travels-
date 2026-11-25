@@ -75,21 +75,23 @@ export function SelectField({
   value,
   options,
   required,
+  placeholder,
 }: {
   label: string
   name: string
   value?: string
-  options: readonly string[]
+  options: readonly (string | { value: string; label: string })[]
   required?: boolean
+  placeholder?: string
 }) {
   return (
     <LabeledField label={label} required={required}>
       <select className={inputStyle} name={name} defaultValue={value ?? ''} required={required}>
-        <option value="">Select {label.toLowerCase()}</option>
-        {value && !options.includes(value) && <option>{value}</option>}
-        {options.map((option) => (
-          <option key={option}>{option}</option>
-        ))}
+        <option value="">{placeholder ?? `Select ${label.toLowerCase()}`}</option>
+        {value && !options.some((option) => (typeof option === 'string' ? option : option.value) === value) && <option>{value}</option>}
+        {options.map((option) => typeof option === 'string'
+          ? <option key={option}>{option}</option>
+          : <option key={option.value} value={option.value}>{option.label}</option>)}
       </select>
     </LabeledField>
   )

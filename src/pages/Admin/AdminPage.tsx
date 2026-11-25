@@ -236,7 +236,7 @@ function AdminDashboardContent({
     }
     if (activeTab === 'packages') {
       const pkg = store.packages.find(({ id }) => matchesId(id))
-      if (isNew || pkg) return <PackageEditor key={route} pkg={pkg} onBack={closeEditor} onSave={handleSavePackage} />
+      if (isNew || pkg) return <PackageEditor key={route} pkg={pkg} destinations={store.destinations} onBack={closeEditor} onSave={handleSavePackage} />
     }
     if (activeTab === 'stays') {
       const stay = store.stays.find(({ id }) => matchesId(id))

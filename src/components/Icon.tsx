@@ -73,6 +73,7 @@ const iconPaths: Record<IconName, React.ReactNode> = {
       <path d="M3 19v-8h18v8M3 16h18M7 11V7h5a4 4 0 0 1 4 4" />
     </>
   ),
+  meals: <path d="M5 3v5a3 3 0 0 0 6 0V3M8 3v18M19 21V3c-3 2-4 5-4 10h4" />,
   car: (
     <>
       <path d="m5 16-1-2 2-5h12l2 5-1 2M5 16v3M19 16v3M4 16h16M7 16h.01M17 16h.01" />

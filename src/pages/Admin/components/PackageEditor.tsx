@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import { Icon } from '../../../components/Icon'
 import { ImageDropzone, validateCoverPhoto } from '../../../components/ImageDropzone'
 import { catalogPhotoUrls, getStarterPackagePhoto } from '../../../data/catalogPhotos'
-import type { ItineraryDay, PackageItem } from '../../../types/travel'
+import { travellerGroups, type DestinationItem, type ItineraryDay, type PackageItem } from '../../../types/travel'
 import { GalleryEditor } from './GalleryEditor'
 import {
   EditorSection,
@@ -38,10 +38,12 @@ const newDay = () => ({
 
 export function PackageEditor({
   pkg,
+  destinations,
   onBack,
   onSave,
 }: {
   pkg?: PackageItem
+  destinations: DestinationItem[]
   onBack: () => void
   onSave: (pkg: PackageItem) => Promise<void>
 }) {
@@ -99,6 +101,8 @@ export function PackageEditor({
       place: requiredText(form, 'place', 'Destination or route'),
       state: requiredText(form, 'state', 'State or region'),
       theme: requiredText(form, 'theme', 'Travel theme') as PackageItem['theme'],
+      travellerGroup: travellerGroups.find((group) => group === form.get('travellerGroup')),
+      destinationSlug: textValue(form, 'destinationSlug'),
       duration,
       daysCount,
       priceNum: rate,
@@ -157,6 +161,12 @@ export function PackageEditor({
             placeholder="e.g. Rajasthan"
           />
           <SelectField label="Travel theme" name="theme" value={pkg?.theme} required options={themes} />
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <SelectField label="Destination page" name="destinationSlug" value={pkg?.destinationSlug}
+            placeholder="Match by itinerary" options={destinations.map((d) => ({ value: d.slug, label: d.city }))} />
+          <SelectField label="Traveller group" name="travellerGroup" value={pkg?.travellerGroup}
+            placeholder="Use package theme" options={travellerGroups} />
         </div>
         <TextArea
           label="Trip overview"

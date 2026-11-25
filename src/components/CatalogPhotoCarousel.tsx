@@ -13,6 +13,7 @@ export function CatalogPhotoCarousel({
   gallery,
   className = '',
   frameClassName,
+  card = false,
   children,
 }: {
   title: string
@@ -20,6 +21,7 @@ export function CatalogPhotoCarousel({
   gallery?: string[]
   className?: string
   frameClassName: string
+  card?: boolean
   children: ReactNode
 }) {
   const id = useId()
@@ -101,9 +103,25 @@ export function CatalogPhotoCarousel({
           ))}
         </div>
         {children}
+        {card && count > 1 && !reducedMotion && (
+          <button type="button" className="destination-gallery-play" aria-label={playing ? 'Pause photo slideshow' : 'Play photo slideshow'}
+            aria-controls={id} onClick={() => setPlaying((current) => !current)}>
+            {playing ? <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M4 2h3v12H4zm5 0h3v12H9z" /></svg> : <Icon name="play" size={14} />}
+          </button>
+        )}
+        {card && count > 1 && (
+          <div className="destination-gallery-arrows">
+            <button type="button" aria-label="Previous photo" aria-controls={id} disabled={active === 0} onClick={() => move(-1)}>
+              <Icon name="chevron" size={18} className="rotate-180" />
+            </button>
+            <button type="button" aria-label="Next photo" aria-controls={id} disabled={active === count - 1} onClick={() => move(1)}>
+              <Icon name="chevron" size={18} />
+            </button>
+          </div>
+        )}
       </div>
 
-      {(count > 1 || credit) && (
+      {((!card && count > 1) || credit) && (
         <div className="catalog-carousel-bar">
           <p className="catalog-carousel-caption">
             {credit ? (
@@ -118,7 +136,7 @@ export function CatalogPhotoCarousel({
               </>
             ) : 'Photos'}
           </p>
-          {count > 1 && (
+          {!card && count > 1 && (
             <div className="catalog-carousel-controls">
               <span aria-live={autoPlay ? 'off' : 'polite'} aria-atomic="true">
                 <span className="sr-only">Photo </span>{active + 1}
