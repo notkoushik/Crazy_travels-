@@ -38,7 +38,50 @@ interface StorefrontStudioPageProps {
   navigate: (route: RouteName) => void
 }
 
-type StudioSection = 'specials' | 'trending' | 'soul' | 'board' | 'stays' | 'pillars' | 'stats'
+type StudioSection = 'hero' | 'trending' | 'customization' | 'soul' | 'board' | 'stays' | 'pillars' | 'stats'
+
+const HERO_VIDEO_PRESETS = [
+  {
+    label: 'Kedarnath Temple & Snow Peaks (16:9 HD)',
+    videoUrl: '/Video/optimized/destination_kedarnath.mp4',
+    posterUrl: '/Video/optimized/destination_kedarnath_poster.jpg',
+  },
+  {
+    label: 'Himachal Pine Valleys & Mountains (16:9 HD)',
+    videoUrl: '/Video/optimized/destination_himachal.mp4',
+    posterUrl: '/Video/optimized/destination_himachal_poster.jpg',
+  },
+  {
+    label: 'Slow Travel Scenic Train Journey (16:9 HD)',
+    videoUrl: '/Video/optimized/destination_slow_travel.mp4',
+    posterUrl: '/Video/optimized/destination_slow_travel_poster.jpg',
+  },
+  {
+    label: 'Golden Peaks & Alpenglow (16:9 HD)',
+    videoUrl: '/Video/optimized/destination_golden_peaks.mp4',
+    posterUrl: '/Video/optimized/destination_golden_peaks_poster.jpg',
+  },
+  {
+    label: 'Sikkim Kanchenjunga Sunrise (16:9 HD)',
+    videoUrl: '/Video/optimized/destination_sikkim.mp4',
+    posterUrl: '/Video/optimized/destination_sikkim_poster.jpg',
+  },
+  {
+    label: 'Ladakh High Passes & Monasteries (16:9 HD)',
+    videoUrl: '/Video/optimized/destination_ladakh.mp4',
+    posterUrl: '/Video/optimized/destination_ladakh_poster.jpg',
+  },
+  {
+    label: 'Kashmir Snow Ridge & Pine Valley (16:9 HD)',
+    videoUrl: '/Video/optimized/destination_kashmir.mp4',
+    posterUrl: '/Video/optimized/destination_kashmir_poster.jpg',
+  },
+  {
+    label: 'Kerala Munnar Tea Trails',
+    videoUrl: '/Video/optimized/destination_kerala.mp4',
+    posterUrl: '/Video/optimized/destination_kerala_poster.jpg',
+  },
+]
 
 export function StorefrontStudioPage({
   storefront,
@@ -55,7 +98,7 @@ export function StorefrontStudioPage({
   onToast,
   navigate,
 }: StorefrontStudioPageProps) {
-  const [activeSection, setActiveSection] = useState<StudioSection>('specials')
+  const [activeSection, setActiveSection] = useState<StudioSection>('hero')
   const [saving, setSaving] = useState(false)
 
   // Section 1: Specials State
@@ -148,13 +191,34 @@ export function StorefrontStudioPage({
   }
 
   // Save Handlers
+  const handleSaveHero = async () => {
+    try {
+      setSaving(true)
+      await onSaveSectionHeader('hero', headers.hero || {
+        kicker: 'Travel with a local touch',
+        title: 'Crazy Tours Travel',
+        subtitle: 'Handcrafted journeys across India and beyond',
+      })
+      await onSaveSectionHeader('hero_video', headers.hero_video || {
+        kicker: '/Video/optimized/destination_kedarnath.mp4',
+        title: '/Video/optimized/destination_kedarnath_poster.jpg',
+        subtitle: 'Hero Scenic Video',
+      })
+      onToast('Hero Video & Brand Banner saved to database!')
+    } catch (e: any) {
+      onToast(e.message || 'Failed to save hero banner')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   const handleSaveSpecial = async () => {
     try {
       setSaving(true)
       await onSaveSpecial(selectedSpecialIndex, specialForm)
-      onToast(`Special Card #${selectedSpecialIndex} saved successfully!`)
+      onToast(`Customization Card #${selectedSpecialIndex} saved successfully!`)
     } catch (e: any) {
-      onToast(e.message || 'Failed to save special card')
+      onToast(e.message || 'Failed to save customization card')
     } finally {
       setSaving(false)
     }
@@ -275,7 +339,7 @@ export function StorefrontStudioPage({
                 <Icon name="sparkle" size={12} className="text-amber-500" />
                 Storefront Merchandising Suite
               </span>
-              <span className="text-xs text-slate-400">● 7 Modules</span>
+              <span className="text-xs text-slate-400">● 8 Modules</span>
             </div>
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 font-serif">
               Storefront Experience Studio
@@ -299,9 +363,10 @@ export function StorefrontStudioPage({
         {/* Section Quick Switcher Tabs */}
         <div className="mt-6 flex flex-wrap gap-2 border-t border-slate-100 pt-4">
           {[
-            { id: 'specials', label: 'Crazy Specials (4)', icon: 'tag' },
-            { id: 'trending', label: 'Trending Fort Arch (6)', icon: 'map' },
-            { id: 'soul', label: 'Journeys With Soul (3)', icon: 'compass' },
+            { id: 'hero', label: 'Hero Video & Banner', icon: 'video' },
+            { id: 'trending', label: 'Trending Destinations', icon: 'map' },
+            { id: 'customization', label: 'We Offer Customization (4)', icon: 'sparkle' },
+            { id: 'soul', label: 'Recommended Packages (3)', icon: 'compass' },
             { id: 'board', label: 'Travel Boards Recommend', icon: 'fileText' },
             { id: 'stays', label: 'Boutique Hotel Stays', icon: 'hotel' },
             { id: 'pillars', label: 'Brand Value Pillars (4)', icon: 'shield' },
@@ -324,30 +389,241 @@ export function StorefrontStudioPage({
       </div>
 
       {/* ======================================================== */}
-      {/* 1. CRAZY SPECIALS & OFFERS (4 ASYMMETRIC CARDS) */}
+      {/* 1. HERO SCENIC VIDEO & BRAND BANNER */}
       {/* ======================================================== */}
-      {activeSection === 'specials' && (
+      {activeSection === 'hero' && (
         <div className="space-y-6">
           <div className="rounded-2xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-xs space-y-5">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
               <div>
                 <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                  <Icon name="tag" size={16} className="text-[#ef4934]" />
-                  <span>Module 1: Crazy Specials &amp; Offers (4-Slot Visual Grid)</span>
+                  <Icon name="video" size={16} className="text-[#ef4934]" />
+                  <span>Module 1: Hero Scenic Video &amp; Brand Banner</span>
                 </h2>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Click any slot below to edit its badge, title, subtitle, price, and background image.
+                  Customize the top rolling video, eyebrow, brand headline, and subtitle shown on the left side of the homepage hero.
                 </p>
+              </div>
+              <button
+                type="button"
+                disabled={saving}
+                onClick={handleSaveHero}
+                className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-xs flex items-center gap-1.5"
+              >
+                <Icon name="check" size={14} />
+                <span>{saving ? 'Saving...' : 'Save Hero Banner'}</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 text-xs">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-slate-700 font-semibold mb-1">Select Preset Hero Video</label>
+                  <select
+                    value={headers.hero_video?.kicker || '/Video/optimized/destination_kedarnath.mp4'}
+                    onChange={(e) => {
+                      const preset = HERO_VIDEO_PRESETS.find((p) => p.videoUrl === e.target.value)
+                      setHeaders((prev) => ({
+                        ...prev,
+                        hero_video: {
+                          kicker: e.target.value,
+                          title: preset?.posterUrl || prev.hero_video?.title || '/Video/optimized/destination_kedarnath_poster.jpg',
+                          subtitle: preset?.label || 'Custom Hero Video',
+                        },
+                      }))
+                    }}
+                    className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
+                  >
+                    {HERO_VIDEO_PRESETS.map((preset) => (
+                      <option key={preset.videoUrl} value={preset.videoUrl}>
+                        {preset.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-slate-700 font-semibold mb-1">Hero Video URL (MP4)</label>
+                  <input
+                    type="text"
+                    value={headers.hero_video?.kicker ?? '/Video/optimized/destination_kedarnath.mp4'}
+                    onChange={(e) =>
+                      setHeaders((prev) => ({
+                        ...prev,
+                        hero_video: {
+                          ...(prev.hero_video || { title: '/Video/optimized/destination_kedarnath_poster.jpg' }),
+                          kicker: e.target.value,
+                        },
+                      }))
+                    }
+                    placeholder="/Video/optimized/destination_kedarnath.mp4"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-900 font-mono focus:outline-none focus:ring-2 focus:ring-slate-900"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-700 font-semibold mb-1">Hero Poster Image URL</label>
+                  <input
+                    type="text"
+                    value={headers.hero_video?.title ?? '/Video/optimized/destination_kedarnath_poster.jpg'}
+                    onChange={(e) =>
+                      setHeaders((prev) => ({
+                        ...prev,
+                        hero_video: {
+                          ...(prev.hero_video || { kicker: '/Video/optimized/destination_kedarnath.mp4' }),
+                          title: e.target.value,
+                        },
+                      }))
+                    }
+                    placeholder="/Video/optimized/destination_kedarnath_poster.jpg"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-900 font-mono focus:outline-none focus:ring-2 focus:ring-slate-900"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-700 font-semibold mb-1">Eyebrow Line</label>
+                  <input
+                    type="text"
+                    value={headers.hero?.kicker ?? 'Travel with a local touch'}
+                    onChange={(e) =>
+                      setHeaders((prev) => ({
+                        ...prev,
+                        hero: { ...(prev.hero || { title: 'Crazy Tours Travel' }), kicker: e.target.value },
+                      }))
+                    }
+                    className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-700 font-semibold mb-1">Main Brand Headline</label>
+                  <input
+                    type="text"
+                    value={headers.hero?.title ?? 'Crazy Tours Travel'}
+                    onChange={(e) =>
+                      setHeaders((prev) => ({
+                        ...prev,
+                        hero: { ...(prev.hero || {}), title: e.target.value },
+                      }))
+                    }
+                    className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-700 font-semibold mb-1">Subtitle</label>
+                  <input
+                    type="text"
+                    value={headers.hero?.subtitle ?? 'Handcrafted journeys across India and beyond'}
+                    onChange={(e) =>
+                      setHeaders((prev) => ({
+                        ...prev,
+                        hero: { ...(prev.hero || { title: 'Crazy Tours Travel' }), subtitle: e.target.value },
+                      }))
+                    }
+                    className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
+                  />
+                </div>
+              </div>
+
+              {/* Live Video Preview */}
+              <div className="space-y-2">
+                <span className="block text-slate-700 font-semibold">Live Hero Background Preview</span>
+                <div className="relative rounded-2xl overflow-hidden aspect-video bg-slate-900 shadow-md border border-slate-200">
+                  <video
+                    key={headers.hero_video?.kicker || '/Video/optimized/destination_kedarnath.mp4'}
+                    src={headers.hero_video?.kicker || '/Video/optimized/destination_kedarnath.mp4'}
+                    poster={headers.hero_video?.title || '/Video/optimized/destination_kedarnath_poster.jpg'}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent pointer-events-none" />
+                  <div className="absolute inset-y-0 left-0 p-5 flex flex-col justify-center text-white max-w-xs">
+                    <span className="text-[10px] font-semibold tracking-wider text-emerald-100 uppercase mb-1">
+                      {headers.hero?.kicker || 'Travel with a local touch'}
+                    </span>
+                    <h3 className="text-2xl font-bold leading-tight mb-1">
+                      {headers.hero?.title || 'Crazy Tours Travel'}
+                    </h3>
+                    <p className="text-xs text-white/85">
+                      {headers.hero?.subtitle || 'Handcrafted journeys across India and beyond'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* 3. WE OFFER CUSTOMIZATION (4 BENTO GROUP CARDS) */}
+      {/* ======================================================== */}
+      {activeSection === 'customization' && (
+        <div className="space-y-6">
+          <div className="rounded-2xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-xs space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+              <div>
+                <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                  <Icon name="sparkle" size={16} className="text-[#ef4934]" />
+                  <span>Module 3: We Offer Customization (4-Card Bento Showcase)</span>
+                </h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Edit the 4 traveler-group customization cards shown below Trending Destinations (Romantic Escapes, Family Holidays, Bachelors’ Trips, Adventure Picks).
+                </p>
+              </div>
+              <button
+                type="button"
+                disabled={saving}
+                onClick={() => handleSaveHeader('customization')}
+                className="px-4 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 text-xs font-bold transition-all shadow-xs flex items-center gap-1.5"
+              >
+                <Icon name="check" size={14} />
+                <span>Save Section Heading</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs bg-slate-50/70 p-4 rounded-xl border border-slate-200/70">
+              <div>
+                <label className="block text-slate-700 font-semibold mb-1">Section Kicker</label>
+                <input
+                  type="text"
+                  value={headers.customization?.kicker ?? 'CURATED CUSTOMIZATION'}
+                  onChange={(e) =>
+                    setHeaders((prev) => ({
+                      ...prev,
+                      customization: { ...(prev.customization || { title: 'We offer customization' }), kicker: e.target.value },
+                    }))
+                  }
+                  className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-900"
+                />
+              </div>
+              <div>
+                <label className="block text-slate-700 font-semibold mb-1">Section Subtitle</label>
+                <input
+                  type="text"
+                  value={headers.customization?.subtitle ?? 'Crazy Tours offers curated, tailor-made journeys for couples, families, friends, and adventure seekers.'}
+                  onChange={(e) =>
+                    setHeaders((prev) => ({
+                      ...prev,
+                      customization: { ...(prev.customization || { title: 'We offer customization' }), subtitle: e.target.value },
+                    }))
+                  }
+                  className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-900"
+                />
               </div>
             </div>
 
-            {/* Asymmetric 4-Slot Selector Matrix */}
+            {/* 4-Slot Bento Selector Matrix */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
               {[
-                { slot: 1, type: 'Large Marquee (Left)', desc: 'Prominent seasonal departure' },
-                { slot: 2, type: 'Tall Column (Middle)', desc: 'Scenic route feature' },
-                { slot: 3, type: 'Compact (Top Right)', desc: 'Micro-escape preview' },
-                { slot: 4, type: 'Compact (Bottom Right)', desc: 'Road trip spotlight' },
+                { slot: 1, type: 'Tall Card (Left)', fallback: 'Romantic Escapes' },
+                { slot: 2, type: 'Tall Card (Middle)', fallback: 'Family Holidays' },
+                { slot: 3, type: 'Compact (Top Right)', fallback: 'Bachelors’ Trips' },
+                { slot: 4, type: 'Compact (Bottom Right)', fallback: 'Adventure Picks' },
               ].map((s) => {
                 const sp = storefront.specials.find((x) => x.slotIndex === s.slot)
                 const isSelected = selectedSpecialIndex === s.slot
@@ -363,11 +639,11 @@ export function StorefrontStudioPage({
                     }`}
                   >
                     <div className="flex items-center justify-between text-xs mb-1">
-                      <span className="font-bold text-slate-900">Slot {s.slot}</span>
+                      <span className="font-bold text-slate-900">Card {s.slot}</span>
                       <span className="text-[10px] font-semibold text-slate-400">{s.type}</span>
                     </div>
                     <div className="text-xs font-semibold text-slate-800 truncate">
-                      {sp?.title || `Special #${s.slot}`}
+                      {sp?.title || s.fallback}
                     </div>
                     <div className="text-[11px] text-slate-500 truncate mt-0.5">
                       {sp?.badge || 'No badge'}
@@ -381,19 +657,18 @@ export function StorefrontStudioPage({
             <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 sm:p-5 space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-slate-800 uppercase tracking-wide">
-                  Editing Slot #{selectedSpecialIndex} Details
+                  Editing Customization Card #{selectedSpecialIndex}
                 </span>
-                <span className="text-xs text-slate-500">Live preview below</span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                 <div>
-                  <label className="block text-slate-700 font-semibold mb-1">Departure Badge / Kicker</label>
+                  <label className="block text-slate-700 font-semibold mb-1">Badge Pill Label</label>
                   <input
                     type="text"
                     value={specialForm.badge ?? activeSpecial?.badge ?? ''}
                     onChange={(e) => setSpecialForm((prev) => ({ ...prev, badge: e.target.value }))}
-                    placeholder="e.g. April departures · Limited season"
+                    placeholder="e.g. ROMANTIC ESCAPES"
                     className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
                   />
                 </div>
@@ -404,58 +679,42 @@ export function StorefrontStudioPage({
                     type="text"
                     value={specialForm.title ?? activeSpecial?.title ?? ''}
                     onChange={(e) => setSpecialForm((prev) => ({ ...prev, title: e.target.value }))}
-                    placeholder="e.g. Kashmir in full bloom"
+                    placeholder="e.g. Romantic Escapes"
                     className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
                   />
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label className="block text-slate-700 font-semibold mb-1">Short Description / Copy</label>
+                  <label className="block text-slate-700 font-semibold mb-1">Short Subtitle</label>
                   <textarea
                     rows={2}
                     value={specialForm.description ?? activeSpecial?.description ?? ''}
                     onChange={(e) => setSpecialForm((prev) => ({ ...prev, description: e.target.value }))}
-                    placeholder="e.g. 6 days of tulip gardens, houseboat evenings and mountain air."
+                    placeholder="e.g. Handpicked destinations for two."
                     className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
                   />
                 </div>
 
-                <div>
-                  <label className="block text-slate-700 font-semibold mb-1">Starting Price (INR)</label>
-                  <input
-                    type="number"
-                    value={specialForm.priceNum ?? activeSpecial?.priceNum ?? ''}
-                    onChange={(e) => setSpecialForm((prev) => ({ ...prev, priceNum: parseInt(e.target.value) || 0 }))}
-                    placeholder="e.g. 36800"
-                    className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-slate-700 font-semibold mb-1">Target Route / Page Link</label>
+                <div className="sm:col-span-2">
+                  <label className="block text-slate-700 font-semibold mb-1">Custom Trip Travel Style Target</label>
                   <select
-                    value={specialForm.actionRoute ?? activeSpecial?.actionRoute ?? 'packages'}
+                    value={specialForm.actionRoute ?? activeSpecial?.actionRoute ?? 'Romantic / Honeymoon'}
                     onChange={(e) => setSpecialForm((prev) => ({ ...prev, actionRoute: e.target.value }))}
                     className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
                   >
-                    <option value="packages">Tour Packages (/packages)</option>
-                    <option value="stays">Stays &amp; Resorts (/stays)</option>
-                    <option value="road-trips">Road Trips (/road-trips)</option>
-                    <option value="offers">Crazy Offers (/offers)</option>
-                    {destinations.map((d) => (
-                      <option key={d.slug} value={`destination/${d.slug}`}>
-                        Destination: {d.city} (/destination/{d.slug})
-                      </option>
-                    ))}
+                    <option value="Romantic / Honeymoon">Romantic / Honeymoon</option>
+                    <option value="Family with Kids">Family with Kids</option>
+                    <option value="Friends & Bachelors Group">Friends &amp; Bachelors Group</option>
+                    <option value="Adventure & Mountain Trails">Adventure &amp; Mountain Trails</option>
                   </select>
                 </div>
 
                 <div className="sm:col-span-2">
                   <ImageDropzone
-                    label="Background Scenic Photo"
+                    label="Primary Card Photo"
                     value={specialForm.image ?? activeSpecial?.image ?? ''}
                     onChange={(url) => setSpecialForm((prev) => ({ ...prev, image: url }))}
-                    helperText="Upload a high-resolution photo from your device or paste a web URL"
+                    helperText="Upload a high-resolution photo or paste a path like /catalog-photos/groups/couple.jpg"
                   />
                 </div>
               </div>
@@ -468,7 +727,7 @@ export function StorefrontStudioPage({
                   className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-xs flex items-center gap-1.5"
                 >
                   <Icon name="check" size={14} />
-                  <span>{saving ? 'Saving...' : `Save Slot #${selectedSpecialIndex}`}</span>
+                  <span>{saving ? 'Saving...' : `Save Card #${selectedSpecialIndex}`}</span>
                 </button>
               </div>
             </div>
@@ -572,7 +831,7 @@ export function StorefrontStudioPage({
               <div>
                 <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
                   <Icon name="compass" size={16} className="text-[#ef4934]" />
-                  <span>Module 3: Journeys with a Little More Soul (3 Headliner Trips)</span>
+                  <span>Module 4: Recommended Packages (3 Spotlight Trips)</span>
                 </h2>
                 <p className="text-xs text-slate-500 mt-0.5">
                   Pick the 3 featured tour packages highlighted in the editorial homepage section.

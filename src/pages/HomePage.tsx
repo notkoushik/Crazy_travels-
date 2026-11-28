@@ -244,7 +244,7 @@ export function HomePage({
     }, 80)
   }
 
-  const customizationGroupCards: readonly CustomizationGroupCardData[] = [
+  const baseCustomizationCards: readonly CustomizationGroupCardData[] = [
     {
       id: 'romantic',
       badge: 'ROMANTIC ESCAPES',
@@ -324,6 +324,26 @@ export function HomePage({
       ),
     },
   ]
+
+  const customizationGroupCards: readonly CustomizationGroupCardData[] = baseCustomizationCards.map((base, idx) => {
+    const slot = sf.specials.find((s) => s.slotIndex === idx + 1)
+    if (!slot || slot.actionRoute.startsWith('destination/') || slot.actionRoute === 'road-trips' || slot.actionRoute === 'packages') {
+      return base
+    }
+    const mergedImages = slot.image && !base.images.includes(slot.image)
+      ? [slot.image, ...base.images]
+      : slot.image
+        ? [slot.image, ...base.images.filter((img) => img !== slot.image)]
+        : base.images
+    return {
+      ...base,
+      badge: slot.badge || base.badge,
+      title: slot.title || base.title,
+      subtitle: slot.description || base.subtitle,
+      travelStyle: slot.actionRoute || base.travelStyle,
+      images: mergedImages,
+    }
+  })
 
   const [selectedHeroIndex, setHeroIndex] = useState(0)
   const heroIndex = selectedHeroIndex % slides.length
@@ -407,8 +427,8 @@ export function HomePage({
         <section className="hero-window-banner" aria-label="Crazy Tours Travel Showcase">
           {/* Ambient Video Background */}
           <video
-            src={heroVideoConfig.videoUrl}
-            poster={heroVideoConfig.posterUrl}
+            src={headers.hero_video?.kicker || heroVideoConfig.videoUrl}
+            poster={headers.hero_video?.title || heroVideoConfig.posterUrl}
             autoPlay
             loop
             muted={isHeroMuted}
@@ -435,11 +455,11 @@ export function HomePage({
 
             {/* Left Column: Pure English Brand Information (Right side empty for landscape view) */}
             <div className="hero-info-panel">
-              <p className="hero-eyebrow">Travel with a local touch</p>
+              <p className="hero-eyebrow">{headers.hero?.kicker || heroVideoConfig.eyebrow}</p>
 
-              <h1 className="hero-title">Crazy Tours Travel</h1>
+              <h1 className="hero-title">{headers.hero?.title || heroVideoConfig.title}</h1>
 
-              <p className="hero-subtitle">Handcrafted journeys across India and beyond</p>
+              <p className="hero-subtitle">{headers.hero?.subtitle || heroVideoConfig.subtitle}</p>
 
               {/* 4 Feature Badges in a single horizontal strip */}
               <div className="hero-features-strip">
@@ -704,7 +724,7 @@ export function HomePage({
           <div className="customization-header">
             <div>
               <div className="customization-kicker-row">
-                <span>CURATED CUSTOMIZATION</span>
+                <span>{headers.customization?.kicker || 'CURATED CUSTOMIZATION'}</span>
                 <span className="customization-kicker-line" aria-hidden="true" />
               </div>
               <h2 id="home-customization-heading" className="customization-title">
@@ -728,7 +748,7 @@ export function HomePage({
                 </span>
               </h2>
               <p className="customization-subtitle">
-                Crazy Tours offers curated, tailor-made journeys for couples, families, friends, and adventure seekers.
+                {headers.customization?.subtitle || 'Crazy Tours offers curated, tailor-made journeys for couples, families, friends, and adventure seekers.'}
               </p>
             </div>
             <button
